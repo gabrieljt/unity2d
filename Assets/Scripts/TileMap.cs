@@ -13,8 +13,8 @@ public class TileMapInspector : Editor
 		if (GUILayout.Button("Build"))
 		{
 			TileMap tileMap = (TileMap)target;
-			tileMap.SetupGameObject();
 			tileMap.Build();
+			FindObjectOfType<GameState>().OnTileMapBuilt();
 		}
 	}
 }
@@ -50,7 +50,6 @@ public class TileMap : MonoBehaviour
 
 	new private BoxCollider2D collider2D;
 
-	[SerializeField]
 	private Tile[,] tiles;
 
 	public Vector2 Origin { get { return new Vector2(width / 2f, height / 2f); } }
@@ -59,15 +58,8 @@ public class TileMap : MonoBehaviour
 
 	private void Awake()
 	{
-		SetupGameObject();
-	}
-
-	public void SetupGameObject()
-	{
 		Debug.Assert(tilesetTexture);
 		Debug.Assert(tilesetTiles.Length > 0);
-
-		gameObject.isStatic = true;
 
 		spriteRenderer = GetComponent<SpriteRenderer>();
 
@@ -77,7 +69,7 @@ public class TileMap : MonoBehaviour
 
 		collider2D = GetComponent<BoxCollider2D>();
 
-		transform.position = Origin;
+		gameObject.isStatic = true;
 	}
 
 	private void Start()
@@ -87,6 +79,7 @@ public class TileMap : MonoBehaviour
 
 	public void Build()
 	{
+		transform.position = Origin;
 		BuildMap();
 		// TODO: generate colliders
 		BuildTexture();
@@ -142,7 +135,10 @@ public class TileMap : MonoBehaviour
 
 		public bool CollidesWith(Room other)
 		{
-			return !(left > other.right - 1 || top > other.bottom - 1 || right < other.left + 1 || bottom < other.top + 1);
+			return !(left > other.right - 1
+				|| top > other.bottom - 1
+				|| right < other.left + 1
+				|| bottom < other.top + 1);
 		}
 	}
 
@@ -274,26 +270,14 @@ public class TileMap : MonoBehaviour
 
 	private bool HasAdjacentFloor(int x, int y)
 	{
-		if (x > 0 && tiles[x - 1, y].Type == TileType.Floor)
-			return true;
-		if (x < width - 1 && tiles[x + 1, y].Type == TileType.Floor)
-			return true;
-		if (y > 0 && tiles[x, y - 1].Type == TileType.Floor)
-			return true;
-		if (y < height - 1 && tiles[x, y + 1].Type == TileType.Floor)
-			return true;
-
-		if (x > 0 && y > 0 && tiles[x - 1, y - 1].Type == TileType.Floor)
-			return true;
-		if (x < width - 1 && y > 0 && tiles[x + 1, y - 1].Type == TileType.Floor)
-			return true;
-
-		if (x > 0 && y < height - 1 && tiles[x - 1, y + 1].Type == TileType.Floor)
-			return true;
-		if (x < width - 1 && y < height - 1 && tiles[x + 1, y + 1].Type == TileType.Floor)
-			return true;
-
-		return false;
+		return (x > 0 && tiles[x - 1, y].Type == TileType.Floor)
+			|| (x < width - 1 && tiles[x + 1, y].Type == TileType.Floor)
+			|| (y > 0 && tiles[x, y - 1].Type == TileType.Floor)
+			|| (y < height - 1 && tiles[x, y + 1].Type == TileType.Floor)
+			|| (x > 0 && y > 0 && tiles[x - 1, y - 1].Type == TileType.Floor)
+			|| (x < width - 1 && y > 0 && tiles[x + 1, y - 1].Type == TileType.Floor)
+			|| (x > 0 && y < height - 1 && tiles[x - 1, y + 1].Type == TileType.Floor)
+			|| (x < width - 1 && y < height - 1 && tiles[x + 1, y + 1].Type == TileType.Floor);
 	}
 
 	#endregion Build Map

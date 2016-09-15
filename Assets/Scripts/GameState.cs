@@ -26,14 +26,13 @@ public class GameState : MonoBehaviour, IDisposable
 		tileMap.Built += OnTileMapBuilt;
 	}
 
-	private void OnTileMapBuilt()
+	public void OnTileMapBuilt()
 	{
 		playerCharacter.transform.position = tileMap.Origin;
-
-		SetCameraPosition(playerCharacter.transform.position);
+		SetCameraPosition(tileMap.Origin);
 	}
 
-	private void SetCameraPosition(Vector3 position)
+	public void SetCameraPosition(Vector3 position)
 	{
 		camera.transform.position = Vector3.back * 10f + position;
 	}
