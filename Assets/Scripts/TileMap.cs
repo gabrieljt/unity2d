@@ -22,8 +22,7 @@ public class TileMapInspector : Editor
 [ExecuteInEditMode]
 [RequireComponent(
 	typeof(SpriteRenderer),
-	typeof(Rigidbody2D),
-	typeof(BoxCollider2D)
+	typeof(Rigidbody2D)
 )]
 public class TileMap : MonoBehaviour
 {
@@ -48,8 +47,6 @@ public class TileMap : MonoBehaviour
 
 	new private Rigidbody2D rigidbody2D;
 
-	new private BoxCollider2D collider2D;
-
 	private Tile[,] tiles;
 
 	public Vector2 Origin { get { return new Vector2(width / 2f, height / 2f); } }
@@ -67,8 +64,6 @@ public class TileMap : MonoBehaviour
 		rigidbody2D.gravityScale = 0f;
 		rigidbody2D.isKinematic = true;
 
-		collider2D = GetComponent<BoxCollider2D>();
-
 		gameObject.isStatic = true;
 	}
 
@@ -79,14 +74,18 @@ public class TileMap : MonoBehaviour
 
 	public void Build()
 	{
-		transform.position = Origin;
+		SetOrigin();
+
 		BuildMap();
-		// TODO: generate colliders
+
 		BuildTexture();
-		collider2D.size = new Vector2(width, height);
-		collider2D.enabled = false;
 
 		Built();
+	}
+
+	private void SetOrigin()
+	{
+		transform.position = Origin;
 	}
 
 	#region Build Map
@@ -102,6 +101,8 @@ public class TileMap : MonoBehaviour
 		BuildCorridors();
 
 		BuildWalls();
+
+		BuildColliders();
 	}
 
 	public class Room
@@ -143,11 +144,11 @@ public class TileMap : MonoBehaviour
 
 	private void FillTiles(TileType type)
 	{
-		for (int i = 0; i < width; i++)
+		for (int x = 0; x < width; x++)
 		{
-			for (int j = 0; j < height; j++)
+			for (int y = 0; y < height; y++)
 			{
-				tiles[i, j] = new Tile(type);
+				tiles[x, y] = new Tile(type);
 			}
 		}
 	}
@@ -261,6 +262,29 @@ public class TileMap : MonoBehaviour
 				if (tiles[x, y].Type == TileType.Water && HasAdjacentFloor(x, y))
 				{
 					tiles[x, y] = new Tile(TileType.Wall);
+				}
+			}
+		}
+	}
+
+	private void BuildColliders()
+	{
+		BoxCollider2D[] colliders = GetComponents<BoxCollider2D>();
+
+		for (int i = 0; i < colliders.Length; i++)
+		{
+			DestroyImmediate(colliders[i]);
+		}
+
+		for (int x = 0; x < width; x++)
+		{
+			for (int y = 0; y < height; y++)
+			{
+				if (tiles[x, y].Type == TileType.Wall)
+				{
+					BoxCollider2D collider = gameObject.AddComponent<BoxCollider2D>();
+					collider.offset = new Vector2(x, y) + Vector2.one * 0.5f - Origin;
+					collider.size = Vector2.one;
 				}
 			}
 		}
