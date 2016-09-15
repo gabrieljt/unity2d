@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -52,7 +53,9 @@ public class TileMap : MonoBehaviour
 	[SerializeField]
 	private Tile[,] tiles;
 
-	public Vector2 TileMapOrigin { get { return new Vector2(width / 2f, height / 2f); } }
+	public Vector2 Origin { get { return new Vector2(width / 2f, height / 2f); } }
+
+	public Action Built = delegate { };
 
 	private void Awake()
 	{
@@ -74,12 +77,7 @@ public class TileMap : MonoBehaviour
 
 		collider2D = GetComponent<BoxCollider2D>();
 
-		transform.position = TileMapOrigin;
-
-		// TODO: externalize
-		FindObjectOfType<Character>().transform.position = transform.position;
-		Camera camera = FindObjectOfType<Camera>();
-		camera.transform.position = Vector3.back * 10f + transform.position;
+		transform.position = Origin;
 	}
 
 	private void Start()
@@ -94,6 +92,8 @@ public class TileMap : MonoBehaviour
 		BuildTexture();
 		collider2D.size = new Vector2(width, height);
 		collider2D.enabled = false;
+
+		Built();
 	}
 
 	#region Build Map
@@ -167,12 +167,12 @@ public class TileMap : MonoBehaviour
 
 		while (rooms.Count < 10 && attemptsLeft > 0)
 		{
-			int roomWidth = Random.Range(4, 14);
-			int roomHeight = Random.Range(4, 10);
+			int roomWidth = UnityEngine.Random.Range(4, 14);
+			int roomHeight = UnityEngine.Random.Range(4, 10);
 
 			Room room = new Room();
-			room.left = Random.Range(0, width - roomWidth);
-			room.top = Random.Range(0, height - roomHeight);
+			room.left = UnityEngine.Random.Range(0, width - roomWidth);
+			room.top = UnityEngine.Random.Range(0, height - roomHeight);
 			room.width = roomWidth;
 			room.height = roomHeight;
 
@@ -229,7 +229,7 @@ public class TileMap : MonoBehaviour
 		{
 			if (!rooms[i].isConnected)
 			{
-				int j = Random.Range(1, rooms.Count);
+				int j = UnityEngine.Random.Range(1, rooms.Count);
 				BuildCorridor(rooms[i], rooms[(i + j) % rooms.Count]);
 			}
 		}
@@ -316,14 +316,6 @@ public class TileMap : MonoBehaviour
 		}
 
 		return tilesPixels;
-	}
-
-	private int GetRandomTilesetTile()
-	{
-		int tilesPerRow = tilesetTexture.width / tileResolution;
-		int rows = tilesetTexture.height / tileResolution;
-
-		return Random.Range(0, tilesPerRow * rows);
 	}
 
 	public int GetTilesetTileIndexByType(TileType type)
