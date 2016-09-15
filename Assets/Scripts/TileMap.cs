@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,8 +13,8 @@ public class TileMapInspector : Editor
 		if (GUILayout.Button("Build"))
 		{
 			TileMap tileMap = (TileMap)target;
-			tileMap.SetupGameObject();
 			tileMap.Build();
+			FindObjectOfType<GameState>().OnTileMapBuilt();
 		}
 	}
 }
@@ -21,8 +22,7 @@ public class TileMapInspector : Editor
 [ExecuteInEditMode]
 [RequireComponent(
 	typeof(SpriteRenderer),
-	typeof(Rigidbody2D),
-	typeof(BoxCollider2D)
+	typeof(Rigidbody2D)
 )]
 public class TileMap : MonoBehaviour
 {
@@ -47,24 +47,16 @@ public class TileMap : MonoBehaviour
 
 	new private Rigidbody2D rigidbody2D;
 
-	new private BoxCollider2D collider2D;
-
-	[SerializeField]
 	private Tile[,] tiles;
 
-	public Vector2 TileMapOrigin { get { return new Vector2(width / 2f, height / 2f); } }
+	public Vector2 Origin { get { return new Vector2(width / 2f, height / 2f); } }
+
+	public Action Built = delegate { };
 
 	private void Awake()
 	{
-		SetupGameObject();
-	}
-
-	public void SetupGameObject()
-	{
 		Debug.Assert(tilesetTexture);
 		Debug.Assert(tilesetTiles.Length > 0);
-
-		gameObject.isStatic = true;
 
 		spriteRenderer = GetComponent<SpriteRenderer>();
 
@@ -72,14 +64,7 @@ public class TileMap : MonoBehaviour
 		rigidbody2D.gravityScale = 0f;
 		rigidbody2D.isKinematic = true;
 
-		collider2D = GetComponent<BoxCollider2D>();
-
-		transform.position = TileMapOrigin;
-
-		// TODO: externalize
-		FindObjectOfType<Character>().transform.position = transform.position;
-		Camera camera = FindObjectOfType<Camera>();
-		camera.transform.position = Vector3.back * 10f + transform.position;
+		gameObject.isStatic = true;
 	}
 
 	private void Start()
@@ -89,11 +74,18 @@ public class TileMap : MonoBehaviour
 
 	public void Build()
 	{
+		SetOrigin();
+
 		BuildMap();
-		// TODO: generate colliders
+
 		BuildTexture();
-		collider2D.size = new Vector2(width, height);
-		collider2D.enabled = false;
+
+		Built();
+	}
+
+	private void SetOrigin()
+	{
+		transform.position = Origin;
 	}
 
 	#region Build Map
@@ -109,40 +101,42 @@ public class TileMap : MonoBehaviour
 		BuildCorridors();
 
 		BuildWalls();
+
+		BuildColliders();
 	}
 
 	public class Room
 	{
-		public int left;
-		public int top;
-		public int width;
-		public int height;
-
 		public bool isConnected = false;
 
-		public int right
+		public Room(Rect rect)
 		{
-			get { return left + width - 1; }
+			Rect = rect;
 		}
 
-		public int bottom
-		{
-			get { return top + height - 1; }
-		}
+		public Rect Rect { get; private set; }
 
-		public int centerX
-		{
-			get { return left + width / 2; }
-		}
+		public int Width { get { return (int)Rect.width; } }
 
-		public int centerY
-		{
-			get { return top + height / 2; }
-		}
+		public int Height { get { return (int)Rect.height; } }
+
+		public int Left { get { return (int)Rect.xMin; } }
+
+		public int Right { get { return (int)Rect.xMax; } }
+
+		public int Top { get { return (int)Rect.yMin; } }
+
+		public int Bottom { get { return (int)Rect.yMax; } }
+
+		public int CenterX { get { return (int)Rect.center.x; } }
+
+		public int CenterY { get { return (int)Rect.center.y; } }
+
+		public Vector2 Center { get { return Rect.center; } }
 
 		public bool CollidesWith(Room other)
 		{
-			return !(left > other.right - 1 || top > other.bottom - 1 || right < other.left + 1 || bottom < other.top + 1);
+			return Rect.Overlaps(other.Rect);
 		}
 	}
 
@@ -150,11 +144,11 @@ public class TileMap : MonoBehaviour
 
 	private void FillTiles(TileType type)
 	{
-		for (int i = 0; i < width; i++)
+		for (int x = 0; x < width; x++)
 		{
-			for (int j = 0; j < height; j++)
+			for (int y = 0; y < height; y++)
 			{
-				tiles[i, j] = new Tile(type);
+				tiles[x, y] = new Tile(type);
 			}
 		}
 	}
@@ -167,14 +161,15 @@ public class TileMap : MonoBehaviour
 
 		while (rooms.Count < 10 && attemptsLeft > 0)
 		{
-			int roomWidth = Random.Range(4, 14);
-			int roomHeight = Random.Range(4, 10);
+			int roomWidth = UnityEngine.Random.Range(4, 14);
+			int roomHeight = UnityEngine.Random.Range(4, 10);
 
-			Room room = new Room();
-			room.left = Random.Range(0, width - roomWidth);
-			room.top = Random.Range(0, height - roomHeight);
-			room.width = roomWidth;
-			room.height = roomHeight;
+			Room room = new Room(
+				new Rect(UnityEngine.Random.Range(0, width - roomWidth),
+					UnityEngine.Random.Range(0, height - roomHeight),
+					roomWidth,
+					roomHeight)
+			);
 
 			if (!RoomCollides(room))
 			{
@@ -207,17 +202,17 @@ public class TileMap : MonoBehaviour
 
 	private void BuildRoom(Room room)
 	{
-		for (int x = 0; x < room.width; x++)
+		for (int x = 0; x < room.Width; x++)
 		{
-			for (int y = 0; y < room.height; y++)
+			for (int y = 0; y < room.Height; y++)
 			{
-				if (x == 0 || x == room.width - 1 || y == 0 || y == room.height - 1)
+				if (x == 0 || x == room.Width - 1 || y == 0 || y == room.Height - 1)
 				{
-					tiles[room.left + x, room.top + y] = new Tile(TileType.Wall);
+					tiles[room.Left + x, room.Top + y] = new Tile(TileType.Wall);
 				}
 				else
 				{
-					tiles[room.left + x, room.top + y] = new Tile(TileType.Floor);
+					tiles[room.Left + x, room.Top + y] = new Tile(TileType.Floor);
 				}
 			}
 		}
@@ -229,7 +224,7 @@ public class TileMap : MonoBehaviour
 		{
 			if (!rooms[i].isConnected)
 			{
-				int j = Random.Range(1, rooms.Count);
+				int j = UnityEngine.Random.Range(1, rooms.Count);
 				BuildCorridor(rooms[i], rooms[(i + j) % rooms.Count]);
 			}
 		}
@@ -237,21 +232,21 @@ public class TileMap : MonoBehaviour
 
 	private void BuildCorridor(Room sourceRoom, Room targetRoom)
 	{
-		int x = sourceRoom.centerX;
-		int y = sourceRoom.centerY;
+		int x = sourceRoom.CenterX;
+		int y = sourceRoom.CenterY;
 
-		while (x != targetRoom.centerX)
+		while (x != targetRoom.CenterX)
 		{
 			tiles[x, y] = new Tile(TileType.Floor);
 
-			x += x < targetRoom.centerX ? 1 : -1;
+			x += x < targetRoom.CenterX ? 1 : -1;
 		}
 
-		while (y != targetRoom.centerY)
+		while (y != targetRoom.CenterY)
 		{
 			tiles[x, y] = new Tile(TileType.Floor);
 
-			y += y < targetRoom.centerY ? 1 : -1;
+			y += y < targetRoom.CenterY ? 1 : -1;
 		}
 
 		sourceRoom.isConnected = true;
@@ -272,28 +267,44 @@ public class TileMap : MonoBehaviour
 		}
 	}
 
+	private void BuildColliders()
+	{
+		BoxCollider2D[] colliders = GetComponents<BoxCollider2D>();
+
+		for (int i = 0; i < colliders.Length; i++)
+		{
+			DestroyImmediate(colliders[i]);
+		}
+
+		for (int x = 0; x < width; x++)
+		{
+			for (int y = 0; y < height; y++)
+			{
+				if (tiles[x, y].Type == TileType.Wall)
+				{
+					BoxCollider2D collider = gameObject.AddComponent<BoxCollider2D>();
+					collider.offset = new Vector2(x, y) + Vector2.one * 0.5f - Origin;
+					collider.size = Vector2.one;
+				}
+			}
+		}
+	}
+
 	private bool HasAdjacentFloor(int x, int y)
 	{
-		if (x > 0 && tiles[x - 1, y].Type == TileType.Floor)
-			return true;
-		if (x < width - 1 && tiles[x + 1, y].Type == TileType.Floor)
-			return true;
-		if (y > 0 && tiles[x, y - 1].Type == TileType.Floor)
-			return true;
-		if (y < height - 1 && tiles[x, y + 1].Type == TileType.Floor)
-			return true;
+		return (x > 0 && tiles[x - 1, y].Type == TileType.Floor)
+			|| (x < width - 1 && tiles[x + 1, y].Type == TileType.Floor)
+			|| (y > 0 && tiles[x, y - 1].Type == TileType.Floor)
+			|| (y < height - 1 && tiles[x, y + 1].Type == TileType.Floor)
+			|| (x > 0 && y > 0 && tiles[x - 1, y - 1].Type == TileType.Floor)
+			|| (x < width - 1 && y > 0 && tiles[x + 1, y - 1].Type == TileType.Floor)
+			|| (x > 0 && y < height - 1 && tiles[x - 1, y + 1].Type == TileType.Floor)
+			|| (x < width - 1 && y < height - 1 && tiles[x + 1, y + 1].Type == TileType.Floor);
+	}
 
-		if (x > 0 && y > 0 && tiles[x - 1, y - 1].Type == TileType.Floor)
-			return true;
-		if (x < width - 1 && y > 0 && tiles[x + 1, y - 1].Type == TileType.Floor)
-			return true;
-
-		if (x > 0 && y < height - 1 && tiles[x - 1, y + 1].Type == TileType.Floor)
-			return true;
-		if (x < width - 1 && y < height - 1 && tiles[x + 1, y + 1].Type == TileType.Floor)
-			return true;
-
-		return false;
+	public Vector2 GetRandomRoomCenter()
+	{
+		return rooms[UnityEngine.Random.Range(0, rooms.Count - 1)].Center;
 	}
 
 	#endregion Build Map
@@ -316,14 +327,6 @@ public class TileMap : MonoBehaviour
 		}
 
 		return tilesPixels;
-	}
-
-	private int GetRandomTilesetTile()
-	{
-		int tilesPerRow = tilesetTexture.width / tileResolution;
-		int rows = tilesetTexture.height / tileResolution;
-
-		return Random.Range(0, tilesPerRow * rows);
 	}
 
 	public int GetTilesetTileIndexByType(TileType type)
