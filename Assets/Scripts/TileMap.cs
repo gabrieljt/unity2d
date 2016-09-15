@@ -76,6 +76,7 @@ public class TileMap : MonoBehaviour
 		BuildTexture();
 		// TODO: generate colliders
 		collider2D.size = new Vector2(width, height);
+		collider2D.enabled = false;
 	}
 
 	private Color[][] GetPixelsFromTexture()
