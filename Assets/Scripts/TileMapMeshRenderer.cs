@@ -1,8 +1,8 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(TileMap))]
-public class TileMapInspector : Editor
+[CustomEditor(typeof(TileMapMeshRenderer))]
+public class TileMapMeshRendererInspector : Editor
 {
 	public override void OnInspectorGUI()
 	{
@@ -10,40 +10,25 @@ public class TileMapInspector : Editor
 
 		if (GUILayout.Button("Build"))
 		{
-			TileMap tileMap = (TileMap)target;
-			tileMap.Build();
+			TileMapMeshRenderer tileMap = (TileMapMeshRenderer)target;
+			tileMap.Render();
 		}
 	}
 }
 
-[ExecuteInEditMode]
 [RequireComponent(
 	typeof(MeshFilter),
 	typeof(MeshRenderer)
 )]
-public class TileMap : MonoBehaviour
+public class TileMapMeshRenderer : TileMapRenderer
 {
-	[SerializeField]
-	[Range(1, 128)]
-	private int width;
-
-	[SerializeField]
-	[Range(1, 128)]
-	private int height;
-
-	[SerializeField]
-	private int tileResolution = 16;
-
-	[SerializeField]
-	private Texture2D tilesTexture;
-
 	private MeshFilter meshFilter;
 
 	private MeshRenderer meshRenderer;
 
-	private void Awake()
+	protected override void Awake()
 	{
-		Debug.Assert(tilesTexture);
+		base.Awake();
 
 		meshFilter = GetComponent<MeshFilter>();
 		meshRenderer = GetComponent<MeshRenderer>();
@@ -51,15 +36,14 @@ public class TileMap : MonoBehaviour
 
 	private void Start()
 	{
-		Build();
+		Render();
 	}
 
-	public void Build()
+	public override void Render()
 	{
 		// TODO: build logical map
 		SetOrigin();
 		BuildMesh();
-		BuildTexture();
 	}
 
 	private void SetOrigin()
@@ -128,58 +112,13 @@ public class TileMap : MonoBehaviour
 		mesh.normals = normals;
 		mesh.uv = uv;
 
-		meshFilter.mesh = mesh;
-
 		#endregion Mesh Setup
-	}
 
-	private Color[][] GetPixelsFromTexture()
-	{
-		int tilesPerRow = tilesTexture.width / tileResolution;
-		int rows = tilesTexture.height / tileResolution;
+		#region MeshComponentsSetup
 
-		Color[][] tilesPixels = new Color[tilesPerRow * rows][];
+		meshFilter.mesh = mesh;
+		meshRenderer.sharedMaterials[0].mainTexture = BuildTexture();
 
-		for (int y = 0; y < rows; y++)
-		{
-			for (int x = 0; x < tilesPerRow; x++)
-			{
-				tilesPixels[y * tilesPerRow + x] = tilesTexture.GetPixels(x * tileResolution, y * tileResolution, tileResolution, tileResolution);
-			}
-		}
-
-		return tilesPixels;
-	}
-
-	private int GetRandomTileTextureIndex()
-	{
-		int tilesPerRow = tilesTexture.width / tileResolution;
-		int rows = tilesTexture.height / tileResolution;
-
-		return Random.Range(0, tilesPerRow * rows);
-	}
-
-	private void BuildTexture()
-	{
-		int textureWidth = width * tileResolution;
-		int textureHeight = height * tileResolution;
-		Texture2D texture = new Texture2D(textureWidth, textureHeight);
-
-		Color[][] tilesPixels = GetPixelsFromTexture();
-
-		for (int y = 0; y < height; y++)
-		{
-			for (int x = 0; x < width; x++)
-			{
-				Color[] pixels = tilesPixels[GetRandomTileTextureIndex()]; // TODO: read tile type from logical map
-				texture.SetPixels(x * tileResolution, y * tileResolution, tileResolution, tileResolution, pixels);
-			}
-		}
-
-		texture.filterMode = FilterMode.Point;
-		texture.wrapMode = TextureWrapMode.Clamp;
-		texture.Apply();
-
-		meshRenderer.sharedMaterials[0].mainTexture = texture;
+		#endregion MeshComponentsSetup
 	}
 }
