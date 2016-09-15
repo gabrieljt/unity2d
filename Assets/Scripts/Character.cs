@@ -2,9 +2,9 @@
 using UnityEngine;
 
 [RequireComponent(
+	typeof(SpriteRenderer),
 	typeof(Rigidbody2D),
-	typeof(CircleCollider2D),
-	typeof(SpriteRenderer)
+	typeof(Collider2D)
 )]
 public class Character : MonoBehaviour
 {
@@ -21,10 +21,11 @@ public class Character : MonoBehaviour
 
 	private void Awake()
 	{
-		rigidbody2D = GetComponent<Rigidbody2D>();
-		rigidbody2D.isKinematic = true;
-
 		spriteRenderer = GetComponent<SpriteRenderer>();
+
+		rigidbody2D = GetComponent<Rigidbody2D>();
+		rigidbody2D.gravityScale = 0f;
+		rigidbody2D.freezeRotation = true;
 	}
 
 	private void Update()

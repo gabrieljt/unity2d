@@ -1,38 +1,84 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
+[CustomEditor(typeof(TileMap))]
+public class TileMapInspector : Editor
+{
+	public override void OnInspectorGUI()
+	{
+		DrawDefaultInspector();
 
+		if (GUILayout.Button("Build"))
+		{
+			TileMap tileMap = (TileMap)target;
+			tileMap.SetupGameObject();
+			tileMap.Build();
+		}
+	}
+}
 
 [ExecuteInEditMode]
-public abstract class TileMapRenderer : MonoBehaviour
+[RequireComponent(
+	typeof(SpriteRenderer),
+	typeof(Rigidbody2D),
+	typeof(BoxCollider2D)
+)]
+public class TileMap : MonoBehaviour
 {
 	[SerializeField]
 	[Range(1, 128)]
-	protected int width;
+	private int width;
 
 	[SerializeField]
 	[Range(1, 128)]
-	protected int height;
+	private int height;
 
 	[SerializeField]
-	protected int tileResolution = 16;
+	private int tileResolution = 16;
 
 	[SerializeField]
-	protected Texture2D tilesTexture;
+	private Texture2D tilesTexture;
 
-	protected virtual void Awake()
+	private SpriteRenderer spriteRenderer;
+
+	new private Rigidbody2D rigidbody2D;
+
+	new private BoxCollider2D collider2D;
+
+	private void Awake()
+	{
+		SetupGameObject();
+	}
+
+	public void SetupGameObject()
 	{
 		Debug.Assert(tilesTexture);
+
+		gameObject.isStatic = true;
+
+		spriteRenderer = GetComponent<SpriteRenderer>();
+
+		rigidbody2D = GetComponent<Rigidbody2D>();
+		rigidbody2D.gravityScale = 0f;
+		rigidbody2D.isKinematic = true;
+
+		collider2D = GetComponent<BoxCollider2D>();
 	}
 
 	private void Start()
 	{
-		Render();
+		Build();
 	}
 
-	public abstract void Render();
+	public void Build()
+	{
+		// TODO: build logical map
+		BuildTexture();
+		// TODO: generate colliders
+		collider2D.size = new Vector2(width, height);
+	}
 
-	protected Color[][] GetPixelsFromTexture()
+	private Color[][] GetPixelsFromTexture()
 	{
 		int tilesPerRow = tilesTexture.width / tileResolution;
 		int rows = tilesTexture.height / tileResolution;
@@ -50,7 +96,7 @@ public abstract class TileMapRenderer : MonoBehaviour
 		return tilesPixels;
 	}
 
-	protected int GetRandomTileTextureIndex()
+	private int GetRandomTileTextureIndex()
 	{
 		int tilesPerRow = tilesTexture.width / tileResolution;
 		int rows = tilesTexture.height / tileResolution;
@@ -58,7 +104,7 @@ public abstract class TileMapRenderer : MonoBehaviour
 		return Random.Range(0, tilesPerRow * rows);
 	}
 
-	protected Texture2D BuildTexture()
+	private void BuildTexture()
 	{
 		int textureWidth = width * tileResolution;
 		int textureHeight = height * tileResolution;
@@ -79,6 +125,6 @@ public abstract class TileMapRenderer : MonoBehaviour
 		texture.wrapMode = TextureWrapMode.Clamp;
 		texture.Apply();
 
-		return texture;
+		spriteRenderer.sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), Vector2.one * 0.5f, tileResolution);
 	}
 }
