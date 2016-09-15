@@ -37,13 +37,21 @@ public class TileMap : MonoBehaviour
 	private int tileResolution = 16;
 
 	[SerializeField]
-	private Texture2D tilesTexture;
+	private Texture2D tilesetTexture;
+
+	[SerializeField]
+	private TilesetTile[] tilesetTiles;
 
 	private SpriteRenderer spriteRenderer;
 
 	new private Rigidbody2D rigidbody2D;
 
 	new private BoxCollider2D collider2D;
+
+	[SerializeField]
+	private Tile[,] tiles;
+
+	public Vector2 TileMapOrigin { get { return new Vector2(width / 2f, height / 2f); } }
 
 	private void Awake()
 	{
@@ -52,7 +60,8 @@ public class TileMap : MonoBehaviour
 
 	public void SetupGameObject()
 	{
-		Debug.Assert(tilesTexture);
+		Debug.Assert(tilesetTexture);
+		Debug.Assert(tilesetTiles.Length > 0);
 
 		gameObject.isStatic = true;
 
@@ -63,6 +72,13 @@ public class TileMap : MonoBehaviour
 		rigidbody2D.isKinematic = true;
 
 		collider2D = GetComponent<BoxCollider2D>();
+
+		transform.position = TileMapOrigin;
+
+		// TODO: externalize
+		FindObjectOfType<Character>().transform.position = transform.position;
+		Camera camera = FindObjectOfType<Camera>();
+		camera.transform.position = Vector3.back * 10f + transform.position;
 	}
 
 	private void Start()
@@ -72,17 +88,31 @@ public class TileMap : MonoBehaviour
 
 	public void Build()
 	{
-		// TODO: build logical map
-		BuildTexture();
+		BuildMap();
 		// TODO: generate colliders
+		BuildTexture();
 		collider2D.size = new Vector2(width, height);
 		collider2D.enabled = false;
 	}
 
+	private void BuildMap()
+	{
+		tiles = new Tile[width, height];
+		for (int i = 0; i < width; i++)
+		{
+			for (int j = 0; j < height; j++)
+			{
+				tiles[i, j] = i == j ? new Tile(TileType.Water) : new Tile(TileType.Floor);
+			}
+		}
+	}
+
+	#region Build Texture
+
 	private Color[][] GetPixelsFromTexture()
 	{
-		int tilesPerRow = tilesTexture.width / tileResolution;
-		int rows = tilesTexture.height / tileResolution;
+		int tilesPerRow = tilesetTexture.width / tileResolution;
+		int rows = tilesetTexture.height / tileResolution;
 
 		Color[][] tilesPixels = new Color[tilesPerRow * rows][];
 
@@ -90,19 +120,24 @@ public class TileMap : MonoBehaviour
 		{
 			for (int x = 0; x < tilesPerRow; x++)
 			{
-				tilesPixels[y * tilesPerRow + x] = tilesTexture.GetPixels(x * tileResolution, y * tileResolution, tileResolution, tileResolution);
+				tilesPixels[y * tilesPerRow + x] = tilesetTexture.GetPixels(x * tileResolution, y * tileResolution, tileResolution, tileResolution);
 			}
 		}
 
 		return tilesPixels;
 	}
 
-	private int GetRandomTileTextureIndex()
+	private int GetRandomTilesetTile()
 	{
-		int tilesPerRow = tilesTexture.width / tileResolution;
-		int rows = tilesTexture.height / tileResolution;
+		int tilesPerRow = tilesetTexture.width / tileResolution;
+		int rows = tilesetTexture.height / tileResolution;
 
 		return Random.Range(0, tilesPerRow * rows);
+	}
+
+	public int GetTilesetTileIndexByType(TileType type)
+	{
+		return System.Array.Find(tilesetTiles, tilesetTile => tilesetTile.Type == type).TilesetIndex;
 	}
 
 	private void BuildTexture()
@@ -117,7 +152,7 @@ public class TileMap : MonoBehaviour
 		{
 			for (int x = 0; x < width; x++)
 			{
-				Color[] pixels = tilesPixels[GetRandomTileTextureIndex()]; // TODO: read tile type from logical map
+				Color[] pixels = tilesPixels[GetTilesetTileIndexByType(tiles[x, y].Type)];
 				texture.SetPixels(x * tileResolution, y * tileResolution, tileResolution, tileResolution, pixels);
 			}
 		}
@@ -128,4 +163,6 @@ public class TileMap : MonoBehaviour
 
 		spriteRenderer.sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), Vector2.one * 0.5f, tileResolution);
 	}
+
+	#endregion Build Texture
 }
