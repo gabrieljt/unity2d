@@ -106,39 +106,36 @@ public class TileMap : MonoBehaviour
 
 	public class Room
 	{
-		public int left;
-		public int top;
-		public int width;
-		public int height;
-
 		public bool isConnected = false;
 
-		public int right
+		public Room(Rect rect)
 		{
-			get { return left + width - 1; }
+			Rect = rect;
 		}
 
-		public int bottom
-		{
-			get { return top + height - 1; }
-		}
+		public Rect Rect { get; private set; }
 
-		public int centerX
-		{
-			get { return left + width / 2; }
-		}
+		public int Width { get { return (int)Rect.width; } }
 
-		public int centerY
-		{
-			get { return top + height / 2; }
-		}
+		public int Height { get { return (int)Rect.height; } }
+
+		public int Left { get { return (int)Rect.xMin; } }
+
+		public int Right { get { return (int)Rect.xMax; } }
+
+		public int Top { get { return (int)Rect.yMin; } }
+
+		public int Bottom { get { return (int)Rect.yMax; } }
+
+		public int CenterX { get { return (int)Rect.center.x; } }
+
+		public int CenterY { get { return (int)Rect.center.y; } }
+
+		public Vector2 Center { get { return Rect.center; } }
 
 		public bool CollidesWith(Room other)
 		{
-			return !(left > other.right - 1
-				|| top > other.bottom - 1
-				|| right < other.left + 1
-				|| bottom < other.top + 1);
+			return Rect.Overlaps(other.Rect);
 		}
 	}
 
@@ -166,11 +163,12 @@ public class TileMap : MonoBehaviour
 			int roomWidth = UnityEngine.Random.Range(4, 14);
 			int roomHeight = UnityEngine.Random.Range(4, 10);
 
-			Room room = new Room();
-			room.left = UnityEngine.Random.Range(0, width - roomWidth);
-			room.top = UnityEngine.Random.Range(0, height - roomHeight);
-			room.width = roomWidth;
-			room.height = roomHeight;
+			Room room = new Room(
+				new Rect(UnityEngine.Random.Range(0, width - roomWidth),
+					UnityEngine.Random.Range(0, height - roomHeight),
+					roomWidth,
+					roomHeight)
+			);
 
 			if (!RoomCollides(room))
 			{
@@ -203,17 +201,17 @@ public class TileMap : MonoBehaviour
 
 	private void BuildRoom(Room room)
 	{
-		for (int x = 0; x < room.width; x++)
+		for (int x = 0; x < room.Width; x++)
 		{
-			for (int y = 0; y < room.height; y++)
+			for (int y = 0; y < room.Height; y++)
 			{
-				if (x == 0 || x == room.width - 1 || y == 0 || y == room.height - 1)
+				if (x == 0 || x == room.Width - 1 || y == 0 || y == room.Height - 1)
 				{
-					tiles[room.left + x, room.top + y] = new Tile(TileType.Wall);
+					tiles[room.Left + x, room.Top + y] = new Tile(TileType.Wall);
 				}
 				else
 				{
-					tiles[room.left + x, room.top + y] = new Tile(TileType.Floor);
+					tiles[room.Left + x, room.Top + y] = new Tile(TileType.Floor);
 				}
 			}
 		}
@@ -233,21 +231,21 @@ public class TileMap : MonoBehaviour
 
 	private void BuildCorridor(Room sourceRoom, Room targetRoom)
 	{
-		int x = sourceRoom.centerX;
-		int y = sourceRoom.centerY;
+		int x = sourceRoom.CenterX;
+		int y = sourceRoom.CenterY;
 
-		while (x != targetRoom.centerX)
+		while (x != targetRoom.CenterX)
 		{
 			tiles[x, y] = new Tile(TileType.Floor);
 
-			x += x < targetRoom.centerX ? 1 : -1;
+			x += x < targetRoom.CenterX ? 1 : -1;
 		}
 
-		while (y != targetRoom.centerY)
+		while (y != targetRoom.CenterY)
 		{
 			tiles[x, y] = new Tile(TileType.Floor);
 
-			y += y < targetRoom.centerY ? 1 : -1;
+			y += y < targetRoom.CenterY ? 1 : -1;
 		}
 
 		sourceRoom.isConnected = true;
@@ -278,6 +276,11 @@ public class TileMap : MonoBehaviour
 			|| (x < width - 1 && y > 0 && tiles[x + 1, y - 1].Type == TileType.Floor)
 			|| (x > 0 && y < height - 1 && tiles[x - 1, y + 1].Type == TileType.Floor)
 			|| (x < width - 1 && y < height - 1 && tiles[x + 1, y + 1].Type == TileType.Floor);
+	}
+
+	public Vector2 GetRandomRoomCenter()
+	{
+		return rooms[UnityEngine.Random.Range(0, rooms.Count - 1)].Center;
 	}
 
 	#endregion Build Map

@@ -28,8 +28,9 @@ public class GameState : MonoBehaviour, IDisposable
 
 	public void OnTileMapBuilt()
 	{
-		playerCharacter.transform.position = tileMap.Origin;
-		SetCameraPosition(tileMap.Origin);
+		Vector2 roomCenter = tileMap.GetRandomRoomCenter();
+		playerCharacter.transform.position = roomCenter;
+		SetCameraPosition(roomCenter);
 	}
 
 	public void SetCameraPosition(Vector3 position)
