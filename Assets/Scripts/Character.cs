@@ -28,6 +28,8 @@ public class Character : MonoBehaviour
 
 	private Queue<KeyCode> inputs = new Queue<KeyCode>();
 
+	public Queue<KeyCode> Inputs { get { return inputs; } }
+
 	public bool HasInputs { get { return inputs.Count > 0; } }
 
 	public bool ReachedDestination
@@ -41,6 +43,8 @@ public class Character : MonoBehaviour
 	private SpriteRenderer spriteRenderer;
 
 	new private Rigidbody2D rigidbody2D;
+
+	public Rigidbody2D Rigidbody2D { get { return rigidbody2D; } }
 
 	private void Awake()
 	{
@@ -61,7 +65,7 @@ public class Character : MonoBehaviour
 
 	private void GetInput()
 	{
-		if (Input.anyKey)
+		if (Input.anyKey && inputs.Count < 3)
 		{
 			if (Input.GetKeyDown(KeyCode.UpArrow))
 			{
@@ -138,16 +142,22 @@ public class Character : MonoBehaviour
 
 			if (ReachedDestination)
 			{
-				if (!collided)
-				{
-					steps++;
-				}
-				direction = Vector2.zero;
-				state = CharacterState.Idle;
-				transform.position = destination;
-				collided = false;
+				HaltMovement();
 			}
 		}
+	}
+
+	public void HaltMovement()
+	{
+		Debug.LogWarning("Destination Reached");
+		if (!collided)
+		{
+			steps++;
+		}
+		direction = Vector2.zero;
+		state = CharacterState.Idle;
+		transform.position = destination;
+		collided = false;
 	}
 
 	private void OnCollisionEnter2D()
