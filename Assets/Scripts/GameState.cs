@@ -114,15 +114,8 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void DisableSceneObjects()
 	{
-		playerCharacter.HaltMovement();
-		playerCharacter.Inputs.Clear();
-		if (Application.isPlaying)
-		{
-			playerCharacter.Rigidbody2D.isKinematic = true;
-		}
-		playerCharacter.gameObject.SetActive(false);
-
-		exit.gameObject.SetActive(false);
+		playerCharacter.Disable();
+		exit.Disable();
 	}
 
 	private IEnumerator PopulateTileMap()
@@ -143,13 +136,8 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void EnableSceneObjects()
 	{
-		playerCharacter.gameObject.SetActive(true);
-		if (Application.isPlaying)
-		{
-			playerCharacter.Rigidbody2D.isKinematic = false;
-		}
-
-		exit.gameObject.SetActive(true);
+		playerCharacter.Enable();
+		exit.Enable();
 	}
 
 	private void SetPlayerPosition()
