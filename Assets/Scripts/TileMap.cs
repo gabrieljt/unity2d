@@ -100,6 +100,17 @@ public class TileMap : MonoBehaviour
 		BuildColliders();
 	}
 
+	private void FillTiles(TileType type)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			for (int y = 0; y < height; y++)
+			{
+				tiles[x, y] = new Tile(type);
+			}
+		}
+	}
+
 	public class Room
 	{
 		public bool isConnected = false;
@@ -144,17 +155,6 @@ public class TileMap : MonoBehaviour
 	[SerializeField]
 	[Range(10, 50)]
 	private int maximumAttempts = 10;
-
-	private void FillTiles(TileType type)
-	{
-		for (int x = 0; x < width; x++)
-		{
-			for (int y = 0; y < height; y++)
-			{
-				tiles[x, y] = new Tile(type);
-			}
-		}
-	}
 
 	private void BuildRooms()
 	{
