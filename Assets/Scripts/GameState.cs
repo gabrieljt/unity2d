@@ -5,7 +5,7 @@ using UnityEngine;
 public class GameState : MonoBehaviour, IDisposable
 {
 	[SerializeField]
-	new private Camera camera;
+	private Camera camera;
 
 	[SerializeField]
 	private TileMap tileMap;
