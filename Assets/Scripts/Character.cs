@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum CharacterState
@@ -19,6 +20,8 @@ public class Character : MonoBehaviour
 
 	[SerializeField]
 	private int steps = 0;
+
+	public int Steps { get { return steps; } }
 
 	[SerializeField]
 	[Range(0.5f, 3f)]
@@ -45,6 +48,8 @@ public class Character : MonoBehaviour
 	private Rigidbody2D rigidbody2D;
 
 	public Rigidbody2D Rigidbody2D { get { return rigidbody2D; } }
+
+	public Action StepTaken = delegate { };
 
 	private void Awake()
 	{
@@ -155,6 +160,7 @@ public class Character : MonoBehaviour
 				if (!collided)
 				{
 					steps++;
+					StepTaken();
 				}
 
 				HaltMovement();
