@@ -54,22 +54,17 @@ public class GameState : MonoBehaviour, IDisposable
 	private void OnExitReached()
 	{
 		playerCharacter.Rigidbody2D.isKinematic = true;
+		playerCharacter.gameObject.SetActive(false);
 		StartCoroutine(BuildNewTileMap());
 	}
 
 	private IEnumerator BuildNewTileMap()
 	{
 		playerCharacter.HaltMovement();
+		playerCharacter.Inputs.Clear();
 		yield return new WaitForEndOfFrame();
 
 		tileMap.Build();
-	}
-
-	private void SetPlayerPosition()
-	{
-		Vector2 roomCenter = tileMap.GetRandomRoomCenter() + Vector2.one * 0.5f;
-		playerCharacter.transform.position = roomCenter;
-		SetCameraPosition(roomCenter);
 	}
 
 	private IEnumerator PopulateTileMap()
@@ -84,8 +79,16 @@ public class GameState : MonoBehaviour, IDisposable
 		}
 		else
 		{
+			playerCharacter.gameObject.SetActive(true);
 			playerCharacter.Rigidbody2D.isKinematic = false;
 		}
+	}
+
+	private void SetPlayerPosition()
+	{
+		Vector2 roomCenter = tileMap.GetRandomRoomCenter() + Vector2.one * 0.5f;
+		playerCharacter.transform.position = roomCenter;
+		SetCameraPosition(roomCenter);
 	}
 
 	private void SetExitPosition()
