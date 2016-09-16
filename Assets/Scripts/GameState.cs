@@ -17,8 +17,8 @@ public class GameState : MonoBehaviour, IDisposable
 	private Exit exit;
 
 	[SerializeField]
-	[Range(1, 10)]
-	private int level = 1;
+	[Range(1, 100)]
+	private int level = 100;
 
 	private void Awake()
 	{
@@ -85,8 +85,8 @@ public class GameState : MonoBehaviour, IDisposable
 		playerCharacter.gameObject.SetActive(false);
 
 		exit.gameObject.SetActive(false);
-		yield return new WaitForEndOfFrame();
 
+		yield return new WaitForEndOfFrame();
 		tileMap.Build();
 	}
 
