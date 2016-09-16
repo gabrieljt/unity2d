@@ -2,19 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CharacterState
-{
-	Idle,
-	Moving,
-	FallingBack
-}
-
 [RequireComponent(
 	typeof(SpriteRenderer),
 	typeof(Rigidbody2D),
 	typeof(CircleCollider2D)
 )]
-public class Character : MonoBehaviour
+public class AICharacter : MonoBehaviour
 {
 	[SerializeField]
 	private CharacterState state = CharacterState.Idle;
@@ -73,27 +66,29 @@ public class Character : MonoBehaviour
 
 	private void GetInput()
 	{
-		if (Input.anyKey && inputs.Count < 1)
+		if (inputs.Count < 1)
 		{
-			if (Input.GetKey(KeyCode.UpArrow))
+			int generatedInput = UnityEngine.Random.Range(0, 3);
+
+			if (generatedInput == 0)
 			{
 				inputs.Enqueue(KeyCode.UpArrow);
 				return;
 			}
 
-			if (Input.GetKey(KeyCode.DownArrow))
+			if (generatedInput == 1)
 			{
 				inputs.Enqueue(KeyCode.DownArrow);
 				return;
 			}
 
-			if (Input.GetKey(KeyCode.LeftArrow))
+			if (generatedInput == 2)
 			{
 				inputs.Enqueue(KeyCode.LeftArrow);
 				return;
 			}
 
-			if (Input.GetKey(KeyCode.RightArrow))
+			if (generatedInput == 3)
 			{
 				inputs.Enqueue(KeyCode.RightArrow);
 				return;
