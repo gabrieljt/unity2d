@@ -42,6 +42,8 @@ public class Character : MonoBehaviour
 
 	new private Rigidbody2D rigidbody2D;
 
+	public Rigidbody2D Rigidbody2D { get { return rigidbody2D; } }
+
 	private void Awake()
 	{
 		spriteRenderer = GetComponent<SpriteRenderer>();
@@ -138,16 +140,22 @@ public class Character : MonoBehaviour
 
 			if (ReachedDestination)
 			{
-				if (!collided)
-				{
-					steps++;
-				}
-				direction = Vector2.zero;
-				state = CharacterState.Idle;
-				transform.position = destination;
-				collided = false;
+				HaltMovement();
 			}
 		}
+	}
+
+	public void HaltMovement()
+	{
+		Debug.LogWarning("Destination Reached");
+		if (!collided)
+		{
+			steps++;
+		}
+		direction = Vector2.zero;
+		state = CharacterState.Idle;
+		transform.position = destination;
+		collided = false;
 	}
 
 	private void OnCollisionEnter2D()

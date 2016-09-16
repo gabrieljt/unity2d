@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -27,11 +28,11 @@ public class TileMap : MonoBehaviour
 {
 	[SerializeField]
 	[Range(10, 128)]
-	private int width;
+	private int width = 10;
 
 	[SerializeField]
 	[Range(10, 128)]
-	private int height;
+	private int height = 10;
 
 	[SerializeField]
 	private int tileResolution = 16;
@@ -81,17 +82,16 @@ public class TileMap : MonoBehaviour
 		transform.position = Origin;
 	}
 
-	public Tile GetTileByWorldPosition(Vector2 worldPosition)
-	{
-		int x = 0;
-		int y = 0;
-		return tiles[x, y];
-	}
-
 	#region Build Map
 
 	private void BuildMap()
 	{
+#if UNITY_EDITOR
+		DisposeColliders();
+#else
+		StartCoroutine(DisposeCollidersCoroutine());
+#endif
+
 		tiles = new Tile[width, height];
 
 		FillTiles(TileType.Water);
@@ -102,7 +102,11 @@ public class TileMap : MonoBehaviour
 
 		BuildWalls();
 
+#if UNITY_EDITOR
 		BuildColliders();
+#else
+		StartCoroutine(BuildCollidersCoroutine());
+#endif
 	}
 
 	public class Room
@@ -269,7 +273,13 @@ public class TileMap : MonoBehaviour
 		}
 	}
 
-	private void BuildColliders()
+	private IEnumerator DisposeCollidersCoroutine()
+	{
+		yield return new WaitForEndOfFrame();
+		DisposeColliders();
+	}
+
+	private void DisposeColliders()
 	{
 		BoxCollider2D[] colliders = GetComponents<BoxCollider2D>();
 
@@ -277,7 +287,16 @@ public class TileMap : MonoBehaviour
 		{
 			DestroyImmediate(colliders[i]);
 		}
+	}
 
+	private IEnumerator BuildCollidersCoroutine()
+	{
+		yield return 0;
+		BuildColliders();
+	}
+
+	private void BuildColliders()
+	{
 		for (int x = 0; x < width; x++)
 		{
 			for (int y = 0; y < height; y++)

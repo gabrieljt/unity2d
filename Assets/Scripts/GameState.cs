@@ -1,36 +1,42 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 
 public class GameState : MonoBehaviour, IDisposable
 {
-	[SerializeField]
-	private Character playerCharacter;
-
 	[SerializeField]
 	new private Camera camera;
 
 	[SerializeField]
 	private TileMap tileMap;
 
+	[SerializeField]
+	private Character playerCharacter;
+
+	[SerializeField]
+	private Exit exit;
+
 	private void Awake()
 	{
+		camera = FindObjectOfType<Camera>();
+		Debug.Assert(camera);
+
 		tileMap = FindObjectOfType<TileMap>();
 		Debug.Assert(tileMap);
 
 		playerCharacter = FindObjectOfType<Character>();
 		Debug.Assert(playerCharacter);
 
-		camera = FindObjectOfType<Camera>();
-		Debug.Assert(camera);
+		exit = FindObjectOfType<Exit>();
+		Debug.Assert(exit);
 
 		tileMap.Built += OnTileMapBuilt;
+		exit.Reached += OnExitReached;
 	}
 
-	public void OnTileMapBuilt()
+	private void LateUpdate()
 	{
-		Vector2 roomCenter = tileMap.GetRandomRoomCenter() + Vector2.one * 0.5f;
-		playerCharacter.transform.position = roomCenter;
-		SetCameraPosition(roomCenter);
+		SetCameraPosition(playerCharacter.transform.position);
 	}
 
 	public void SetCameraPosition(Vector3 position)
@@ -38,10 +44,57 @@ public class GameState : MonoBehaviour, IDisposable
 		camera.transform.position = Vector3.back * 10f + position;
 	}
 
-	private void LateUpdate()
+	#region Populate Tile Map
+
+	public void OnTileMapBuilt()
 	{
-		SetCameraPosition(playerCharacter.transform.position);
+		StartCoroutine(PopulateTileMap());
 	}
+
+	private void OnExitReached()
+	{
+		playerCharacter.Rigidbody2D.isKinematic = true;
+		StartCoroutine(BuildNewTileMap());
+	}
+
+	private IEnumerator BuildNewTileMap()
+	{
+		playerCharacter.HaltMovement();
+		yield return new WaitForEndOfFrame();
+
+		tileMap.Build();
+	}
+
+	private void SetPlayerPosition()
+	{
+		Vector2 roomCenter = tileMap.GetRandomRoomCenter() + Vector2.one * 0.5f;
+		playerCharacter.transform.position = roomCenter;
+		SetCameraPosition(roomCenter);
+	}
+
+	private IEnumerator PopulateTileMap()
+	{
+		SetPlayerPosition();
+		SetExitPosition();
+		yield return 0;
+
+		if (playerCharacter.transform.position.Equals(exit.transform.position))
+		{
+			StartCoroutine(BuildNewTileMap());
+		}
+		else
+		{
+			playerCharacter.Rigidbody2D.isKinematic = false;
+		}
+	}
+
+	private void SetExitPosition()
+	{
+		Vector2 roomCenter = tileMap.GetRandomRoomCenter() + Vector2.one * 0.5f;
+		exit.transform.position = roomCenter;
+	}
+
+	#endregion Populate Tile Map
 
 	private void OnDestroy()
 	{
