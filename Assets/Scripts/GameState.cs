@@ -16,6 +16,10 @@ public class GameState : MonoBehaviour, IDisposable
 	[SerializeField]
 	private Exit exit;
 
+	[SerializeField]
+	[Range(1, 10)]
+	private int level = 1;
+
 	private void Awake()
 	{
 		camera = FindObjectOfType<Camera>();
@@ -34,6 +38,11 @@ public class GameState : MonoBehaviour, IDisposable
 		exit.Reached += OnExitReached;
 	}
 
+	private void Start()
+	{
+		BuildLevel();
+	}
+
 	private void LateUpdate()
 	{
 		SetCameraPosition(playerCharacter.transform.position);
@@ -44,27 +53,38 @@ public class GameState : MonoBehaviour, IDisposable
 		camera.transform.position = Vector3.back * 10f + position;
 	}
 
-	#region Populate Tile Map
-
-	public void OnTileMapBuilt()
-	{
-		StartCoroutine(PopulateTileMap());
-	}
-
 	private void OnExitReached()
 	{
-		playerCharacter.Rigidbody2D.isKinematic = true;
-		playerCharacter.gameObject.SetActive(false);
+		level++;
+		BuildLevel();
+	}
+
+	private void BuildLevel()
+	{
 		StartCoroutine(BuildNewTileMap());
 	}
+
+	#region Populate Tile Map
 
 	private IEnumerator BuildNewTileMap()
 	{
 		playerCharacter.HaltMovement();
 		playerCharacter.Inputs.Clear();
+		if (Application.isPlaying)
+		{
+			playerCharacter.Rigidbody2D.isKinematic = true;
+		}
+		playerCharacter.gameObject.SetActive(false);
+
+		exit.gameObject.SetActive(false);
 		yield return new WaitForEndOfFrame();
 
 		tileMap.Build();
+	}
+
+	public void OnTileMapBuilt()
+	{
+		StartCoroutine(PopulateTileMap());
 	}
 
 	private IEnumerator PopulateTileMap()
@@ -80,7 +100,12 @@ public class GameState : MonoBehaviour, IDisposable
 		else
 		{
 			playerCharacter.gameObject.SetActive(true);
-			playerCharacter.Rigidbody2D.isKinematic = false;
+			if (Application.isPlaying)
+			{
+				playerCharacter.Rigidbody2D.isKinematic = false;
+			}
+
+			exit.gameObject.SetActive(true);
 		}
 	}
 

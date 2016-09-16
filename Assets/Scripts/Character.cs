@@ -142,18 +142,18 @@ public class Character : MonoBehaviour
 
 			if (ReachedDestination)
 			{
+				if (!collided)
+				{
+					steps++;
+				}
 				HaltMovement();
+				Debug.LogWarning("Destination Reached");
 			}
 		}
 	}
 
 	public void HaltMovement()
 	{
-		Debug.LogWarning("Destination Reached");
-		if (!collided)
-		{
-			steps++;
-		}
 		direction = Vector2.zero;
 		state = CharacterState.Idle;
 		transform.position = destination;
