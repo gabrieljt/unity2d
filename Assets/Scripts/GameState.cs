@@ -43,6 +43,14 @@ public class GameState : MonoBehaviour, IDisposable
 		BuildLevel();
 	}
 
+	private void Update()
+	{
+		if (Input.GetKeyDown(KeyCode.Escape))
+		{
+			BuildLevel();
+		}
+	}
+
 	private void LateUpdate()
 	{
 		SetCameraPosition(playerCharacter.transform.position);
