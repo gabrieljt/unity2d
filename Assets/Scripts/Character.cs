@@ -65,7 +65,7 @@ public class Character : MonoBehaviour
 
 	private void GetInput()
 	{
-		if (Input.anyKey && inputs.Count < 3)
+		if (Input.anyKey && inputs.Count < 1)
 		{
 			if (Input.GetKeyDown(KeyCode.UpArrow))
 			{
@@ -93,7 +93,9 @@ public class Character : MonoBehaviour
 		}
 	}
 
+	[SerializeField]
 	private Vector2 previousDestination, destination;
+
 	private bool collided = false;
 
 	private void ProcessInputs()
@@ -121,9 +123,12 @@ public class Character : MonoBehaviour
 						direction = Vector2.right;
 						break;
 				}
+
 				spriteRenderer.flipX = direction.x > 0f;
+
 				previousDestination = new Vector2(transform.position.x, transform.position.y);
 				destination = previousDestination + direction;
+
 				state = CharacterState.Moving;
 
 				Debug.Log("Moving to " + destination);
@@ -135,29 +140,32 @@ public class Character : MonoBehaviour
 	{
 		if (state == CharacterState.Moving)
 		{
-			if (!ReachedDestination || collided)
-			{
-				transform.position = Vector3.Lerp(transform.position, new Vector3(destination.x, destination.y, 0f), Mathf.Clamp(speed * 0.1f, 0.05f, 0.25f));
-			}
-
 			if (ReachedDestination)
 			{
 				if (!collided)
 				{
 					steps++;
 				}
+
 				HaltMovement();
+
 				Debug.LogWarning("Destination Reached");
+				return;
+			}
+
+			if (!ReachedDestination || collided)
+			{
+				transform.position = Vector3.Lerp(transform.position, new Vector3(destination.x, destination.y, 0f), Mathf.Clamp(speed * 0.1f, 0.05f, 0.25f));
 			}
 		}
 	}
 
 	public void HaltMovement()
 	{
-		direction = Vector2.zero;
-		state = CharacterState.Idle;
-		transform.position = destination;
 		collided = false;
+		direction = Vector2.zero;
+		transform.position = destination;
+		state = CharacterState.Idle;
 	}
 
 	private void OnCollisionEnter2D()
