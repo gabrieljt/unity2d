@@ -1,19 +1,42 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
+public enum CharacterState
+{
+	Idle,
+	Moving
+}
+
 [RequireComponent(
 	typeof(SpriteRenderer),
 	typeof(Rigidbody2D),
-	typeof(Collider2D)
+	typeof(CircleCollider2D)
 )]
 public class Character : MonoBehaviour
 {
 	[SerializeField]
+	private CharacterState state = CharacterState.Idle;
+
+	[SerializeField]
+	private int steps = 0;
+
+	[SerializeField]
+	[Range(0.5f, 3f)]
 	private float speed = 3f;
 
-	private Stack<KeyCode> inputs = new Stack<KeyCode>();
+	private Vector2 direction = Vector2.zero;
+
+	private Queue<KeyCode> inputs = new Queue<KeyCode>();
 
 	public bool HasInputs { get { return inputs.Count > 0; } }
+
+	public bool ReachedDestination
+	{
+		get
+		{
+			return Vector2.Distance(destination, transform.position) <= 0.05f;
+		}
+	}
 
 	private SpriteRenderer spriteRenderer;
 
@@ -25,71 +48,114 @@ public class Character : MonoBehaviour
 
 		rigidbody2D = GetComponent<Rigidbody2D>();
 		rigidbody2D.gravityScale = 0f;
+		rigidbody2D.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 		rigidbody2D.freezeRotation = true;
 	}
 
 	private void Update()
 	{
-		direction = Vector2.zero;
-		GetInputs();
-	}
-
-	private void FixedUpdate()
-	{
+		GetInput();
 		ProcessInputs();
+		Move();
 	}
 
-	private void GetInputs()
+	private void GetInput()
 	{
-		if (Input.GetKey(KeyCode.UpArrow))
+		if (Input.anyKey)
 		{
-			inputs.Push(KeyCode.UpArrow);
-		}
+			if (Input.GetKeyDown(KeyCode.UpArrow))
+			{
+				inputs.Enqueue(KeyCode.UpArrow);
+				return;
+			}
 
-		if (Input.GetKey(KeyCode.DownArrow))
-		{
-			inputs.Push(KeyCode.DownArrow);
-		}
+			if (Input.GetKeyDown(KeyCode.DownArrow))
+			{
+				inputs.Enqueue(KeyCode.DownArrow);
+				return;
+			}
 
-		if (Input.GetKey(KeyCode.LeftArrow))
-		{
-			inputs.Push(KeyCode.LeftArrow);
-		}
+			if (Input.GetKeyDown(KeyCode.LeftArrow))
+			{
+				inputs.Enqueue(KeyCode.LeftArrow);
+				return;
+			}
 
-		if (Input.GetKey(KeyCode.RightArrow))
-		{
-			inputs.Push(KeyCode.RightArrow);
+			if (Input.GetKeyDown(KeyCode.RightArrow))
+			{
+				inputs.Enqueue(KeyCode.RightArrow);
+				return;
+			}
 		}
 	}
 
-	private Vector2 direction = Vector2.zero;
+	private Vector2 previousDestination, destination;
+	private bool collided = false;
 
 	private void ProcessInputs()
 	{
-		while (HasInputs)
+		if (state == CharacterState.Idle)
 		{
-			KeyCode input = inputs.Pop();
-			switch (input)
+			if (HasInputs)
 			{
-				case KeyCode.UpArrow:
-					direction += Vector2.up;
-					break;
+				KeyCode input = inputs.Dequeue();
+				switch (input)
+				{
+					case KeyCode.UpArrow:
+						direction = Vector2.up;
+						break;
 
-				case KeyCode.DownArrow:
-					direction += Vector2.down;
-					break;
+					case KeyCode.DownArrow:
+						direction = Vector2.down;
+						break;
 
-				case KeyCode.LeftArrow:
-					direction += Vector2.left;
-					break;
+					case KeyCode.LeftArrow:
+						direction = Vector2.left;
+						break;
 
-				case KeyCode.RightArrow:
-					direction += Vector2.right;
-					break;
+					case KeyCode.RightArrow:
+						direction = Vector2.right;
+						break;
+				}
+				spriteRenderer.flipX = direction.x > 0f;
+				previousDestination = new Vector2(transform.position.x, transform.position.y);
+				destination = previousDestination + direction;
+				state = CharacterState.Moving;
+
+				Debug.Log("Moving to " + destination);
 			}
-			spriteRenderer.flipX = direction.x > 0f;
 		}
+	}
 
-		rigidbody2D.MovePosition(rigidbody2D.position + (direction.normalized * speed * Time.fixedDeltaTime));
+	private void Move()
+	{
+		if (state == CharacterState.Moving)
+		{
+			if (!ReachedDestination || collided)
+			{
+				transform.position = Vector3.Lerp(transform.position, new Vector3(destination.x, destination.y, 0f), Mathf.Clamp(speed * 0.1f, 0.05f, 0.25f));
+			}
+
+			if (ReachedDestination)
+			{
+				if (!collided)
+				{
+					steps++;
+				}
+				direction = Vector2.zero;
+				state = CharacterState.Idle;
+				transform.position = destination;
+				collided = false;
+			}
+		}
+	}
+
+	private void OnCollisionEnter2D()
+	{
+		collided = true;
+		destination = previousDestination;
+		inputs.Clear();
+
+		Debug.Log("Collided: returning to " + destination);
 	}
 }
