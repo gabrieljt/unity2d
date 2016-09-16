@@ -71,33 +71,15 @@ public class GameState : MonoBehaviour, IDisposable
 		camera.transform.position = Vector3.back * 10f + position;
 	}
 
-	private void OnStepTaken()
+	private void SetDungeonLevelLabel(int level)
 	{
-		SetStepsTakenLabel(playerCharacter.Steps);
+		dungeonLevelLabel.text = "Dungeon Level: " + level;
 	}
 
 	private void SetStepsTakenLabel(int steps)
 	{
 		stepsTakenLabel.text = "Steps Taken: " + steps;
 	}
-
-	private void OnExitReached()
-	{
-		SetDungeonLevelLabel(++level);
-		BuildLevel();
-	}
-
-	private void SetDungeonLevelLabel(int level)
-	{
-		dungeonLevelLabel.text = "Dungeon Level: " + level;
-	}
-
-	public void OnTileMapBuilt()
-	{
-		StartCoroutine(PopulateTileMap());
-	}
-
-	#region Populate Tile Map
 
 	private void BuildLevel()
 	{
@@ -118,28 +100,6 @@ public class GameState : MonoBehaviour, IDisposable
 		exit.Disable();
 	}
 
-	private IEnumerator PopulateTileMap()
-	{
-		SetPlayerPosition();
-		SetExitPosition();
-		yield return 0;
-
-		if (playerCharacter.transform.position.Equals(exit.transform.position))
-		{
-			StartCoroutine(BuildNewTileMap());
-		}
-		else
-		{
-			EnableSceneObjects();
-		}
-	}
-
-	private void EnableSceneObjects()
-	{
-		playerCharacter.Enable();
-		exit.Enable();
-	}
-
 	private void SetPlayerPosition()
 	{
 		Vector2 roomCenter = tileMap.GetRandomRoomCenter() + Vector2.one * 0.5f;
@@ -151,6 +111,61 @@ public class GameState : MonoBehaviour, IDisposable
 	{
 		Vector2 roomCenter = tileMap.GetRandomRoomCenter() + Vector2.one * 0.5f;
 		exit.transform.position = roomCenter;
+	}
+
+	private void EnableSceneObjects()
+	{
+		playerCharacter.Enable();
+		exit.Enable();
+	}
+
+	#region Callbacks
+
+	private void OnStepTaken()
+	{
+		SetStepsTakenLabel(playerCharacter.Steps);
+		// TODO: play step sound based on tile
+	}
+
+	private void OnExitReached()
+	{
+		SetDungeonLevelLabel(++level);
+		BuildLevel();
+	}
+
+	public void OnTileMapBuilt()
+	{
+		StartCoroutine(PopulateTileMap());
+	}
+
+	#endregion Callbacks
+
+	#region Populate Tile Map
+
+	private IEnumerator PopulateTileMap()
+	{
+		Populate();
+		yield return 0;
+
+		if (!Populated())
+		{
+			StartCoroutine(BuildNewTileMap());
+		}
+		else
+		{
+			EnableSceneObjects();
+		}
+	}
+
+	private void Populate()
+	{
+		SetPlayerPosition();
+		SetExitPosition();
+	}
+
+	private bool Populated()
+	{
+		return !playerCharacter.transform.position.Equals(exit.transform.position);
 	}
 
 	#endregion Populate Tile Map

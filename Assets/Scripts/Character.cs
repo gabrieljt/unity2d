@@ -5,7 +5,8 @@ using UnityEngine;
 public enum CharacterState
 {
 	Idle,
-	Moving
+	Moving,
+	FallingBack
 }
 
 [RequireComponent(
@@ -148,15 +149,23 @@ public class Character : MonoBehaviour
 
 	private void UpdateMovementState()
 	{
+		if (state == CharacterState.FallingBack)
+		{
+			if (ReachedDestination)
+			{
+				HaltMovement();
+
+				Debug.LogWarning("Destination Reached from fallback");
+				return;
+			}
+		}
+
 		if (state == CharacterState.Moving)
 		{
 			if (ReachedDestination)
 			{
-				if (!collided)
-				{
-					steps++;
-					StepTaken();
-				}
+				steps++;
+				StepTaken();
 
 				HaltMovement();
 
@@ -167,12 +176,18 @@ public class Character : MonoBehaviour
 
 	private void MoveToDestination()
 	{
-		if (state == CharacterState.Moving)
+		if (state != CharacterState.Idle)
 		{
-			if (!ReachedDestination || collided)
-			{
-				transform.position = Vector3.Lerp(transform.position, new Vector3(destination.x, destination.y, 0f), Mathf.Clamp(speed * 0.1f, 0.05f, 0.25f));
-			}
+			Move();
+			return;
+		}
+	}
+
+	private void Move()
+	{
+		if (!ReachedDestination)
+		{
+			transform.position = Vector3.Lerp(transform.position, new Vector3(destination.x, destination.y, 0f), Mathf.Clamp(speed * 0.1f, 0.05f, 0.25f));
 		}
 	}
 
@@ -186,11 +201,11 @@ public class Character : MonoBehaviour
 
 	private void CollisionFallback()
 	{
-		collided = true;
 		destination = previousDestination;
 		inputs.Clear();
+		state = CharacterState.FallingBack;
 
-		Debug.Log("Collided: returning to " + destination);
+		Debug.Log("Collided: falling back to " + destination);
 	}
 
 	private void OnCollisionEnter2D()
@@ -200,10 +215,11 @@ public class Character : MonoBehaviour
 
 	private void OnCollisionStay2D()
 	{
-		if (!collided)
+		if (state != CharacterState.FallingBack)
 		{
-			Debug.LogWarning("CollisionStay without CollisionEnter: starting fallback");
 			CollisionFallback();
+
+			Debug.LogWarning("CollisionStay Fallback");
 		}
 	}
 
