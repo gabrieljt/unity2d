@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameState : MonoBehaviour, IDisposable
 {
@@ -20,6 +21,9 @@ public class GameState : MonoBehaviour, IDisposable
 	[Range(1, 100)]
 	private int level = 100;
 
+	[SerializeField]
+	private Text dungeonLevelLabel, stepsTakenLabel;
+
 	private void Awake()
 	{
 		camera = FindObjectOfType<Camera>();
@@ -35,7 +39,13 @@ public class GameState : MonoBehaviour, IDisposable
 		Debug.Assert(exit);
 
 		tileMap.Built += OnTileMapBuilt;
+		playerCharacter.StepTaken += OnStepTaken;
 		exit.Reached += OnExitReached;
+
+		Debug.Assert(dungeonLevelLabel);
+		Debug.Assert(stepsTakenLabel);
+		SetDungeonLevelLabel(level);
+		SetStepsTakenLabel(playerCharacter.Steps);
 	}
 
 	private void Start()
@@ -61,18 +71,38 @@ public class GameState : MonoBehaviour, IDisposable
 		camera.transform.position = Vector3.back * 10f + position;
 	}
 
+	private void OnStepTaken()
+	{
+		SetStepsTakenLabel(playerCharacter.Steps);
+	}
+
+	private void SetStepsTakenLabel(int steps)
+	{
+		stepsTakenLabel.text = "Steps Taken: " + steps;
+	}
+
 	private void OnExitReached()
 	{
-		level++;
+		SetDungeonLevelLabel(++level);
 		BuildLevel();
 	}
+
+	private void SetDungeonLevelLabel(int level)
+	{
+		dungeonLevelLabel.text = "Dungeon Level: " + level;
+	}
+
+	public void OnTileMapBuilt()
+	{
+		StartCoroutine(PopulateTileMap());
+	}
+
+	#region Populate Tile Map
 
 	private void BuildLevel()
 	{
 		StartCoroutine(BuildNewTileMap());
 	}
-
-	#region Populate Tile Map
 
 	private IEnumerator BuildNewTileMap()
 	{
@@ -93,11 +123,6 @@ public class GameState : MonoBehaviour, IDisposable
 		playerCharacter.gameObject.SetActive(false);
 
 		exit.gameObject.SetActive(false);
-	}
-
-	public void OnTileMapBuilt()
-	{
-		StartCoroutine(PopulateTileMap());
 	}
 
 	private IEnumerator PopulateTileMap()
@@ -150,6 +175,7 @@ public class GameState : MonoBehaviour, IDisposable
 	public void Dispose()
 	{
 		tileMap.Built -= OnTileMapBuilt;
+		playerCharacter.StepTaken += OnStepTaken;
 		exit.Reached -= OnExitReached;
 	}
 }
