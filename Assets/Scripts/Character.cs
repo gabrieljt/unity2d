@@ -183,12 +183,26 @@ public class Character : MonoBehaviour
 		state = CharacterState.Idle;
 	}
 
-	private void OnCollisionEnter2D()
+	private void CollisionFallback()
 	{
 		collided = true;
 		destination = previousDestination;
 		inputs.Clear();
 
 		Debug.Log("Collided: returning to " + destination);
+	}
+
+	private void OnCollisionEnter2D()
+	{
+		CollisionFallback();
+	}
+
+	private void OnCollisionStay2D()
+	{
+		if (!collided)
+		{
+			Debug.LogWarning("CollisionStay without CollisionEnter: starting fallback");
+			CollisionFallback();
+		}
 	}
 }
