@@ -52,7 +52,7 @@ public class Character : MonoBehaviour
 
 		rigidbody2D = GetComponent<Rigidbody2D>();
 		rigidbody2D.gravityScale = 0f;
-		rigidbody2D.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+		rigidbody2D.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
 		rigidbody2D.freezeRotation = true;
 	}
 
@@ -60,12 +60,17 @@ public class Character : MonoBehaviour
 	{
 		GetInput();
 		ProcessInputs();
-		Move();
+		UpdateMovementState();
+	}
+
+	private void FixedUpdate()
+	{
+		MoveToDestination();
 	}
 
 	private void GetInput()
 	{
-		if (Input.anyKey && inputs.Count < 3)
+		if (Input.anyKey && inputs.Count < 1)
 		{
 			if (Input.GetKeyDown(KeyCode.UpArrow))
 			{
@@ -93,7 +98,9 @@ public class Character : MonoBehaviour
 		}
 	}
 
+	[SerializeField]
 	private Vector2 previousDestination, destination;
+
 	private bool collided = false;
 
 	private void ProcessInputs()
@@ -121,17 +128,43 @@ public class Character : MonoBehaviour
 						direction = Vector2.right;
 						break;
 				}
-				spriteRenderer.flipX = direction.x > 0f;
-				previousDestination = new Vector2(transform.position.x, transform.position.y);
-				destination = previousDestination + direction;
-				state = CharacterState.Moving;
 
-				Debug.Log("Moving to " + destination);
+				SetDestination();
 			}
 		}
 	}
 
-	private void Move()
+	private void SetDestination()
+	{
+		spriteRenderer.flipX = direction.x > 0f;
+
+		previousDestination = new Vector2(transform.position.x, transform.position.y);
+		destination = previousDestination + direction;
+
+		state = CharacterState.Moving;
+
+		Debug.Log("Moving to " + destination);
+	}
+
+	private void UpdateMovementState()
+	{
+		if (state == CharacterState.Moving)
+		{
+			if (ReachedDestination)
+			{
+				if (!collided)
+				{
+					steps++;
+				}
+
+				HaltMovement();
+
+				Debug.LogWarning("Destination Reached");
+			}
+		}
+	}
+
+	private void MoveToDestination()
 	{
 		if (state == CharacterState.Moving)
 		{
@@ -139,25 +172,15 @@ public class Character : MonoBehaviour
 			{
 				transform.position = Vector3.Lerp(transform.position, new Vector3(destination.x, destination.y, 0f), Mathf.Clamp(speed * 0.1f, 0.05f, 0.25f));
 			}
-
-			if (ReachedDestination)
-			{
-				if (!collided)
-				{
-					steps++;
-				}
-				HaltMovement();
-				Debug.LogWarning("Destination Reached");
-			}
 		}
 	}
 
 	public void HaltMovement()
 	{
-		direction = Vector2.zero;
-		state = CharacterState.Idle;
-		transform.position = destination;
 		collided = false;
+		direction = Vector2.zero;
+		transform.position = destination;
+		state = CharacterState.Idle;
 	}
 
 	private void OnCollisionEnter2D()
