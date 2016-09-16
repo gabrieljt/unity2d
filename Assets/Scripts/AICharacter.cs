@@ -68,7 +68,7 @@ public class AICharacter : MonoBehaviour
 	{
 		if (inputs.Count < 1)
 		{
-			int generatedInput = UnityEngine.Random.Range(0, 3);
+			int generatedInput = UnityEngine.Random.Range(0, 4);
 
 			if (generatedInput == 0)
 			{
