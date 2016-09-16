@@ -5,7 +5,7 @@ using UnityEngine;
 public class GameState : MonoBehaviour, IDisposable
 {
 	[SerializeField]
-	new private Camera camera;
+	private Camera camera;
 
 	[SerializeField]
 	private TileMap tileMap;
@@ -17,8 +17,8 @@ public class GameState : MonoBehaviour, IDisposable
 	private Exit exit;
 
 	[SerializeField]
-	[Range(1, 10)]
-	private int level = 1;
+	[Range(1, 100)]
+	private int level = 100;
 
 	private void Awake()
 	{
@@ -56,7 +56,7 @@ public class GameState : MonoBehaviour, IDisposable
 		SetCameraPosition(playerCharacter.transform.position);
 	}
 
-	public void SetCameraPosition(Vector3 position)
+	private void SetCameraPosition(Vector3 position)
 	{
 		camera.transform.position = Vector3.back * 10f + position;
 	}
@@ -76,6 +76,14 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private IEnumerator BuildNewTileMap()
 	{
+		DisableSceneObjects();
+
+		yield return new WaitForEndOfFrame();
+		tileMap.Build();
+	}
+
+	private void DisableSceneObjects()
+	{
 		playerCharacter.HaltMovement();
 		playerCharacter.Inputs.Clear();
 		if (Application.isPlaying)
@@ -85,9 +93,6 @@ public class GameState : MonoBehaviour, IDisposable
 		playerCharacter.gameObject.SetActive(false);
 
 		exit.gameObject.SetActive(false);
-		yield return new WaitForEndOfFrame();
-
-		tileMap.Build();
 	}
 
 	public void OnTileMapBuilt()
@@ -107,14 +112,19 @@ public class GameState : MonoBehaviour, IDisposable
 		}
 		else
 		{
-			playerCharacter.gameObject.SetActive(true);
-			if (Application.isPlaying)
-			{
-				playerCharacter.Rigidbody2D.isKinematic = false;
-			}
-
-			exit.gameObject.SetActive(true);
+			EnableSceneObjects();
 		}
+	}
+
+	private void EnableSceneObjects()
+	{
+		playerCharacter.gameObject.SetActive(true);
+		if (Application.isPlaying)
+		{
+			playerCharacter.Rigidbody2D.isKinematic = false;
+		}
+
+		exit.gameObject.SetActive(true);
 	}
 
 	private void SetPlayerPosition()
@@ -140,5 +150,6 @@ public class GameState : MonoBehaviour, IDisposable
 	public void Dispose()
 	{
 		tileMap.Built -= OnTileMapBuilt;
+		exit.Reached -= OnExitReached;
 	}
 }

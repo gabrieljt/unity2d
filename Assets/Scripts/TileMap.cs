@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -86,11 +85,7 @@ public class TileMap : MonoBehaviour
 
 	private void BuildMap()
 	{
-		//#if UNITY_EDITOR
 		DisposeColliders();
-		/*#else
-				StartCoroutine(DisposeCollidersCoroutine());
-		#endif*/
 
 		tiles = new Tile[width, height];
 
@@ -102,11 +97,18 @@ public class TileMap : MonoBehaviour
 
 		BuildWalls();
 
-		//#if UNITY_EDITOR
 		BuildColliders();
-		/*#else
-				StartCoroutine(BuildCollidersCoroutine());
-		#endif*/
+	}
+
+	private void FillTiles(TileType type)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			for (int y = 0; y < height; y++)
+			{
+				tiles[x, y] = new Tile(type);
+			}
+		}
 	}
 
 	public class Room
@@ -146,27 +148,24 @@ public class TileMap : MonoBehaviour
 
 	private List<Room> rooms;
 
-	private void FillTiles(TileType type)
-	{
-		for (int x = 0; x < width; x++)
-		{
-			for (int y = 0; y < height; y++)
-			{
-				tiles[x, y] = new Tile(type);
-			}
-		}
-	}
+	[SerializeField]
+	[Range(10, 50)]
+	private int maximumRooms = 10;
+
+	[SerializeField]
+	[Range(10, 50)]
+	private int maximumAttempts = 10;
 
 	private void BuildRooms()
 	{
 		rooms = new List<Room>();
 
-		int attemptsLeft = 10;
+		int attemptsLeft = maximumAttempts;
 
-		while (rooms.Count < 10 && attemptsLeft > 0)
+		while (rooms.Count < maximumRooms && attemptsLeft > 0)
 		{
-			int roomWidth = (int)UnityEngine.Random.Range(4f, Mathf.Clamp(width * UnityEngine.Random.Range(0.1f, 0.75f), 4f, width * 0.75f));
-			int roomHeight = (int)UnityEngine.Random.Range(4f, Mathf.Clamp(height * UnityEngine.Random.Range(0.1f, 0.75f), 4f, height * 0.75f));
+			int roomWidth = (int)UnityEngine.Random.Range(4f, Mathf.Clamp(width * UnityEngine.Random.Range(0.1f, 0.35f), 4f, width * 0.35f));
+			int roomHeight = (int)UnityEngine.Random.Range(4f, Mathf.Clamp(height * UnityEngine.Random.Range(0.1f, 0.35f), 4f, height * 0.35f));
 
 			Room room = new Room(
 				new Rect(UnityEngine.Random.Range(0, width - roomWidth),
@@ -273,12 +272,6 @@ public class TileMap : MonoBehaviour
 		}
 	}
 
-	private IEnumerator DisposeCollidersCoroutine()
-	{
-		yield return new WaitForEndOfFrame();
-		DisposeColliders();
-	}
-
 	private void DisposeColliders()
 	{
 		BoxCollider2D[] colliders = GetComponents<BoxCollider2D>();
@@ -287,12 +280,6 @@ public class TileMap : MonoBehaviour
 		{
 			DestroyImmediate(colliders[i]);
 		}
-	}
-
-	private IEnumerator BuildCollidersCoroutine()
-	{
-		yield return 0;
-		BuildColliders();
 	}
 
 	private void BuildColliders()

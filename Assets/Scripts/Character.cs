@@ -42,7 +42,7 @@ public class Character : MonoBehaviour
 
 	private SpriteRenderer spriteRenderer;
 
-	new private Rigidbody2D rigidbody2D;
+	private Rigidbody2D rigidbody2D;
 
 	public Rigidbody2D Rigidbody2D { get { return rigidbody2D; } }
 
