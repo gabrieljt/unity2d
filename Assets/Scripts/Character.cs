@@ -5,7 +5,8 @@ using UnityEngine;
 public enum CharacterState
 {
 	Idle,
-	Moving
+	Moving,
+	FallingBack
 }
 
 [RequireComponent(
@@ -27,11 +28,7 @@ public class Character : MonoBehaviour
 	[Range(0.5f, 3f)]
 	private float speed = 3f;
 
-	private Vector2 direction = Vector2.zero;
-
 	private Queue<KeyCode> inputs = new Queue<KeyCode>();
-
-	public Queue<KeyCode> Inputs { get { return inputs; } }
 
 	public bool HasInputs { get { return inputs.Count > 0; } }
 
@@ -46,8 +43,6 @@ public class Character : MonoBehaviour
 	private SpriteRenderer spriteRenderer;
 
 	private Rigidbody2D rigidbody2D;
-
-	public Rigidbody2D Rigidbody2D { get { return rigidbody2D; } }
 
 	public Action StepTaken = delegate { };
 
@@ -77,25 +72,25 @@ public class Character : MonoBehaviour
 	{
 		if (Input.anyKey && inputs.Count < 1)
 		{
-			if (Input.GetKeyDown(KeyCode.UpArrow))
+			if (Input.GetKey(KeyCode.UpArrow))
 			{
 				inputs.Enqueue(KeyCode.UpArrow);
 				return;
 			}
 
-			if (Input.GetKeyDown(KeyCode.DownArrow))
+			if (Input.GetKey(KeyCode.DownArrow))
 			{
 				inputs.Enqueue(KeyCode.DownArrow);
 				return;
 			}
 
-			if (Input.GetKeyDown(KeyCode.LeftArrow))
+			if (Input.GetKey(KeyCode.LeftArrow))
 			{
 				inputs.Enqueue(KeyCode.LeftArrow);
 				return;
 			}
 
-			if (Input.GetKeyDown(KeyCode.RightArrow))
+			if (Input.GetKey(KeyCode.RightArrow))
 			{
 				inputs.Enqueue(KeyCode.RightArrow);
 				return;
@@ -114,6 +109,7 @@ public class Character : MonoBehaviour
 		{
 			if (HasInputs)
 			{
+				Vector2 direction = Vector2.zero;
 				KeyCode input = inputs.Dequeue();
 				switch (input)
 				{
@@ -134,12 +130,12 @@ public class Character : MonoBehaviour
 						break;
 				}
 
-				SetDestination();
+				SetDestination(direction);
 			}
 		}
 	}
 
-	private void SetDestination()
+	private void SetDestination(Vector2 direction)
 	{
 		spriteRenderer.flipX = direction.x > 0f;
 
@@ -153,15 +149,23 @@ public class Character : MonoBehaviour
 
 	private void UpdateMovementState()
 	{
+		if (state == CharacterState.FallingBack)
+		{
+			if (ReachedDestination)
+			{
+				HaltMovement();
+
+				Debug.LogWarning("Destination Reached from fallback");
+				return;
+			}
+		}
+
 		if (state == CharacterState.Moving)
 		{
 			if (ReachedDestination)
 			{
-				if (!collided)
-				{
-					steps++;
-					StepTaken();
-				}
+				steps++;
+				StepTaken();
 
 				HaltMovement();
 
@@ -172,30 +176,36 @@ public class Character : MonoBehaviour
 
 	private void MoveToDestination()
 	{
-		if (state == CharacterState.Moving)
+		if (state != CharacterState.Idle)
 		{
-			if (!ReachedDestination || collided)
-			{
-				transform.position = Vector3.Lerp(transform.position, new Vector3(destination.x, destination.y, 0f), Mathf.Clamp(speed * 0.1f, 0.05f, 0.25f));
-			}
+			Move();
+			return;
 		}
 	}
 
-	public void HaltMovement()
+	private void Move()
+	{
+		if (!ReachedDestination)
+		{
+			transform.position = Vector3.Lerp(transform.position, new Vector3(destination.x, destination.y, 0f), Mathf.Clamp(speed * 0.1f, 0.05f, 0.25f));
+		}
+	}
+
+	private void HaltMovement()
 	{
 		collided = false;
-		direction = Vector2.zero;
 		transform.position = destination;
+		inputs.Clear();
 		state = CharacterState.Idle;
 	}
 
 	private void CollisionFallback()
 	{
-		collided = true;
 		destination = previousDestination;
 		inputs.Clear();
+		state = CharacterState.FallingBack;
 
-		Debug.Log("Collided: returning to " + destination);
+		Debug.Log("Collided: falling back to " + destination);
 	}
 
 	private void OnCollisionEnter2D()
@@ -205,10 +215,30 @@ public class Character : MonoBehaviour
 
 	private void OnCollisionStay2D()
 	{
-		if (!collided)
+		if (state != CharacterState.FallingBack)
 		{
-			Debug.LogWarning("CollisionStay without CollisionEnter: starting fallback");
 			CollisionFallback();
+
+			Debug.LogWarning("CollisionStay Fallback");
 		}
+	}
+
+	public void Enable()
+	{
+		gameObject.SetActive(true);
+		if (Application.isPlaying)
+		{
+			rigidbody2D.isKinematic = false;
+		}
+	}
+
+	public void Disable()
+	{
+		HaltMovement();
+		if (Application.isPlaying)
+		{
+			rigidbody2D.isKinematic = true;
+		}
+		gameObject.SetActive(false);
 	}
 }
