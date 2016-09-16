@@ -1,6 +1,13 @@
 ﻿using System;
 using UnityEngine;
 
+public enum TileType
+{
+	Water,
+	Floor,
+	Wall,
+}
+
 [Serializable]
 public class Tile
 {

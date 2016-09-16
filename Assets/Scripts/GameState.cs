@@ -28,7 +28,7 @@ public class GameState : MonoBehaviour, IDisposable
 
 	public void OnTileMapBuilt()
 	{
-		Vector2 roomCenter = tileMap.GetRandomRoomCenter();
+		Vector2 roomCenter = tileMap.GetRandomRoomCenter() + Vector2.one * 0.5f;
 		playerCharacter.transform.position = roomCenter;
 		SetCameraPosition(roomCenter);
 	}

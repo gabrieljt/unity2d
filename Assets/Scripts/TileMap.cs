@@ -21,17 +21,16 @@ public class TileMapInspector : Editor
 
 [ExecuteInEditMode]
 [RequireComponent(
-	typeof(SpriteRenderer),
-	typeof(Rigidbody2D)
+	typeof(SpriteRenderer)
 )]
 public class TileMap : MonoBehaviour
 {
 	[SerializeField]
-	[Range(1, 128)]
+	[Range(10, 128)]
 	private int width;
 
 	[SerializeField]
-	[Range(1, 128)]
+	[Range(10, 128)]
 	private int height;
 
 	[SerializeField]
@@ -45,8 +44,6 @@ public class TileMap : MonoBehaviour
 
 	private SpriteRenderer spriteRenderer;
 
-	new private Rigidbody2D rigidbody2D;
-
 	private Tile[,] tiles;
 
 	public Vector2 Origin { get { return new Vector2(width / 2f, height / 2f); } }
@@ -59,10 +56,6 @@ public class TileMap : MonoBehaviour
 		Debug.Assert(tilesetTiles.Length > 0);
 
 		spriteRenderer = GetComponent<SpriteRenderer>();
-
-		rigidbody2D = GetComponent<Rigidbody2D>();
-		rigidbody2D.gravityScale = 0f;
-		rigidbody2D.isKinematic = true;
 
 		gameObject.isStatic = true;
 	}
@@ -86,6 +79,13 @@ public class TileMap : MonoBehaviour
 	private void SetOrigin()
 	{
 		transform.position = Origin;
+	}
+
+	public Tile GetTileByWorldPosition(Vector2 worldPosition)
+	{
+		int x = 0;
+		int y = 0;
+		return tiles[x, y];
 	}
 
 	#region Build Map
@@ -161,8 +161,8 @@ public class TileMap : MonoBehaviour
 
 		while (rooms.Count < 10 && attemptsLeft > 0)
 		{
-			int roomWidth = UnityEngine.Random.Range(4, 14);
-			int roomHeight = UnityEngine.Random.Range(4, 10);
+			int roomWidth = (int)UnityEngine.Random.Range(4f, Mathf.Clamp(width * UnityEngine.Random.Range(0.1f, 0.75f), 4f, width * 0.75f));
+			int roomHeight = (int)UnityEngine.Random.Range(4f, Mathf.Clamp(height * UnityEngine.Random.Range(0.1f, 0.75f), 4f, height * 0.75f));
 
 			Room room = new Room(
 				new Rect(UnityEngine.Random.Range(0, width - roomWidth),
@@ -185,6 +185,8 @@ public class TileMap : MonoBehaviour
 		{
 			BuildRoom(room);
 		}
+
+		Debug.Log(rooms.Count + " room(s) built");
 	}
 
 	private bool RoomCollides(Room room)
@@ -304,7 +306,8 @@ public class TileMap : MonoBehaviour
 
 	public Vector2 GetRandomRoomCenter()
 	{
-		return rooms[UnityEngine.Random.Range(0, rooms.Count - 1)].Center;
+		Vector2 roomCenter = rooms[UnityEngine.Random.Range(0, rooms.Count - 1)].Center;
+		return new Vector2((int)roomCenter.x, (int)roomCenter.y);
 	}
 
 	#endregion Build Map
