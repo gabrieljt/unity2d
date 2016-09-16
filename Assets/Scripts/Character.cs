@@ -52,7 +52,7 @@ public class Character : MonoBehaviour
 
 		rigidbody2D = GetComponent<Rigidbody2D>();
 		rigidbody2D.gravityScale = 0f;
-		rigidbody2D.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+		rigidbody2D.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
 		rigidbody2D.freezeRotation = true;
 	}
 
@@ -60,7 +60,12 @@ public class Character : MonoBehaviour
 	{
 		GetInput();
 		ProcessInputs();
-		Move();
+		UpdateMovementState();
+	}
+
+	private void FixedUpdate()
+	{
+		MoveToDestination();
 	}
 
 	private void GetInput()
@@ -124,19 +129,24 @@ public class Character : MonoBehaviour
 						break;
 				}
 
-				spriteRenderer.flipX = direction.x > 0f;
-
-				previousDestination = new Vector2(transform.position.x, transform.position.y);
-				destination = previousDestination + direction;
-
-				state = CharacterState.Moving;
-
-				Debug.Log("Moving to " + destination);
+				SetDestination();
 			}
 		}
 	}
 
-	private void Move()
+	private void SetDestination()
+	{
+		spriteRenderer.flipX = direction.x > 0f;
+
+		previousDestination = new Vector2(transform.position.x, transform.position.y);
+		destination = previousDestination + direction;
+
+		state = CharacterState.Moving;
+
+		Debug.Log("Moving to " + destination);
+	}
+
+	private void UpdateMovementState()
 	{
 		if (state == CharacterState.Moving)
 		{
@@ -150,9 +160,14 @@ public class Character : MonoBehaviour
 				HaltMovement();
 
 				Debug.LogWarning("Destination Reached");
-				return;
 			}
+		}
+	}
 
+	private void MoveToDestination()
+	{
+		if (state == CharacterState.Moving)
+		{
 			if (!ReachedDestination || collided)
 			{
 				transform.position = Vector3.Lerp(transform.position, new Vector3(destination.x, destination.y, 0f), Mathf.Clamp(speed * 0.1f, 0.05f, 0.25f));
