@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
+
+#if UNITY_EDITOR
+
+using UnityEditor;
 
 [CustomEditor(typeof(TileMap))]
 public class TileMapInspector : Editor
@@ -19,6 +22,8 @@ public class TileMapInspector : Editor
 		}
 	}
 }
+
+#endif
 
 [ExecuteInEditMode]
 [RequireComponent(
@@ -61,11 +66,6 @@ public class TileMap : MonoBehaviour
 		gameObject.isStatic = true;
 	}
 
-	private void Start()
-	{
-		Build();
-	}
-
 	public void Build()
 	{
 		SetOrigin();
@@ -86,11 +86,11 @@ public class TileMap : MonoBehaviour
 
 	private void BuildMap()
 	{
-#if UNITY_EDITOR
+		//#if UNITY_EDITOR
 		DisposeColliders();
-#else
-		StartCoroutine(DisposeCollidersCoroutine());
-#endif
+		/*#else
+				StartCoroutine(DisposeCollidersCoroutine());
+		#endif*/
 
 		tiles = new Tile[width, height];
 
@@ -102,11 +102,11 @@ public class TileMap : MonoBehaviour
 
 		BuildWalls();
 
-#if UNITY_EDITOR
+		//#if UNITY_EDITOR
 		BuildColliders();
-#else
-		StartCoroutine(BuildCollidersCoroutine());
-#endif
+		/*#else
+				StartCoroutine(BuildCollidersCoroutine());
+		#endif*/
 	}
 
 	public class Room
