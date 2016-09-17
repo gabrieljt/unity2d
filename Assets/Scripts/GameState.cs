@@ -100,19 +100,6 @@ public class GameState : MonoBehaviour, IDisposable
 		exit.Disable();
 	}
 
-	private void SetPlayerPosition()
-	{
-		Vector2 roomCenter = tileMap.GetRandomRoomCenter() + Vector2.one * 0.5f;
-		playerCharacter.transform.position = roomCenter;
-		SetCameraPosition(roomCenter);
-	}
-
-	private void SetExitPosition()
-	{
-		Vector2 roomCenter = tileMap.GetRandomRoomCenter() + Vector2.one * 0.5f;
-		exit.transform.position = roomCenter;
-	}
-
 	private void EnableSceneObjects()
 	{
 		playerCharacter.Enable();
@@ -124,7 +111,6 @@ public class GameState : MonoBehaviour, IDisposable
 	private void OnStepTaken()
 	{
 		SetStepsTakenLabel(playerCharacter.Steps);
-		// TODO: play step sound based on tile
 	}
 
 	private void OnExitReached()
@@ -159,8 +145,69 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void Populate()
 	{
-		SetPlayerPosition();
-		SetExitPosition();
+		bool playerSet = false, exitSet = false;
+		for (int i = 0; i < tileMap.Rooms.Count; i++)
+		{
+			TileMap.Room room = tileMap.Rooms[i];
+			for (int x = 0; x < room.Width; x++)
+			{
+				for (int y = 0; y < room.Height; y++)
+				{
+					if (tileMap.Tiles[room.Left + x, room.Top + y].Type == TileType.Floor)
+					{
+						Vector2 tilePosition = new Vector2(room.Left + x, room.Top + y) + Vector2.one * 0.5f;
+						switch (tileMap.Rooms.Count)
+						{
+							case 1:
+								if (!playerSet)
+								{
+									SetPlayerPosition(tilePosition);
+									playerSet = true;
+								}
+								else if (!exitSet)
+								{
+									SetExitPosition(tilePosition);
+									exitSet = true;
+								}
+
+								break;
+
+							default:
+								if (i == 0)
+								{
+									SetPlayerPosition(tilePosition);
+									playerSet = true;
+								}
+								else if (i == tileMap.Rooms.Count - 1)
+								{
+									SetExitPosition(tilePosition);
+									exitSet = true;
+								}
+								break;
+						}
+						if (playerSet && exitSet)
+						{
+							return;
+						}
+					}
+				}
+			}
+		}
+		if (!(playerSet && exitSet))
+		{
+			playerCharacter.transform.position = exit.transform.position = Vector2.zero;
+		}
+	}
+
+	private void SetPlayerPosition(Vector2 position)
+	{
+		playerCharacter.transform.position = position;
+		SetCameraPosition(position);
+	}
+
+	private void SetExitPosition(Vector2 position)
+	{
+		exit.transform.position = position;
 	}
 
 	private bool Populated()
