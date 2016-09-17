@@ -3,6 +3,7 @@ using UnityEngine;
 
 public enum TileType
 {
+	None,
 	Water,
 	Floor,
 	Wall,

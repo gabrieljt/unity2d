@@ -51,6 +51,8 @@ public class TileMap : MonoBehaviour
 
 	private Tile[,] tiles;
 
+	public Tile[,] Tiles { get { return tiles; } }
+
 	public Vector2 Origin { get { return new Vector2(width / 2f, height / 2f); } }
 
 	public Action Built = delegate { };
@@ -147,6 +149,8 @@ public class TileMap : MonoBehaviour
 	}
 
 	private List<Room> rooms;
+
+	public List<Room> Rooms { get { return rooms; } }
 
 	[SerializeField]
 	[Range(10, 50)]
@@ -308,12 +312,6 @@ public class TileMap : MonoBehaviour
 			|| (x < width - 1 && y > 0 && tiles[x + 1, y - 1].Type == TileType.Floor)
 			|| (x > 0 && y < height - 1 && tiles[x - 1, y + 1].Type == TileType.Floor)
 			|| (x < width - 1 && y < height - 1 && tiles[x + 1, y + 1].Type == TileType.Floor);
-	}
-
-	public Vector2 GetRandomRoomCenter()
-	{
-		Vector2 roomCenter = rooms[UnityEngine.Random.Range(0, rooms.Count - 1)].Center;
-		return new Vector2((int)roomCenter.x, (int)roomCenter.y);
 	}
 
 	#endregion Build Map
