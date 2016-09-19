@@ -62,9 +62,15 @@ public class GameState : MonoBehaviour, IDisposable
 			height = width;
 		}
 
-		public void SetMaximumSteps(Vector2 startPosition, Vector2 endPosition)
+		public void SetMaximumSteps(int level, TileMap.Room[] rooms, Vector2 tileMapOrigin)
 		{
-			maximumSteps = (int)Vector2.Distance(startPosition, endPosition) + id;
+			maximumSteps = stepsTaken = 0;
+			foreach (TileMap.Room room in rooms)
+			{
+				maximumSteps += (int)Vector2.Distance(room.Center, tileMapOrigin);
+			}
+
+			maximumSteps = Mathf.Clamp(maximumSteps / level * rooms.Length, level + rooms.Length, maximumSteps + level + rooms.Length);
 		}
 	}
 
@@ -108,12 +114,12 @@ public class GameState : MonoBehaviour, IDisposable
 		{
 			ResetLevel();
 		}
-		if (currentLevel.StepsLeft > 0)
+
+		if (currentLevel.StepsLeft == 0)
 		{
+			ResetLevel();
 		}
-		else
-		{
-		}
+
 		UpdateUI();
 	}
 
@@ -215,7 +221,7 @@ public class GameState : MonoBehaviour, IDisposable
 		else
 		{
 			EnableSceneObjects();
-			currentLevel.SetMaximumSteps(playerCharacter.transform.position, exit.transform.position);
+			currentLevel.SetMaximumSteps(level, tileMap.Rooms.ToArray(), tileMap.Origin);
 		}
 	}
 
