@@ -58,8 +58,7 @@ public class GameState : MonoBehaviour, IDisposable
 
 		public void SetSize(out int width, out int height)
 		{
-			width = id + 9;
-			height = width;
+			height = width = id + 9;
 		}
 
 		public void SetMaximumSteps(int level, TileMap.Room[] rooms, Vector2 tileMapOrigin)
@@ -164,6 +163,7 @@ public class GameState : MonoBehaviour, IDisposable
 
 		int width, height;
 		currentLevel.SetSize(out width, out height);
+		camera.orthographicSize = Mathf.Sqrt(Mathf.Max(width, height));
 		StartCoroutine(BuildNewTileMap(width, height));
 	}
 
