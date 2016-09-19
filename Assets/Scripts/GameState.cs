@@ -23,7 +23,7 @@ public class GameState : MonoBehaviour, IDisposable
 	private int level = 1;
 
 	[SerializeField]
-	private Text dungeonLevelLabel, stepsTakenLabel;
+	private Text dungeonLevelLabel, stepsLeftLabel, stepsTakenLabel;
 
 	[Serializable]
 	public class Level
@@ -92,6 +92,7 @@ public class GameState : MonoBehaviour, IDisposable
 		exit.Reached += OnExitReached;
 
 		Debug.Assert(dungeonLevelLabel);
+		Debug.Assert(stepsLeftLabel);
 		Debug.Assert(stepsTakenLabel);
 	}
 
@@ -107,6 +108,12 @@ public class GameState : MonoBehaviour, IDisposable
 		{
 			ResetLevel();
 		}
+		if (currentLevel.StepsLeft > 0)
+		{
+		}
+		else
+		{
+		}
 		UpdateUI();
 	}
 
@@ -118,6 +125,7 @@ public class GameState : MonoBehaviour, IDisposable
 	private void UpdateUI()
 	{
 		SetDungeonLevelLabel(currentLevel.Id);
+		SetStepsLeftLabel(currentLevel.StepsLeft);
 		SetStepsTakenLabel(playerCharacter.Steps);
 	}
 
@@ -129,6 +137,11 @@ public class GameState : MonoBehaviour, IDisposable
 	private void SetDungeonLevelLabel(int level)
 	{
 		dungeonLevelLabel.text = "Dungeon Level: " + level;
+	}
+
+	private void SetStepsLeftLabel(int stepsLeft)
+	{
+		stepsLeftLabel.text = "Steps Left: " + stepsLeft;
 	}
 
 	private void SetStepsTakenLabel(int steps)
@@ -152,7 +165,7 @@ public class GameState : MonoBehaviour, IDisposable
 	{
 		DisableSceneObjects();
 
-		yield return new WaitForEndOfFrame();
+		yield return 0;
 		tileMap.Build(width, height);
 	}
 

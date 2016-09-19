@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,7 +7,7 @@ public enum CharacterState
 {
 	Idle,
 	Moving,
-	FallingBack
+	FallingBack,
 }
 
 [RequireComponent(
@@ -33,6 +34,12 @@ public class Character : MonoBehaviour
 	public bool HasInputs { get { return inputs.Count > 0; } }
 
 	[SerializeField]
+	[Range(0, 10)]
+	private int maximumInputsPerFrame = 1;
+
+	public int MaximumInputsPerFrame { get; private set; }
+
+	[SerializeField]
 	private Vector2 previousDestination, destination;
 
 	public bool ReachedDestination
@@ -57,6 +64,8 @@ public class Character : MonoBehaviour
 		rigidbody2D.gravityScale = 0f;
 		rigidbody2D.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
 		rigidbody2D.freezeRotation = true;
+
+		MaximumInputsPerFrame = maximumInputsPerFrame;
 	}
 
 	private void Update()
@@ -73,7 +82,7 @@ public class Character : MonoBehaviour
 
 	private void GetInput()
 	{
-		if (Input.anyKey && inputs.Count < 1)
+		if (Input.anyKey && inputs.Count < maximumInputsPerFrame)
 		{
 			if (Input.GetKey(KeyCode.UpArrow))
 			{
@@ -224,18 +233,37 @@ public class Character : MonoBehaviour
 	{
 		gameObject.SetActive(true);
 		if (Application.isPlaying)
+
 		{
 			rigidbody2D.isKinematic = false;
 		}
+
+		StartCoroutine(UnlockInputsCoroutine());
+	}
+
+	private IEnumerator UnlockInputsCoroutine()
+	{
+		int targetFrameRate = Application.targetFrameRate == 0 ? 60 : Application.targetFrameRate;
+		yield return new WaitForSeconds(1f / targetFrameRate * 10f);
+
+		maximumInputsPerFrame = MaximumInputsPerFrame;
 	}
 
 	public void Disable()
 	{
 		HaltMovement();
+		LockInputs();
+
 		if (Application.isPlaying)
 		{
 			rigidbody2D.isKinematic = true;
 		}
+
 		gameObject.SetActive(false);
+	}
+
+	private void LockInputs()
+	{
+		maximumInputsPerFrame = 0;
 	}
 }
