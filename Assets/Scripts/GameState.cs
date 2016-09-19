@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,10 +20,58 @@ public class GameState : MonoBehaviour, IDisposable
 
 	[SerializeField]
 	[Range(1, 100)]
-	private int level = 100;
+	private int level = 1;
 
 	[SerializeField]
 	private Text dungeonLevelLabel, stepsTakenLabel;
+
+	[Serializable]
+	public class Level
+	{
+		[SerializeField]
+		[Range(1, 100)]
+		private int id = 1;
+
+		public int Id { get { return id; } }
+
+		[SerializeField]
+		private int stepsTaken = 0;
+
+		public int StepsTaken { get { return stepsTaken; } }
+
+		[SerializeField]
+		private int maximumSteps;
+
+		public int MaximumSteps { get { return maximumSteps; } }
+
+		public int StepsLeft { get { return maximumSteps - stepsTaken; } }
+
+		public Level(int id)
+		{
+			this.id = id;
+		}
+
+		public void StepTaken()
+		{
+			++stepsTaken;
+		}
+
+		public void SetSize(out int width, out int height)
+		{
+			width = id + 9;
+			height = width;
+		}
+
+		public void SetMaximumSteps(Vector2 startPosition, Vector2 endPosition)
+		{
+			maximumSteps = (int)Vector2.Distance(startPosition, endPosition) + id;
+		}
+	}
+
+	private Stack<Level> levels = new Stack<Level>();
+
+	[SerializeField]
+	private Level currentLevel;
 
 	private void Awake()
 	{
@@ -44,26 +93,32 @@ public class GameState : MonoBehaviour, IDisposable
 
 		Debug.Assert(dungeonLevelLabel);
 		Debug.Assert(stepsTakenLabel);
-		SetDungeonLevelLabel(level);
-		SetStepsTakenLabel(playerCharacter.Steps);
 	}
 
 	private void Start()
 	{
 		BuildLevel();
+		UpdateUI();
 	}
 
 	private void Update()
 	{
 		if (Input.GetKeyDown(KeyCode.Escape))
 		{
-			BuildLevel();
+			ResetLevel();
 		}
+		UpdateUI();
 	}
 
 	private void LateUpdate()
 	{
 		SetCameraPosition(playerCharacter.transform.position);
+	}
+
+	private void UpdateUI()
+	{
+		SetDungeonLevelLabel(currentLevel.Id);
+		SetStepsTakenLabel(playerCharacter.Steps);
 	}
 
 	private void SetCameraPosition(Vector3 position)
@@ -83,15 +138,22 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void BuildLevel()
 	{
-		StartCoroutine(BuildNewTileMap());
+		if (level > levels.Count)
+		{
+			levels.Push(currentLevel = new Level(level));
+		}
+
+		int width, height;
+		currentLevel.SetSize(out width, out height);
+		StartCoroutine(BuildNewTileMap(width, height));
 	}
 
-	private IEnumerator BuildNewTileMap()
+	private IEnumerator BuildNewTileMap(int width, int height)
 	{
 		DisableSceneObjects();
 
 		yield return new WaitForEndOfFrame();
-		tileMap.Build();
+		tileMap.Build(width, height);
 	}
 
 	private void DisableSceneObjects()
@@ -110,12 +172,12 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void OnStepTaken()
 	{
-		SetStepsTakenLabel(playerCharacter.Steps);
+		currentLevel.StepTaken();
 	}
 
 	private void OnExitReached()
 	{
-		SetDungeonLevelLabel(++level);
+		++level;
 		BuildLevel();
 	}
 
@@ -130,20 +192,27 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private IEnumerator PopulateTileMap()
 	{
-		Populate();
+		bool populated = Populate();
 		yield return 0;
 
-		if (!Populated())
+		if (!populated)
 		{
-			StartCoroutine(BuildNewTileMap());
+			ResetLevel();
 		}
 		else
 		{
 			EnableSceneObjects();
+			currentLevel.SetMaximumSteps(playerCharacter.transform.position, exit.transform.position);
 		}
 	}
 
-	private void Populate()
+	private void ResetLevel()
+	{
+		levels.Pop();
+		BuildLevel();
+	}
+
+	private bool Populate()
 	{
 		bool playerSet = false, exitSet = false;
 		for (int i = 0; i < tileMap.Rooms.Count; i++)
@@ -187,16 +256,13 @@ public class GameState : MonoBehaviour, IDisposable
 						}
 						if (playerSet && exitSet)
 						{
-							return;
+							return true;
 						}
 					}
 				}
 			}
 		}
-		if (!(playerSet && exitSet))
-		{
-			playerCharacter.transform.position = exit.transform.position = Vector2.zero;
-		}
+		return false;
 	}
 
 	private void SetPlayerPosition(Vector2 position)
@@ -208,11 +274,6 @@ public class GameState : MonoBehaviour, IDisposable
 	private void SetExitPosition(Vector2 position)
 	{
 		exit.transform.position = position;
-	}
-
-	private bool Populated()
-	{
-		return !playerCharacter.transform.position.Equals(exit.transform.position);
 	}
 
 	#endregion Populate Tile Map
