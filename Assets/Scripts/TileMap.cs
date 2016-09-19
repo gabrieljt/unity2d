@@ -78,6 +78,13 @@ public class TileMap : MonoBehaviour
 		Built();
 	}
 
+	public void Build(int width, int height)
+	{
+		this.width = width;
+		this.height = height;
+		Build();
+	}
+
 	private void SetOrigin()
 	{
 		transform.position = Origin;

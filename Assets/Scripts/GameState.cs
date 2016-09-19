@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,10 +20,64 @@ public class GameState : MonoBehaviour, IDisposable
 
 	[SerializeField]
 	[Range(1, 100)]
-	private int level = 100;
+	private int level = 1;
 
 	[SerializeField]
-	private Text dungeonLevelLabel, stepsTakenLabel;
+	private Text dungeonLevelLabel, stepsLeftLabel, stepsTakenLabel;
+
+	[Serializable]
+	public class Level
+	{
+		[SerializeField]
+		[Range(1, 100)]
+		private int id = 1;
+
+		public int Id { get { return id; } }
+
+		[SerializeField]
+		private int stepsTaken = 0;
+
+		public int StepsTaken { get { return stepsTaken; } }
+
+		[SerializeField]
+		private int maximumSteps;
+
+		public int MaximumSteps { get { return maximumSteps; } }
+
+		public int StepsLeft { get { return maximumSteps - stepsTaken; } }
+
+		public Level(int id)
+		{
+			this.id = id;
+		}
+
+		public void StepTaken()
+		{
+			++stepsTaken;
+		}
+
+		public void SetSize(out int width, out int height)
+		{
+			width = id + 9;
+			height = width;
+		}
+
+		public void SetMaximumSteps(int level, TileMap.Room[] rooms, Vector2 tileMapOrigin)
+		{
+			maximumSteps = stepsTaken = 0;
+			foreach (TileMap.Room room in rooms)
+			{
+				maximumSteps += (int)Vector2.Distance(room.Center, tileMapOrigin);
+			}
+
+			maximumSteps = Mathf.Clamp(maximumSteps / level * rooms.Length, level + rooms.Length, maximumSteps + level + rooms.Length);
+		}
+	}
+
+	private Stack<Level> levels = new Stack<Level>();
+
+	[SerializeField]
+	private Level currentLevel;
 
 	private void Awake()
 	{
@@ -43,27 +98,41 @@ public class GameState : MonoBehaviour, IDisposable
 		exit.Reached += OnExitReached;
 
 		Debug.Assert(dungeonLevelLabel);
+		Debug.Assert(stepsLeftLabel);
 		Debug.Assert(stepsTakenLabel);
-		SetDungeonLevelLabel(level);
-		SetStepsTakenLabel(playerCharacter.Steps);
 	}
 
 	private void Start()
 	{
 		BuildLevel();
+		UpdateUI();
 	}
 
 	private void Update()
 	{
 		if (Input.GetKeyDown(KeyCode.Escape))
 		{
-			BuildLevel();
+			ResetLevel();
 		}
+
+		if (currentLevel.StepsLeft == 0)
+		{
+			ResetLevel();
+		}
+
+		UpdateUI();
 	}
 
 	private void LateUpdate()
 	{
 		SetCameraPosition(playerCharacter.transform.position);
+	}
+
+	private void UpdateUI()
+	{
+		SetDungeonLevelLabel(currentLevel.Id);
+		SetStepsLeftLabel(currentLevel.StepsLeft);
+		SetStepsTakenLabel(playerCharacter.Steps);
 	}
 
 	private void SetCameraPosition(Vector3 position)
@@ -76,6 +145,11 @@ public class GameState : MonoBehaviour, IDisposable
 		dungeonLevelLabel.text = "Dungeon Level: " + level;
 	}
 
+	private void SetStepsLeftLabel(int stepsLeft)
+	{
+		stepsLeftLabel.text = "Steps Left: " + stepsLeft;
+	}
+
 	private void SetStepsTakenLabel(int steps)
 	{
 		stepsTakenLabel.text = "Steps Taken: " + steps;
@@ -83,15 +157,22 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void BuildLevel()
 	{
-		StartCoroutine(BuildNewTileMap());
+		if (level > levels.Count)
+		{
+			levels.Push(currentLevel = new Level(level));
+		}
+
+		int width, height;
+		currentLevel.SetSize(out width, out height);
+		StartCoroutine(BuildNewTileMap(width, height));
 	}
 
-	private IEnumerator BuildNewTileMap()
+	private IEnumerator BuildNewTileMap(int width, int height)
 	{
 		DisableSceneObjects();
 
-		yield return new WaitForEndOfFrame();
-		tileMap.Build();
+		yield return 0;
+		tileMap.Build(width, height);
 	}
 
 	private void DisableSceneObjects()
@@ -110,12 +191,12 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void OnStepTaken()
 	{
-		SetStepsTakenLabel(playerCharacter.Steps);
+		currentLevel.StepTaken();
 	}
 
 	private void OnExitReached()
 	{
-		SetDungeonLevelLabel(++level);
+		++level;
 		BuildLevel();
 	}
 
@@ -130,20 +211,27 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private IEnumerator PopulateTileMap()
 	{
-		Populate();
+		bool populated = Populate();
 		yield return 0;
 
-		if (!Populated())
+		if (!populated)
 		{
-			StartCoroutine(BuildNewTileMap());
+			ResetLevel();
 		}
 		else
 		{
 			EnableSceneObjects();
+			currentLevel.SetMaximumSteps(level, tileMap.Rooms.ToArray(), tileMap.Origin);
 		}
 	}
 
-	private void Populate()
+	private void ResetLevel()
+	{
+		levels.Pop();
+		BuildLevel();
+	}
+
+	private bool Populate()
 	{
 		bool playerSet = false, exitSet = false;
 		for (int i = 0; i < tileMap.Rooms.Count; i++)
@@ -187,16 +275,13 @@ public class GameState : MonoBehaviour, IDisposable
 						}
 						if (playerSet && exitSet)
 						{
-							return;
+							return true;
 						}
 					}
 				}
 			}
 		}
-		if (!(playerSet && exitSet))
-		{
-			playerCharacter.transform.position = exit.transform.position = Vector2.zero;
-		}
+		return false;
 	}
 
 	private void SetPlayerPosition(Vector2 position)
@@ -208,11 +293,6 @@ public class GameState : MonoBehaviour, IDisposable
 	private void SetExitPosition(Vector2 position)
 	{
 		exit.transform.position = position;
-	}
-
-	private bool Populated()
-	{
-		return !playerCharacter.transform.position.Equals(exit.transform.position);
 	}
 
 	#endregion Populate Tile Map
