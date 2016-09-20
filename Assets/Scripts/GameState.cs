@@ -112,6 +112,7 @@ public class GameState : MonoBehaviour, IDisposable
 		if (Input.GetKeyDown(KeyCode.Escape))
 		{
 			ResetLevel();
+			return;
 		}
 
 		if (currentLevel.StepsLeft == 0)

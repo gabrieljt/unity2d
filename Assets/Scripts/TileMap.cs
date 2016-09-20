@@ -17,7 +17,7 @@ public class TileMapInspector : Editor
 		{
 			TileMap tileMap = (TileMap)target;
 			tileMap.Build();
-			FindObjectOfType<GameState>().OnTileMapBuilt();
+			//FindObjectOfType<GameState>().OnTileMapBuilt();
 		}
 	}
 }
@@ -311,14 +311,65 @@ public class TileMap : MonoBehaviour
 
 	private bool HasAdjacentFloor(int x, int y)
 	{
-		return (x > 0 && tiles[x - 1, y].Type == TileType.Floor)
-			|| (x < width - 1 && tiles[x + 1, y].Type == TileType.Floor)
-			|| (y > 0 && tiles[x, y - 1].Type == TileType.Floor)
-			|| (y < height - 1 && tiles[x, y + 1].Type == TileType.Floor)
-			|| (x > 0 && y > 0 && tiles[x - 1, y - 1].Type == TileType.Floor)
-			|| (x < width - 1 && y > 0 && tiles[x + 1, y - 1].Type == TileType.Floor)
-			|| (x > 0 && y < height - 1 && tiles[x - 1, y + 1].Type == TileType.Floor)
-			|| (x < width - 1 && y < height - 1 && tiles[x + 1, y + 1].Type == TileType.Floor);
+		return HasAdjacentType(x, y, TileType.Floor);
+	}
+
+	private bool HasAdjacentType(int x, int y, TileType type)
+	{
+		return (x > 0 && tiles[x - 1, y].Type == type)
+			|| (x < width - 1 && tiles[x + 1, y].Type == type)
+			|| (y > 0 && tiles[x, y - 1].Type == type)
+			|| (y < height - 1 && tiles[x, y + 1].Type == type)
+			|| (x > 0 && y > 0 && tiles[x - 1, y - 1].Type == type)
+			|| (x < width - 1 && y > 0 && tiles[x + 1, y - 1].Type == type)
+			|| (x > 0 && y < height - 1 && tiles[x - 1, y + 1].Type == type)
+			|| (x < width - 1 && y < height - 1 && tiles[x + 1, y + 1].Type == type);
+	}
+
+	private bool HasAdjacentType(int x, int y, TileType type, out List<Tile> tiles)
+	{
+		tiles = new List<Tile>();
+		if (x > 0 && this.tiles[x - 1, y].Type == type)
+		{
+			tiles.Add(this.tiles[x - 1, y]);
+		}
+
+		if (x < width - 1 && this.tiles[x + 1, y].Type == type)
+		{
+			tiles.Add(this.tiles[x + 1, y]);
+		}
+
+		if (y > 0 && this.tiles[x, y - 1].Type == type)
+		{
+			tiles.Add(this.tiles[x, y - 1]);
+		}
+
+		if (y < height - 1 && this.tiles[x, y + 1].Type == type)
+		{
+			tiles.Add(this.tiles[x, y + 1]);
+		}
+
+		if (x > 0 && y > 0 && this.tiles[x - 1, y - 1].Type == type)
+		{
+			tiles.Add(this.tiles[x - 1, y - 1]);
+		}
+
+		if (x < width - 1 && y > 0 && this.tiles[x + 1, y - 1].Type == type)
+		{
+			tiles.Add(this.tiles[x + 1, y - 1]);
+		}
+
+		if (x > 0 && y < height - 1 && this.tiles[x - 1, y + 1].Type == type)
+		{
+			tiles.Add(this.tiles[x - 1, y + 1]);
+		}
+
+		if (x < width - 1 && y < height - 1 && this.tiles[x + 1, y + 1].Type == type)
+		{
+			tiles.Add(this.tiles[x + 1, y + 1]);
+		}
+
+		return tiles.Count > 0;
 	}
 
 	#endregion Build Map
