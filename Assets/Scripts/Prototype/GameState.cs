@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Level;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,7 +11,7 @@ public class GameState : MonoBehaviour, IDisposable
 	private Camera camera;
 
 	[SerializeField]
-	private TileMap tileMap;
+	private LevelInstance levelInstance;
 
 	[SerializeField]
 	private Character playerCharacter;
@@ -61,10 +62,10 @@ public class GameState : MonoBehaviour, IDisposable
 			height = width = id + 9;
 		}
 
-		public void SetMaximumSteps(int level, TileMap.Room[] rooms, Vector2 tileMapOrigin)
+		public void SetMaximumSteps(int level, LevelInstance.Room[] rooms, Vector2 tileMapOrigin)
 		{
 			maximumSteps = stepsTaken = 0;
-			foreach (TileMap.Room room in rooms)
+			foreach (LevelInstance.Room room in rooms)
 			{
 				maximumSteps += (int)Vector2.Distance(room.Center, tileMapOrigin);
 			}
@@ -83,8 +84,8 @@ public class GameState : MonoBehaviour, IDisposable
 		camera = FindObjectOfType<Camera>();
 		Debug.Assert(camera);
 
-		tileMap = FindObjectOfType<TileMap>();
-		Debug.Assert(tileMap);
+		levelInstance = FindObjectOfType<LevelInstance>();
+		Debug.Assert(levelInstance);
 
 		playerCharacter = FindObjectOfType<Character>();
 		Debug.Assert(playerCharacter);
@@ -92,7 +93,7 @@ public class GameState : MonoBehaviour, IDisposable
 		exit = FindObjectOfType<Exit>();
 		Debug.Assert(exit);
 
-		tileMap.Built += OnTileMapBuilt;
+		levelInstance.Built += OnTileMapBuilt;
 		playerCharacter.StepTaken += OnStepTaken;
 		exit.Reached += OnExitReached;
 
@@ -173,7 +174,10 @@ public class GameState : MonoBehaviour, IDisposable
 		DisableSceneObjects();
 
 		yield return 0;
-		tileMap.Build(width, height);
+		var levelParameters = new LevelInstanceParameters();
+		levelParameters.width = width;
+		levelParameters.height = height;
+		levelInstance.Build(ref levelParameters);
 	}
 
 	private void DisableSceneObjects()
@@ -222,7 +226,7 @@ public class GameState : MonoBehaviour, IDisposable
 		else
 		{
 			EnableSceneObjects();
-			currentLevel.SetMaximumSteps(level, tileMap.Rooms.ToArray(), tileMap.Origin);
+			currentLevel.SetMaximumSteps(level, levelInstance.Rooms, levelInstance.WorldPosition);
 		}
 	}
 
@@ -235,17 +239,17 @@ public class GameState : MonoBehaviour, IDisposable
 	private bool Populate()
 	{
 		bool playerSet = false, exitSet = false;
-		for (int i = 0; i < tileMap.Rooms.Count; i++)
+		for (int i = 0; i < levelInstance.Rooms.Length; i++)
 		{
-			TileMap.Room room = tileMap.Rooms[i];
+			LevelInstance.Room room = levelInstance.Rooms[i];
 			for (int x = 0; x < room.Width; x++)
 			{
 				for (int y = 0; y < room.Height; y++)
 				{
-					if (tileMap.Tiles[room.Left + x, room.Top + y].Type == TileType.Floor)
+					if (levelInstance.Tiles[room.Left + x, room.Top + y].Type == TileType.Floor)
 					{
 						Vector2 tilePosition = new Vector2(room.Left + x, room.Top + y) + Vector2.one * 0.5f;
-						switch (tileMap.Rooms.Count)
+						switch (levelInstance.Rooms.Length)
 						{
 							case 1:
 								if (!playerSet)
@@ -267,7 +271,7 @@ public class GameState : MonoBehaviour, IDisposable
 									SetPlayerPosition(tilePosition);
 									playerSet = true;
 								}
-								else if (i == tileMap.Rooms.Count - 1)
+								else if (i == levelInstance.Rooms.Length - 1)
 								{
 									SetExitPosition(tilePosition);
 									exitSet = true;
@@ -305,7 +309,7 @@ public class GameState : MonoBehaviour, IDisposable
 
 	public void Dispose()
 	{
-		tileMap.Built -= OnTileMapBuilt;
+		levelInstance.Built -= OnTileMapBuilt;
 		playerCharacter.StepTaken += OnStepTaken;
 		exit.Reached -= OnExitReached;
 	}
