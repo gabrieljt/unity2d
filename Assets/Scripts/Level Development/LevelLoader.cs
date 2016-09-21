@@ -52,13 +52,7 @@ namespace Level
 
 				var levelParameters = levelLoader.levelInstanceParameters;
 
-				LevelInstance loadedLevel;
-				if (LevelLoader.LoadLevelStatus.Loaded == levelLoader.LoadLevel(
-					levelLoader.Index)
-				)
-				{
-					levelLoader.LoadLevel(levelLoader.Index);
-				}
+				levelLoader.LoadLevel(levelLoader.Index);
 			}
 
 			if (GUILayout.Button("Dispose"))
@@ -79,7 +73,7 @@ namespace Level
 			Created,
 			Loaded,
 			Failed,
-			Destroyed
+			Destroyed,
 		}
 
 		[SerializeField]
@@ -102,7 +96,7 @@ namespace Level
 
 		private static Dictionary<int, LevelInstance> levelInstances = new Dictionary<int, LevelInstance>();
 
-		public Action LevelLoaded = delegate { };
+		public Action<int, LevelInstance, LevelInstanceParameters> LevelLoaded = delegate { };
 
 		private void Awake()
 		{
@@ -157,6 +151,7 @@ namespace Level
 				SetStatusDestroyed(index, ref status);
 			}
 
+			Debug.LogWarning(GetType() + "LevelLoader.DestroyLevel.status: " + status);
 			return status;
 		}
 
@@ -176,7 +171,7 @@ namespace Level
 				levelInstanceParameters = SetStatusLoaded(index, ref status);
 			}
 
-			Debug.LogWarning(GetType() + "LevelLoader.CreateLevel.status: " + status);
+			Debug.LogWarning(GetType() + "LevelLoader.LoadLevel.status: " + status);
 			return status;
 		}
 
@@ -193,13 +188,13 @@ namespace Level
 			loadedLevel.gameObject.SetActive(true);
 			status = LoadLevelStatus.Loaded;
 
-			LevelLoaded();
-
 			var levelInstanceParameters = new LevelInstanceParameters();
 			levelInstanceParameters.width = loadedLevel.Width;
 			levelInstanceParameters.height = loadedLevel.Height;
 			levelInstanceParameters.rooms = loadedLevel.Rooms;
 			levelInstanceParameters.tiles = loadedLevel.Tiles;
+
+			LevelLoaded(index, loadedLevel, levelInstanceParameters);
 
 			return levelInstanceParameters;
 		}
