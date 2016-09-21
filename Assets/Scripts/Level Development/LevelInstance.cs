@@ -18,18 +18,19 @@ namespace Level
 			if (GUILayout.Button("Build Level"))
 			{
 				LevelInstance tileMap = (LevelInstance)target;
-				var levelParameters = new LevelInstanceParameters();
-				levelParameters.height = tileMap.Height;
-				levelParameters.width = tileMap.Width;
-				tileMap.Build(ref levelParameters);
+				var levelInstanceParameters = new LevelInstanceParameters();
+				levelInstanceParameters.height = tileMap.Height;
+				levelInstanceParameters.width = tileMap.Width;
+				tileMap.Build(ref levelInstanceParameters);
 			}
 		}
 	}
 
 #endif
 
-	
-
+	/// <summary>
+	/// TODO: externalize texture handling
+	/// </summary>
 	[ExecuteInEditMode]
 	[RequireComponent(
 		typeof(SpriteRenderer)
@@ -125,12 +126,12 @@ namespace Level
 			gameObject.isStatic = true;
 		}
 
-		public void Build(ref LevelInstanceParameters levelParameters)
+		public void Build(ref LevelInstanceParameters levelInstanceParameters)
 		{
 			DisposeColliders();
 
-			this.width = levelParameters.width;
-			this.height = levelParameters.height;
+			this.width = levelInstanceParameters.width;
+			this.height = levelInstanceParameters.height;
 
 			SetWorldPosition();
 
@@ -145,8 +146,8 @@ namespace Level
 
 			BuildColliders();
 
-			levelParameters.tiles = tiles;
-			levelParameters.rooms = rooms;
+			levelInstanceParameters.tiles = tiles;
+			levelInstanceParameters.rooms = rooms;
 
 			BuildTexture();
 

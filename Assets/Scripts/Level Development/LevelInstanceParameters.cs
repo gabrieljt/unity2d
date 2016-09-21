@@ -1,14 +1,13 @@
-﻿using Level;
-using System;
+﻿using System;
 
 namespace Level
 {
 	[Serializable]
 	public class LevelInstanceParameters
 	{
-		public int height;
-		public LevelInstance.Room[] rooms;
-		public Tile[,] tiles;
 		public int width;
+		public int height;
+		public Tile[,] tiles;
+		public LevelInstance.Room[] rooms;
 	}
 }
