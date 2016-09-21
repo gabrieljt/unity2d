@@ -23,6 +23,18 @@ namespace Level
 				levelInstanceParameters.width = tileMap.Width;
 				tileMap.Build(ref levelInstanceParameters);
 			}
+
+			if (GUILayout.Button("Dispose Colliders"))
+			{
+				LevelInstance tileMap = (LevelInstance)target;
+				tileMap.DisposeColliders();
+			}
+
+			if (GUILayout.Button("Build Colliders"))
+			{
+				LevelInstance tileMap = (LevelInstance)target;
+				tileMap.BuildColliders();
+			}
 		}
 	}
 
@@ -290,7 +302,7 @@ namespace Level
 			}
 		}
 
-		private void DisposeColliders()
+		public void DisposeColliders()
 		{
 			BoxCollider2D[] colliders = GetComponents<BoxCollider2D>();
 
@@ -300,7 +312,7 @@ namespace Level
 			}
 		}
 
-		private void BuildColliders()
+		public void BuildColliders()
 		{
 			for (int x = 0; x < width; x++)
 			{
