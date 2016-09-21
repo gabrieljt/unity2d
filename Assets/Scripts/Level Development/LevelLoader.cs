@@ -135,6 +135,7 @@ namespace Level
 			loadedLevel = Instantiate(levelInstancePrefab).GetComponent<LevelInstance>();
 			loadedLevel.Build(ref levelParameters);
 			loadedLevel.transform.SetParent(transform, true);
+			loadedLevel.name = "Level " + index;
 			levelInstances[index] = loadedLevel;
 			levelIndexes = new int[levelInstances.Count];
 			levelInstances.Keys.CopyTo(levelIndexes, 0);
@@ -171,6 +172,11 @@ namespace Level
 				levelInstanceParameters = SetStatusLoaded(index, ref status);
 			}
 
+			if (status == LoadLevelStatus.Loaded)
+			{
+				LevelLoaded(index, loadedLevel, levelInstanceParameters);
+			}
+
 			Debug.LogWarning(GetType() + "LevelLoader.LoadLevel.status: " + status);
 			return status;
 		}
@@ -193,8 +199,6 @@ namespace Level
 			levelInstanceParameters.height = loadedLevel.Height;
 			levelInstanceParameters.rooms = loadedLevel.Rooms;
 			levelInstanceParameters.tiles = loadedLevel.Tiles;
-
-			LevelLoaded(index, loadedLevel, levelInstanceParameters);
 
 			return levelInstanceParameters;
 		}

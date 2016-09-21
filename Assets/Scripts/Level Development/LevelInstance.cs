@@ -17,23 +17,23 @@ namespace Level
 
 			if (GUILayout.Button("Build Level"))
 			{
-				LevelInstance tileMap = (LevelInstance)target;
+				LevelInstance levelInstance = (LevelInstance)target;
 				var levelInstanceParameters = new LevelInstanceParameters();
-				levelInstanceParameters.height = tileMap.Height;
-				levelInstanceParameters.width = tileMap.Width;
-				tileMap.Build(ref levelInstanceParameters);
+				levelInstanceParameters.height = levelInstance.Height;
+				levelInstanceParameters.width = levelInstance.Width;
+				levelInstance.Build(ref levelInstanceParameters);
 			}
 
 			if (GUILayout.Button("Dispose Colliders"))
 			{
-				LevelInstance tileMap = (LevelInstance)target;
-				tileMap.DisposeColliders();
+				LevelInstance levelInstance = (LevelInstance)target;
+				levelInstance.DisposeColliders();
 			}
 
 			if (GUILayout.Button("Build Colliders"))
 			{
-				LevelInstance tileMap = (LevelInstance)target;
-				tileMap.BuildColliders();
+				LevelInstance levelInstance = (LevelInstance)target;
+				levelInstance.BuildColliders();
 			}
 		}
 	}
