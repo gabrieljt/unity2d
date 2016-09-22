@@ -1,4 +1,4 @@
-﻿namespace Level
+﻿namespace TiledLevel
 {
 	public interface IMapParams
 	{

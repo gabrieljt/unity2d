@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Level
+namespace TiledLevel
 {
 	public class MapRoomParams : IMapRoomParams
 	{

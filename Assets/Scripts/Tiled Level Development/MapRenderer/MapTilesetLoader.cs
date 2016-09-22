@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Level
+namespace TiledLevel
 {
 	[ExecuteInEditMode]
 	public class MapTilesetLoader : MonoBehaviour

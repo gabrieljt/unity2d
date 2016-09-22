@@ -1,7 +1,7 @@
-﻿using Level;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TiledLevel;
 using UnityEngine;
 using UnityEngine.UI;
 

@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Level
+namespace TiledLevel
 {
 	using System;
 	using System.Collections.Generic;
@@ -75,7 +75,7 @@ namespace Level
 		[SerializeField]
 		private GameObject levelPrefab;
 
-		public GameObject LevelInstancePrefab { get { return levelPrefab; } }
+		public GameObject LevelPrefab { get { return levelPrefab; } }
 
 		[SerializeField]
 		private GameObject activeLevel;

@@ -1,10 +1,10 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Level
+namespace TiledLevel
 {
 	[Serializable]
-	public class LevelParams : IMapParams, IMapRoomParams
+	public class MapParams : IMapParams
 	{
 		[SerializeField]
 		private int width;
@@ -14,9 +14,6 @@ namespace Level
 
 		[SerializeField]
 		private Tile[,] tiles;
-
-		[SerializeField]
-		private MapRoom.Room[] rooms;
 
 		public int Width
 		{
@@ -57,31 +54,14 @@ namespace Level
 			}
 		}
 
-		public MapRoom.Room[] Rooms
+		public MapParams(Map map)
 		{
-			get
-			{
-				return rooms;
-			}
-
-			set
-			{
-				rooms = value;
-			}
+			Width = map.Width;
+			Height = map.Height;
+			Tiles = map.Tiles;
 		}
 
-		public LevelParams(GameObject level)
-		{
-			var levelMap = level.GetComponent<Map>();
-			Width = levelMap.Width;
-			Height = levelMap.Height;
-			Tiles = levelMap.Tiles;
-
-			var levelRoomMap = level.GetComponent<MapRoom>();
-			Rooms = levelRoomMap.Rooms;
-		}
-
-		public LevelParams()
+		public MapParams()
 		{
 		}
 	}

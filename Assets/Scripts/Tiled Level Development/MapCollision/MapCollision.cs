@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Level
+namespace TiledLevel
 
 {
 #if UNITY_EDITOR
