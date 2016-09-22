@@ -1,77 +1,79 @@
-﻿using TiledLevel;
-using UnityEngine;
+﻿using UnityEngine;
 
-public enum MapTilesetType
+namespace TiledLevel
 {
-	Dungeon = 0,
-}
-
-[CreateAssetMenu(fileName = "NewMapTileset", menuName = "Map/Tileset", order = 1)]
-public class MapTileset : ScriptableObject
-{
-	[SerializeField]
-	private MapTilesetType type = MapTilesetType.Dungeon;
-
-	public MapTilesetType Type { get { return type; } }
-
-	[SerializeField]
-	private const int tileResolution = 16;
-
-	[SerializeField]
-	private Texture2D tilesetTexture;
-
-	public Texture2D TilesetTexture { get { return tilesetTexture; } }
-
-	[SerializeField]
-	private TilesetTile[] tilesetTiles;
-
-	public TilesetTile[] TilesetTiles { get { return tilesetTiles; } }
-
-	private static Color[][] GetPixelsFromTexture(Texture2D tilesetTexture, int tileResolution = 16)
+	public enum MapTilesetType
 	{
-		var tilesPerRow = tilesetTexture.width / tileResolution;
-		var rows = tilesetTexture.height / tileResolution;
-		var tilesPixels = new Color[tilesPerRow * rows][];
-
-		for (int y = 0; y < rows; y++)
-		{
-			for (int x = 0; x < tilesPerRow; x++)
-			{
-				tilesPixels[y * tilesPerRow + x] = tilesetTexture.GetPixels(x * tileResolution, y * tileResolution, tileResolution, tileResolution);
-			}
-		}
-
-		return tilesPixels;
+		Dungeon = 0,
 	}
 
-	public static int GetTilesetTileIndexByType(TilesetTile[] tilesetTiles, TileType type)
+	[CreateAssetMenu(fileName = "NewMapTileset", menuName = "Map/Tileset", order = 1)]
+	public class MapTileset : ScriptableObject
 	{
-		return System.Array.Find(tilesetTiles, tilesetTile => tilesetTile.Type == type).TilesetIndex;
-	}
+		[SerializeField]
+		private MapTilesetType type = MapTilesetType.Dungeon;
 
-	public static Texture2D BuildTexture(IMapParams mapParams, Texture2D tilesetTexture, TilesetTile[] tilesetTiles)
-	{
-		Debug.Assert(tilesetTexture);
-		Debug.Assert(tilesetTiles.Length > 0);
+		public MapTilesetType Type { get { return type; } }
 
-		var textureWidth = mapParams.Width * tileResolution;
-		var textureHeight = mapParams.Height * tileResolution;
-		var texture = new Texture2D(textureWidth, textureHeight);
-		var tilesPixels = GetPixelsFromTexture(tilesetTexture, tileResolution);
+		[SerializeField]
+		private const int tileResolution = 16;
 
-		for (int y = 0; y < mapParams.Height; y++)
+		[SerializeField]
+		private Texture2D tilesetTexture;
+
+		public Texture2D TilesetTexture { get { return tilesetTexture; } }
+
+		[SerializeField]
+		private TilesetTile[] tilesetTiles;
+
+		public TilesetTile[] TilesetTiles { get { return tilesetTiles; } }
+
+		private static Color[][] GetPixelsFromTexture(Texture2D tilesetTexture, int tileResolution = 16)
 		{
-			for (int x = 0; x < mapParams.Width; x++)
+			var tilesPerRow = tilesetTexture.width / tileResolution;
+			var rows = tilesetTexture.height / tileResolution;
+			var tilesPixels = new Color[tilesPerRow * rows][];
+
+			for (int y = 0; y < rows; y++)
 			{
-				Color[] pixels = tilesPixels[GetTilesetTileIndexByType(tilesetTiles, mapParams.Tiles[x, y].Type)];
-				texture.SetPixels(x * tileResolution, y * tileResolution, tileResolution, tileResolution, pixels);
+				for (int x = 0; x < tilesPerRow; x++)
+				{
+					tilesPixels[y * tilesPerRow + x] = tilesetTexture.GetPixels(x * tileResolution, y * tileResolution, tileResolution, tileResolution);
+				}
 			}
+
+			return tilesPixels;
 		}
 
-		texture.filterMode = FilterMode.Point;
-		texture.wrapMode = TextureWrapMode.Clamp;
-		texture.Apply();
+		public static int GetTilesetTileIndexByType(TilesetTile[] tilesetTiles, TileType type)
+		{
+			return System.Array.Find(tilesetTiles, tilesetTile => tilesetTile.Type == type).TilesetIndex;
+		}
 
-		return texture;
+		public static Texture2D BuildTexture(IMapParams mapParams, Texture2D tilesetTexture, TilesetTile[] tilesetTiles)
+		{
+			Debug.Assert(tilesetTexture);
+			Debug.Assert(tilesetTiles.Length > 0);
+
+			var textureWidth = mapParams.Width * tileResolution;
+			var textureHeight = mapParams.Height * tileResolution;
+			var texture = new Texture2D(textureWidth, textureHeight);
+			var tilesPixels = GetPixelsFromTexture(tilesetTexture, tileResolution);
+
+			for (int y = 0; y < mapParams.Height; y++)
+			{
+				for (int x = 0; x < mapParams.Width; x++)
+				{
+					Color[] pixels = tilesPixels[GetTilesetTileIndexByType(tilesetTiles, mapParams.Tiles[x, y].Type)];
+					texture.SetPixels(x * tileResolution, y * tileResolution, tileResolution, tileResolution, pixels);
+				}
+			}
+
+			texture.filterMode = FilterMode.Point;
+			texture.wrapMode = TextureWrapMode.Clamp;
+			texture.Apply();
+
+			return texture;
+		}
 	}
 }
