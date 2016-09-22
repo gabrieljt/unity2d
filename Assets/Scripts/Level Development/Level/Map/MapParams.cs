@@ -15,9 +15,6 @@ namespace Level
 		[SerializeField]
 		private Tile[,] tiles;
 
-		[SerializeField]
-		private Map.Room[] rooms;
-
 		public int Width
 		{
 			get
@@ -57,17 +54,15 @@ namespace Level
 			}
 		}
 
-		public Map.Room[] Rooms
+		public MapParams(Map map)
 		{
-			get
-			{
-				return rooms;
-			}
+			Width = map.Width;
+			Height = map.Height;
+			Tiles = map.Tiles;
+		}
 
-			set
-			{
-				rooms = value;
-			}
+		public MapParams()
+		{
 		}
 	}
 }

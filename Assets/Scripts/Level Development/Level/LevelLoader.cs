@@ -98,6 +98,8 @@ namespace Level
 		{
 			Debug.Assert(levelPrefab);
 			Debug.Assert(levelPrefab.GetComponent<Map>());
+
+			gameObject.isStatic = true;
 		}
 
 		private void Start()

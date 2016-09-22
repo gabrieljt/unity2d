@@ -62,10 +62,10 @@ public class GameState : MonoBehaviour, IDisposable
 			height = width = id + 9;
 		}
 
-		public void SetMaximumSteps(int level, Map.Room[] rooms, Vector2 tileMapOrigin)
+		public void SetMaximumSteps(int level, RoomMap.Room[] rooms, Vector2 tileMapOrigin)
 		{
 			maximumSteps = stepsTaken = 0;
-			foreach (Map.Room room in rooms)
+			foreach (RoomMap.Room room in rooms)
 			{
 				maximumSteps += (int)Vector2.Distance(room.Center, tileMapOrigin);
 			}
@@ -94,6 +94,7 @@ public class GameState : MonoBehaviour, IDisposable
 		Debug.Assert(exit);
 
 		levelInstance.Built += OnTileMapBuilt;
+		levelInstance.GetComponent<RoomMap>().Built += OnRoomMapBuilt;
 		playerCharacter.StepTaken += OnStepTaken;
 		exit.Reached += OnExitReached;
 
@@ -206,18 +207,22 @@ public class GameState : MonoBehaviour, IDisposable
 		BuildLevel();
 	}
 
-	public void OnTileMapBuilt()
+	public void OnTileMapBuilt(IMapParams mapParams)
 	{
-		StartCoroutine(PopulateTileMap());
+	}
+
+	public void OnRoomMapBuilt(IRoomMapParams roomMapParams)
+	{
+		StartCoroutine(PopulateTileMap(roomMapParams));
 	}
 
 	#endregion Callbacks
 
 	#region Populate Tile Map
 
-	private IEnumerator PopulateTileMap()
+	private IEnumerator PopulateTileMap(IRoomMapParams roomMapParams)
 	{
-		bool populated = Populate();
+		bool populated = Populate(roomMapParams);
 		yield return 0;
 
 		if (!populated)
@@ -227,7 +232,7 @@ public class GameState : MonoBehaviour, IDisposable
 		else
 		{
 			EnableSceneObjects();
-			currentLevel.SetMaximumSteps(level, levelInstance.Rooms, levelInstance.WorldPosition);
+			currentLevel.SetMaximumSteps(level, roomMapParams.Rooms, levelInstance.WorldPosition);
 		}
 	}
 
@@ -237,12 +242,12 @@ public class GameState : MonoBehaviour, IDisposable
 		BuildLevel();
 	}
 
-	private bool Populate()
+	private bool Populate(IRoomMapParams roomMapParams)
 	{
 		bool playerSet = false, exitSet = false;
-		for (int i = 0; i < levelInstance.Rooms.Length; i++)
+		for (int i = 0; i < roomMapParams.Rooms.Length; i++)
 		{
-			Map.Room room = levelInstance.Rooms[i];
+			RoomMap.Room room = roomMapParams.Rooms[i];
 			for (int x = 0; x < room.Width; x++)
 			{
 				for (int y = 0; y < room.Height; y++)
@@ -250,7 +255,7 @@ public class GameState : MonoBehaviour, IDisposable
 					if (levelInstance.Tiles[room.Left + x, room.Top + y].Type == TileType.Floor)
 					{
 						Vector2 tilePosition = new Vector2(room.Left + x, room.Top + y) + Vector2.one * 0.5f;
-						switch (levelInstance.Rooms.Length)
+						switch (roomMapParams.Rooms.Length)
 						{
 							case 1:
 								if (!playerSet)
@@ -272,7 +277,7 @@ public class GameState : MonoBehaviour, IDisposable
 									SetPlayerPosition(tilePosition);
 									playerSet = true;
 								}
-								else if (i == levelInstance.Rooms.Length - 1)
+								else if (i == roomMapParams.Rooms.Length - 1)
 								{
 									SetExitPosition(tilePosition);
 									exitSet = true;

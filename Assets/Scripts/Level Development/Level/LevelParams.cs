@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Level
 {
 	[Serializable]
-	public class LevelParams : IMapParams
+	public class LevelParams : IMapParams, IRoomMapParams
 	{
 		[SerializeField]
 		private int width;
@@ -16,7 +16,7 @@ namespace Level
 		private Tile[,] tiles;
 
 		[SerializeField]
-		private Map.Room[] rooms;
+		private RoomMap.Room[] rooms;
 
 		public int Width
 		{
@@ -57,7 +57,7 @@ namespace Level
 			}
 		}
 
-		public Map.Room[] Rooms
+		public RoomMap.Room[] Rooms
 		{
 			get
 			{
@@ -76,7 +76,9 @@ namespace Level
 			Width = levelMap.Width;
 			Height = levelMap.Height;
 			Tiles = levelMap.Tiles;
-			Rooms = levelMap.Rooms;
+
+			var levelRoomMap = level.GetComponent<RoomMap>();
+			Rooms = levelRoomMap.Rooms;
 		}
 
 		public LevelParams()
