@@ -23,18 +23,6 @@ namespace Level
 				mapParams.Width = map.Width;
 				map.Build(ref mapParams);
 			}
-
-			if (GUILayout.Button("Dispose Colliders"))
-			{
-				Map map = (Map)target;
-				map.DisposeColliders();
-			}
-
-			if (GUILayout.Button("Build Colliders"))
-			{
-				Map map = (Map)target;
-				map.BuildColliders();
-			}
 		}
 	}
 
@@ -96,10 +84,6 @@ namespace Level
 			SetValues(mapParams);
 			this.tiles = mapParams.Tiles;
 
-			DisposeColliders();
-
-			BuildColliders();
-
 			Updated(mapParams);
 		}
 
@@ -117,32 +101,6 @@ namespace Level
 				for (int y = 0; y < height; y++)
 				{
 					tiles[x, y] = new Tile(type);
-				}
-			}
-		}
-
-		public void DisposeColliders()
-		{
-			var colliders = GetComponents<BoxCollider2D>();
-
-			for (int i = 0; i < colliders.Length; i++)
-			{
-				DestroyImmediate(colliders[i]);
-			}
-		}
-
-		public void BuildColliders()
-		{
-			for (int x = 0; x < width; x++)
-			{
-				for (int y = 0; y < height; y++)
-				{
-					if (tiles[x, y].Type == TileType.Wall)
-					{
-						var collider = gameObject.AddComponent<BoxCollider2D>();
-						collider.offset = new Vector2(x, y) + Vector2.one * 0.5f - WorldPosition;
-						collider.size = Vector2.one;
-					}
 				}
 			}
 		}

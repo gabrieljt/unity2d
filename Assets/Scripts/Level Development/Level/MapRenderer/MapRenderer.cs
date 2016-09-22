@@ -8,7 +8,7 @@ namespace Level
 	[RequireComponent(
 		typeof(SpriteRenderer)
 	)]
-	public class MapTexture : MonoBehaviour, IDisposable
+	public class MapRenderer : MonoBehaviour, IDisposable
 	{
 		[SerializeField]
 		private SpriteRenderer spriteRenderer;
@@ -21,30 +21,23 @@ namespace Level
 
 		public Map Map { get { return map; } }
 
-		public Action<IMapTextureParams> Built = delegate { };
+		public Action<IMapRendererParams> Built = delegate { };
 
 		private void Awake()
 		{
 			spriteRenderer = GetComponent<SpriteRenderer>();
 
 			map = GetComponent<Map>();
-			map.Built += OnMapBuilt;
 			map.Updated += OnMapUpdated;
-		}
-
-		private void OnMapBuilt(IMapParams mapParams)
-		{
-			IMapTextureParams mapTextureParams = new MapTextureParams();
-			Build(mapParams, mapTextureParams);
 		}
 
 		private void OnMapUpdated(IMapParams mapParams)
 		{
-			IMapTextureParams mapTextureParams = new MapTextureParams();
-			Build(mapParams, mapTextureParams);
+			IMapRendererParams mapRendererParams = new MapRendererParams();
+			Build(mapParams, mapRendererParams);
 		}
 
-		public void Build(IMapParams mapParams, IMapTextureParams mapTextureRendererParams)
+		public void Build(IMapParams mapParams, IMapRendererParams mapTextureRendererParams)
 		{
 			Debug.Assert(mapTilesetType == MapTilesetLoader.MapTilesets[(int)mapTilesetType].Type);
 			Debug.Assert((int)mapTilesetType < MapTilesetLoader.MapTilesets.Length);
@@ -58,7 +51,6 @@ namespace Level
 
 		public void Dispose()
 		{
-			map.Built -= OnMapBuilt;
 			map.Updated -= OnMapUpdated;
 		}
 	}

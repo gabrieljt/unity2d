@@ -62,10 +62,10 @@ public class GameState : MonoBehaviour, IDisposable
 			height = width = id + 9;
 		}
 
-		public void SetMaximumSteps(int level, RoomMap.Room[] rooms, Vector2 tileMapOrigin)
+		public void SetMaximumSteps(int level, MapRoom.Room[] rooms, Vector2 tileMapOrigin)
 		{
 			maximumSteps = stepsTaken = 0;
-			foreach (RoomMap.Room room in rooms)
+			foreach (MapRoom.Room room in rooms)
 			{
 				maximumSteps += (int)Vector2.Distance(room.Center, tileMapOrigin);
 			}
@@ -94,7 +94,7 @@ public class GameState : MonoBehaviour, IDisposable
 		Debug.Assert(exit);
 
 		levelInstance.Built += OnTileMapBuilt;
-		levelInstance.GetComponent<RoomMap>().Built += OnRoomMapBuilt;
+		levelInstance.GetComponent<MapRoom>().Built += OnRoomMapBuilt;
 		playerCharacter.StepTaken += OnStepTaken;
 		exit.Reached += OnExitReached;
 
@@ -211,7 +211,7 @@ public class GameState : MonoBehaviour, IDisposable
 	{
 	}
 
-	public void OnRoomMapBuilt(IRoomMapParams roomMapParams)
+	public void OnRoomMapBuilt(IMapRoomParams roomMapParams)
 	{
 		StartCoroutine(PopulateTileMap(roomMapParams));
 	}
@@ -220,7 +220,7 @@ public class GameState : MonoBehaviour, IDisposable
 
 	#region Populate Tile Map
 
-	private IEnumerator PopulateTileMap(IRoomMapParams roomMapParams)
+	private IEnumerator PopulateTileMap(IMapRoomParams roomMapParams)
 	{
 		bool populated = Populate(roomMapParams);
 		yield return 0;
@@ -242,12 +242,12 @@ public class GameState : MonoBehaviour, IDisposable
 		BuildLevel();
 	}
 
-	private bool Populate(IRoomMapParams roomMapParams)
+	private bool Populate(IMapRoomParams roomMapParams)
 	{
 		bool playerSet = false, exitSet = false;
 		for (int i = 0; i < roomMapParams.Rooms.Length; i++)
 		{
-			RoomMap.Room room = roomMapParams.Rooms[i];
+			MapRoom.Room room = roomMapParams.Rooms[i];
 			for (int x = 0; x < room.Width; x++)
 			{
 				for (int y = 0; y < room.Height; y++)

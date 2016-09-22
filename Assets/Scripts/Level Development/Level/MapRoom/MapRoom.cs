@@ -8,8 +8,8 @@ namespace Level
 
 	using UnityEditor;
 
-	[CustomEditor(typeof(RoomMap))]
-	public class RoomMapInspector : Editor
+	[CustomEditor(typeof(MapRoom))]
+	public class MapRoomInspector : Editor
 	{
 		public override void OnInspectorGUI()
 		{
@@ -17,9 +17,9 @@ namespace Level
 
 			if (GUILayout.Button("Build Rooms"))
 			{
-				var roomMap = (RoomMap)target;
+				var roomMap = (MapRoom)target;
 				IMapParams mapParams = new MapParams(roomMap.Map);
-				IRoomMapParams roomMapParams = new RoomMapParams();
+				IMapRoomParams roomMapParams = new MapRoomParams();
 				roomMap.Build(ref mapParams, ref roomMapParams);
 			}
 		}
@@ -31,7 +31,7 @@ namespace Level
 	[RequireComponent(
 		typeof(Map)
 	)]
-	public class RoomMap : MonoBehaviour, IDisposable
+	public class MapRoom : MonoBehaviour, IDisposable
 	{
 		[Serializable]
 		public class Room
@@ -90,7 +90,7 @@ namespace Level
 
 		public Map Map { get { return map; } }
 
-		public Action<IRoomMapParams> Built = delegate { };
+		public Action<IMapRoomParams> Built = delegate { };
 
 		private void Awake()
 		{
@@ -100,11 +100,11 @@ namespace Level
 
 		private void OnMapBuilt(IMapParams mapParams)
 		{
-			IRoomMapParams roomMapParams = new RoomMapParams();
+			IMapRoomParams roomMapParams = new MapRoomParams();
 			Build(ref mapParams, ref roomMapParams);
 		}
 
-		public void Build(ref IMapParams mapParams, ref IRoomMapParams roomMapParams)
+		public void Build(ref IMapParams mapParams, ref IMapRoomParams roomMapParams)
 		{
 			if (rooms.Length > 0)
 			{
@@ -125,7 +125,7 @@ namespace Level
 
 			map.UpdateValues(mapParams);
 
-			roomMapParams = new RoomMapParams(this);
+			roomMapParams = new MapRoomParams(this);
 
 			Built(roomMapParams);
 		}

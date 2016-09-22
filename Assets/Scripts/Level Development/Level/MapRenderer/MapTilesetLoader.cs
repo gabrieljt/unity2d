@@ -15,15 +15,21 @@ namespace Level
 		[SerializeField]
 		private MapTileset[] mapTilesets;
 
-		public static MapTileset[] MapTilesets { get { return Instance.mapTilesets; } }
+		public static MapTileset[] MapTilesets
+		{
+			get
+			{
+				if (Instance == null)
+				{
+					Instance = FindObjectOfType<MapTilesetLoader>();
+				}
+
+				return Instance.mapTilesets;
+			}
+		}
 
 		private void Awake()
 		{
-			if (Instance == null)
-			{
-				Instance = this;
-			}
-
 			gameObject.isStatic = true;
 		}
 	}

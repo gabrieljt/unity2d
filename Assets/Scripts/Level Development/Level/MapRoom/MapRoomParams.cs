@@ -2,12 +2,12 @@
 
 namespace Level
 {
-	public class RoomMapParams : IRoomMapParams
+	public class MapRoomParams : IMapRoomParams
 	{
 		[SerializeField]
-		private RoomMap.Room[] rooms;
+		private MapRoom.Room[] rooms;
 
-		public RoomMap.Room[] Rooms
+		public MapRoom.Room[] Rooms
 		{
 			get
 			{
@@ -20,12 +20,12 @@ namespace Level
 			}
 		}
 
-		public RoomMapParams(RoomMap roomMap)
+		public MapRoomParams(MapRoom roomMap)
 		{
 			Rooms = roomMap.Rooms;
 		}
 
-		public RoomMapParams()
+		public MapRoomParams()
 		{
 		}
 	}
