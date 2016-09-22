@@ -15,7 +15,7 @@ namespace Level
 		{
 			DrawDefaultInspector();
 
-			if (GUILayout.Button("Build Level"))
+			if (GUILayout.Button("Build Map"))
 			{
 				var map = (Map)target;
 				IMapParams mapParams = new MapParams();
@@ -40,18 +40,9 @@ namespace Level
 
 #endif
 
-	/// <summary>
-	/// TODO: externalize texture handling
-	/// </summary>
 	[ExecuteInEditMode]
-	[RequireComponent(
-		typeof(SpriteRenderer)
-	)]
 	public class Map : MonoBehaviour
 	{
-		[SerializeField]
-		private SpriteRenderer spriteRenderer;
-
 		[SerializeField]
 		[Range(4, 128)]
 		private int width = 16;
@@ -71,23 +62,12 @@ namespace Level
 
 		public Vector2 WorldPosition { get { return new Vector2(width / 2f, height / 2f); } }
 
-		[SerializeField]
-		private int tileResolution = 16;
-
-		[SerializeField]
-		private Texture2D tilesetTexture;
-
-		[SerializeField]
-		private TilesetTile[] tilesetTiles;
-
 		public Action<IMapParams> Built = delegate { };
+
+		public Action<IMapParams> Updated = delegate { };
 
 		private void Awake()
 		{
-			Debug.Assert(tilesetTexture);
-			Debug.Assert(tilesetTiles.Length > 0);
-
-			spriteRenderer = GetComponent<SpriteRenderer>();
 			gameObject.isStatic = true;
 		}
 
@@ -104,7 +84,7 @@ namespace Level
 			Built(mapParams);
 		}
 
-		private void SetValues(IMapParams mapParams)
+		public void SetValues(IMapParams mapParams)
 		{
 			this.width = mapParams.Width;
 			this.height = mapParams.Height;
@@ -120,7 +100,7 @@ namespace Level
 
 			BuildColliders();
 
-			BuildTexture();
+			Updated(mapParams);
 		}
 
 		private void SetWorldPosition()
@@ -240,55 +220,5 @@ namespace Level
 		}
 
 		#endregion Build Map
-
-		#region Build Texture
-
-		private Color[][] GetPixelsFromTexture()
-		{
-			var tilesPerRow = tilesetTexture.width / tileResolution;
-			var rows = tilesetTexture.height / tileResolution;
-			var tilesPixels = new Color[tilesPerRow * rows][];
-
-			for (int y = 0; y < rows; y++)
-			{
-				for (int x = 0; x < tilesPerRow; x++)
-				{
-					tilesPixels[y * tilesPerRow + x] = tilesetTexture.GetPixels(x * tileResolution, y * tileResolution, tileResolution, tileResolution);
-				}
-			}
-
-			return tilesPixels;
-		}
-
-		public int GetTilesetTileIndexByType(TileType type)
-		{
-			return System.Array.Find(tilesetTiles, tilesetTile => tilesetTile.Type == type).TilesetIndex;
-		}
-
-		private void BuildTexture()
-		{
-			var textureWidth = width * tileResolution;
-			var textureHeight = height * tileResolution;
-			var texture = new Texture2D(textureWidth, textureHeight);
-
-			var tilesPixels = GetPixelsFromTexture();
-
-			for (int y = 0; y < height; y++)
-			{
-				for (int x = 0; x < width; x++)
-				{
-					Color[] pixels = tilesPixels[GetTilesetTileIndexByType(tiles[x, y].Type)];
-					texture.SetPixels(x * tileResolution, y * tileResolution, tileResolution, tileResolution, pixels);
-				}
-			}
-
-			texture.filterMode = FilterMode.Point;
-			texture.wrapMode = TextureWrapMode.Clamp;
-			texture.Apply();
-
-			spriteRenderer.sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), Vector2.one * 0.5f, tileResolution);
-		}
-
-		#endregion Build Texture
 	}
 }

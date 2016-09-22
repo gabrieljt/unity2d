@@ -95,7 +95,6 @@ namespace Level
 		private void Awake()
 		{
 			map = GetComponent<Map>();
-
 			map.Built += OnMapBuilt;
 		}
 
@@ -111,6 +110,9 @@ namespace Level
 			{
 				// TODO: clear corridors
 				//ClearRooms(ref mapParams, ref rooms);
+				
+				// Hard Reset
+				map.SetValues(mapParams);
 				map.FillTiles(TileType.Water);
 				mapParams.Tiles = map.Tiles;
 			}
