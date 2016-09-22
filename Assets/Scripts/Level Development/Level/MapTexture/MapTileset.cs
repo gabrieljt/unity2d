@@ -1,12 +1,19 @@
 ﻿using Level;
 using UnityEngine;
 
+public enum MapTilesetType
+{
+	Dungeon = 0,
+}
+
 [CreateAssetMenu(fileName = "NewMapTileset", menuName = "Map/Tileset", order = 1)]
 public class MapTileset : ScriptableObject
 {
-	/// <summary>
-	/// TODO: externalize
-	/// </summary>
+	[SerializeField]
+	private MapTilesetType type = MapTilesetType.Dungeon;
+
+	public MapTilesetType Type { get { return type; } }
+
 	[SerializeField]
 	private const int tileResolution = 16;
 
@@ -51,7 +58,6 @@ public class MapTileset : ScriptableObject
 		var textureHeight = mapParams.Height * tileResolution;
 		var texture = new Texture2D(textureWidth, textureHeight);
 		var tilesPixels = GetPixelsFromTexture(tilesetTexture, tileResolution);
-
 
 		for (int y = 0; y < mapParams.Height; y++)
 		{

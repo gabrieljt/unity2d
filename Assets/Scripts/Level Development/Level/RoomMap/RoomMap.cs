@@ -31,7 +31,7 @@ namespace Level
 	[RequireComponent(
 		typeof(Map)
 	)]
-	public class RoomMap : MonoBehaviour
+	public class RoomMap : MonoBehaviour, IDisposable
 	{
 		[Serializable]
 		public class Room
@@ -110,7 +110,7 @@ namespace Level
 			{
 				// TODO: clear corridors
 				//ClearRooms(ref mapParams, ref rooms);
-				
+
 				// Hard Reset
 				map.SetValues(mapParams);
 				map.FillTiles(TileType.Water);
@@ -260,6 +260,16 @@ namespace Level
 					}
 				}
 			}
+		}
+
+		public void Dispose()
+		{
+			map.Built += OnMapBuilt;
+		}
+
+		private void OnDestroy()
+		{
+			Dispose();
 		}
 	}
 }

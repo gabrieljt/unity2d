@@ -1,6 +1,6 @@
 ﻿namespace Level
 {
-	internal class MapTextureParams : IMapTextureParams
+	public class MapTextureParams : IMapTextureParams
 	{
 	}
 }

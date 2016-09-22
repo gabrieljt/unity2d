@@ -8,10 +8,13 @@ namespace Level
 	[RequireComponent(
 		typeof(SpriteRenderer)
 	)]
-	public class MapTexture : MonoBehaviour
+	public class MapTexture : MonoBehaviour, IDisposable
 	{
 		[SerializeField]
 		private SpriteRenderer spriteRenderer;
+
+		[SerializeField]
+		private MapTilesetType mapTilesetType;
 
 		[SerializeField]
 		private Map map;
@@ -43,8 +46,20 @@ namespace Level
 
 		public void Build(IMapParams mapParams, IMapTextureParams mapTextureRendererParams)
 		{
-			var texture = MapTileset.BuildTexture(mapParams, MapTilesetLoader.MapTilesets[0].TilesetTexture, MapTilesetLoader.MapTilesets[0].TilesetTiles);
+			Debug.Assert(mapTilesetType == MapTilesetLoader.MapTilesets[(int)mapTilesetType].Type);
+			Debug.Assert((int)mapTilesetType < MapTilesetLoader.MapTilesets.Length);
+
+			var texture = MapTileset.BuildTexture(mapParams,
+				MapTilesetLoader.MapTilesets[(int)mapTilesetType].TilesetTexture,
+				MapTilesetLoader.MapTilesets[(int)mapTilesetType].TilesetTiles);
+
 			spriteRenderer.sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), Vector2.one * 0.5f, MapTilesetLoader.PixelsPerUnit);
+		}
+
+		public void Dispose()
+		{
+			map.Built -= OnMapBuilt;
+			map.Updated -= OnMapUpdated;
 		}
 	}
 }
