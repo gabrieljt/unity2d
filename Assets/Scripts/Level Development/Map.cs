@@ -8,8 +8,8 @@ namespace Level
 
 	using UnityEditor;
 
-	[CustomEditor(typeof(LevelInstance))]
-	public class LevelInstanceInspector : Editor
+	[CustomEditor(typeof(Map))]
+	public class MapInspector : Editor
 	{
 		public override void OnInspectorGUI()
 		{
@@ -17,23 +17,23 @@ namespace Level
 
 			if (GUILayout.Button("Build Level"))
 			{
-				LevelInstance levelInstance = (LevelInstance)target;
-				var levelInstanceParameters = new LevelInstanceParameters();
-				levelInstanceParameters.height = levelInstance.Height;
-				levelInstanceParameters.width = levelInstance.Width;
-				levelInstance.Build(ref levelInstanceParameters);
+				var map = (Map)target;
+				IMapParams mapParams = new MapParams();
+				mapParams.Height = map.Height;
+				mapParams.Width = map.Width;
+				map.Build(ref mapParams);
 			}
 
 			if (GUILayout.Button("Dispose Colliders"))
 			{
-				LevelInstance levelInstance = (LevelInstance)target;
-				levelInstance.DisposeColliders();
+				Map map = (Map)target;
+				map.DisposeColliders();
 			}
 
 			if (GUILayout.Button("Build Colliders"))
 			{
-				LevelInstance levelInstance = (LevelInstance)target;
-				levelInstance.BuildColliders();
+				Map map = (Map)target;
+				map.BuildColliders();
 			}
 		}
 	}
@@ -47,7 +47,7 @@ namespace Level
 	[RequireComponent(
 		typeof(SpriteRenderer)
 	)]
-	public class LevelInstance : MonoBehaviour
+	public class Map : MonoBehaviour
 	{
 		public class Room
 		{
@@ -83,6 +83,9 @@ namespace Level
 				return Rect.Overlaps(other.Rect);
 			}
 		}
+
+		[SerializeField]
+		private SpriteRenderer spriteRenderer;
 
 		[SerializeField]
 		[Range(4, 128)]
@@ -124,8 +127,6 @@ namespace Level
 		[SerializeField]
 		private TilesetTile[] tilesetTiles;
 
-		private SpriteRenderer spriteRenderer;
-
 		public Action Built = delegate { };
 
 		private void Awake()
@@ -134,16 +135,15 @@ namespace Level
 			Debug.Assert(tilesetTiles.Length > 0);
 
 			spriteRenderer = GetComponent<SpriteRenderer>();
-
 			gameObject.isStatic = true;
 		}
 
-		public void Build(ref LevelInstanceParameters levelInstanceParameters)
+		public void Build(ref IMapParams mapParams)
 		{
 			DisposeColliders();
 
-			this.width = levelInstanceParameters.width;
-			this.height = levelInstanceParameters.height;
+			this.width = mapParams.Width;
+			this.height = mapParams.Height;
 
 			SetWorldPosition();
 
@@ -158,8 +158,8 @@ namespace Level
 
 			BuildColliders();
 
-			levelInstanceParameters.tiles = tiles;
-			levelInstanceParameters.rooms = rooms;
+			mapParams.Tiles = tiles;
+			mapParams.Rooms = rooms;
 
 			BuildTexture();
 

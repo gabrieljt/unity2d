@@ -18,13 +18,12 @@ namespace Level
 
 			if (GUILayout.Button("Create Level"))
 			{
-				LevelLoader levelLoader = (LevelLoader)target;
+				var levelLoader = (LevelLoader)target;
+				var levelParams = levelLoader.levelParams;
 
-				var levelParameters = levelLoader.levelInstanceParameters;
-
-				LevelInstance loadedLevel;
+				GameObject loadedLevel;
 				if (LevelLoader.LoadLevelStatus.Created == levelLoader.CreateLevel(
-					levelLoader.Index, ref levelParameters, out loadedLevel, false)
+					levelLoader.Index, ref levelParams, out loadedLevel, false)
 				)
 				{
 					levelLoader.LoadLevel(levelLoader.Index);
@@ -33,13 +32,12 @@ namespace Level
 
 			if (GUILayout.Button("Recreate Level"))
 			{
-				LevelLoader levelLoader = (LevelLoader)target;
+				var levelLoader = (LevelLoader)target;
+				var levelParams = levelLoader.levelParams;
 
-				var levelParameters = levelLoader.levelInstanceParameters;
-
-				LevelInstance loadedLevel;
+				GameObject loadedLevel;
 				if (LevelLoader.LoadLevelStatus.Created == levelLoader.CreateLevel(
-					levelLoader.Index, ref levelParameters, out loadedLevel, true)
+					levelLoader.Index, ref levelParams, out loadedLevel, true)
 				)
 				{
 					levelLoader.LoadLevel(levelLoader.Index);
@@ -48,16 +46,14 @@ namespace Level
 
 			if (GUILayout.Button("Load Level"))
 			{
-				LevelLoader levelLoader = (LevelLoader)target;
-
-				var levelParameters = levelLoader.levelInstanceParameters;
-
+				var levelLoader = (LevelLoader)target;
+				var levelParams = levelLoader.levelParams;
 				levelLoader.LoadLevel(levelLoader.Index);
 			}
 
 			if (GUILayout.Button("Dispose"))
 			{
-				LevelLoader levelLoader = (LevelLoader)target;
+				var levelLoader = (LevelLoader)target;
 
 				levelLoader.Dispose();
 			}
@@ -77,31 +73,31 @@ namespace Level
 		}
 
 		[SerializeField]
-		private GameObject levelInstancePrefab;
+		private GameObject levelPrefab;
 
-		public GameObject LevelInstancePrefab { get { return levelInstancePrefab; } }
+		public GameObject LevelInstancePrefab { get { return levelPrefab; } }
 
 		[SerializeField]
-		private LevelInstance loadedLevel;
+		private GameObject activeLevel;
 
 		[SerializeField]
 		private int index;
 
 		public int Index { get { return index; } }
 
-		public LevelInstanceParameters levelInstanceParameters;
+		public LevelParams levelParams;
 
 		[SerializeField]
 		private int[] levelIndexes;
 
-		private static Dictionary<int, LevelInstance> levelInstances = new Dictionary<int, LevelInstance>();
+		private static Dictionary<int, GameObject> levels = new Dictionary<int, GameObject>();
 
-		public Action<int, LevelInstance, LevelInstanceParameters> LevelLoaded = delegate { };
+		public Action<int, GameObject, LevelParams> LevelLoaded = delegate { };
 
 		private void Awake()
 		{
-			Debug.Assert(levelInstancePrefab);
-			Debug.Assert(levelInstancePrefab.GetComponent<LevelInstance>());
+			Debug.Assert(levelPrefab);
+			Debug.Assert(levelPrefab.GetComponent<Map>());
 		}
 
 		private void Start()
@@ -109,45 +105,47 @@ namespace Level
 			Clear();
 		}
 
-		public LoadLevelStatus CreateLevel(int index, ref LevelInstanceParameters levelInstanceParameters, out LevelInstance loadedLevel, bool overwrite = false)
+		public LoadLevelStatus CreateLevel(int index, ref LevelParams levelParams, out GameObject loadedLevel, bool overwrite = false)
 		{
-			LoadLevelStatus status = LoadLevelStatus.Failed;
+			var status = LoadLevelStatus.Failed;
 			loadedLevel = null;
 
-			if (!levelInstances.ContainsKey(index))
+			if (!levels.ContainsKey(index))
 			{
-				levelInstanceParameters = SetStatusCreated(index, levelInstanceParameters, out loadedLevel, ref status);
+				levelParams = SetStatusCreated(index, levelParams, out loadedLevel, ref status);
 			}
 			else if (overwrite)
 			{
 				DestroyLevel(index);
-				levelInstanceParameters = SetStatusCreated(index, levelInstanceParameters, out loadedLevel, ref status);
+				levelParams = SetStatusCreated(index, levelParams, out loadedLevel, ref status);
 			}
 
-			this.levelInstanceParameters = levelInstanceParameters;
+			this.levelParams = levelParams;
 
 			Debug.LogWarning(GetType() + "LevelLoader.CreateLevel.status: " + status);
 			return status;
 		}
 
-		private LevelInstanceParameters SetStatusCreated(int index, LevelInstanceParameters levelParameters, out LevelInstance loadedLevel, ref LoadLevelStatus status)
+		private LevelParams SetStatusCreated(int index, LevelParams levelParams, out GameObject loadedLevel, ref LoadLevelStatus status)
 		{
-			loadedLevel = Instantiate(levelInstancePrefab).GetComponent<LevelInstance>();
-			loadedLevel.Build(ref levelParameters);
+			loadedLevel = Instantiate(levelPrefab);
+			IMapParams mapParams = levelParams;
+			loadedLevel.GetComponent<Map>().Build(ref mapParams);
 			loadedLevel.transform.SetParent(transform, true);
 			loadedLevel.name = "Level " + index;
-			levelInstances[index] = loadedLevel;
-			levelIndexes = new int[levelInstances.Count];
-			levelInstances.Keys.CopyTo(levelIndexes, 0);
+			levels[index] = loadedLevel;
+			levelIndexes = new int[levels.Count];
+			levels.Keys.CopyTo(levelIndexes, 0);
 			status = LoadLevelStatus.Created;
-			return levelParameters;
+
+			return levelParams;
 		}
 
 		private LoadLevelStatus DestroyLevel(int index)
 		{
 			var status = LoadLevelStatus.Failed;
 
-			if (levelInstances.ContainsKey(index))
+			if (levels.ContainsKey(index))
 			{
 				SetStatusDestroyed(index, ref status);
 			}
@@ -158,49 +156,43 @@ namespace Level
 
 		private void SetStatusDestroyed(int index, ref LoadLevelStatus status)
 		{
-			DestroyImmediate(levelInstances[index].gameObject);
-			levelInstances.Remove(index);
+			DestroyImmediate(levels[index].gameObject);
+			levels.Remove(index);
 			status = LoadLevelStatus.Destroyed;
 		}
 
 		public LoadLevelStatus LoadLevel(int index)
 		{
-			LoadLevelStatus status = LoadLevelStatus.Failed;
+			var status = LoadLevelStatus.Failed;
 
-			if (levelInstances.ContainsKey(index))
+			if (levels.ContainsKey(index))
 			{
-				levelInstanceParameters = SetStatusLoaded(index, ref status);
+				levelParams = SetStatusLoaded(index, ref status);
 			}
 
 			if (status == LoadLevelStatus.Loaded)
 			{
-				LevelLoaded(index, loadedLevel, levelInstanceParameters);
+				LevelLoaded(index, activeLevel, levelParams);
 			}
 
 			Debug.LogWarning(GetType() + "LevelLoader.LoadLevel.status: " + status);
 			return status;
 		}
 
-		private LevelInstanceParameters SetStatusLoaded(int index, ref LoadLevelStatus status)
+		private LevelParams SetStatusLoaded(int index, ref LoadLevelStatus status)
 		{
 			this.index = index;
 
-			if (loadedLevel != null)
+			if (activeLevel != null)
 			{
-				loadedLevel.gameObject.SetActive(false);
+				activeLevel.SetActive(false);
 			}
 
-			loadedLevel = levelInstances[index];
-			loadedLevel.gameObject.SetActive(true);
+			activeLevel = levels[index];
+			activeLevel.SetActive(true);
 			status = LoadLevelStatus.Loaded;
 
-			var levelInstanceParameters = new LevelInstanceParameters();
-			levelInstanceParameters.width = loadedLevel.Width;
-			levelInstanceParameters.height = loadedLevel.Height;
-			levelInstanceParameters.rooms = loadedLevel.Rooms;
-			levelInstanceParameters.tiles = loadedLevel.Tiles;
-
-			return levelInstanceParameters;
+			return new LevelParams(activeLevel);
 		}
 
 		public void Dispose()
@@ -210,14 +202,14 @@ namespace Level
 
 		private void Clear()
 		{
-			var sceneLevelInstances = FindObjectsOfType<LevelInstance>();
+			var sceneLevelInstances = FindObjectsOfType<Map>();
 
 			for (int i = 0; i < sceneLevelInstances.Length; i++)
 			{
 				DestroyImmediate(sceneLevelInstances[i].gameObject);
 			}
 
-			levelInstances.Clear();
+			levels.Clear();
 			levelIndexes = new int[0];
 		}
 

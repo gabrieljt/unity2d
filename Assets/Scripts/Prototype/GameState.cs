@@ -11,7 +11,7 @@ public class GameState : MonoBehaviour, IDisposable
 	private Camera camera;
 
 	[SerializeField]
-	private LevelInstance levelInstance;
+	private Map levelInstance;
 
 	[SerializeField]
 	private Character playerCharacter;
@@ -62,10 +62,10 @@ public class GameState : MonoBehaviour, IDisposable
 			height = width = id + 9;
 		}
 
-		public void SetMaximumSteps(int level, LevelInstance.Room[] rooms, Vector2 tileMapOrigin)
+		public void SetMaximumSteps(int level, Map.Room[] rooms, Vector2 tileMapOrigin)
 		{
 			maximumSteps = stepsTaken = 0;
-			foreach (LevelInstance.Room room in rooms)
+			foreach (Map.Room room in rooms)
 			{
 				maximumSteps += (int)Vector2.Distance(room.Center, tileMapOrigin);
 			}
@@ -84,7 +84,7 @@ public class GameState : MonoBehaviour, IDisposable
 		camera = FindObjectOfType<Camera>();
 		Debug.Assert(camera);
 
-		levelInstance = FindObjectOfType<LevelInstance>();
+		levelInstance = FindObjectOfType<Map>();
 		Debug.Assert(levelInstance);
 
 		playerCharacter = FindObjectOfType<Character>();
@@ -174,10 +174,11 @@ public class GameState : MonoBehaviour, IDisposable
 		DisableSceneObjects();
 
 		yield return 0;
-		var levelParameters = new LevelInstanceParameters();
-		levelParameters.width = width;
-		levelParameters.height = height;
-		levelInstance.Build(ref levelParameters);
+		var levelParams = new LevelParams();
+		levelParams.Width = width;
+		levelParams.Height = height;
+		IMapParams mapParams = levelParams;
+		levelInstance.Build(ref mapParams);
 	}
 
 	private void DisableSceneObjects()
@@ -241,7 +242,7 @@ public class GameState : MonoBehaviour, IDisposable
 		bool playerSet = false, exitSet = false;
 		for (int i = 0; i < levelInstance.Rooms.Length; i++)
 		{
-			LevelInstance.Room room = levelInstance.Rooms[i];
+			Map.Room room = levelInstance.Rooms[i];
 			for (int x = 0; x < room.Width; x++)
 			{
 				for (int y = 0; y < room.Height; y++)
