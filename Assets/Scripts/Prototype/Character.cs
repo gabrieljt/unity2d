@@ -243,15 +243,17 @@ public class Character : MonoBehaviour
 
 	private IEnumerator UnlockInputsCoroutine()
 	{
+		/*
 		int targetFrameRate = Application.targetFrameRate == 0 ? 60 : Application.targetFrameRate;
-		yield return new WaitForSeconds(1f / targetFrameRate * 10f);
-
+		yield return new WaitForSeconds(1f / (targetFrameRate * 0.1f));
+		*/
+		yield return new WaitForSeconds(1f);
 		maximumInputsPerFrame = MaximumInputsPerFrame;
 	}
 
 	public void Disable()
 	{
-		HaltMovement();
+		//HaltMovement();
 		LockInputs();
 
 		if (Application.isPlaying)
