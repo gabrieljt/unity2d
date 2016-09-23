@@ -14,12 +14,6 @@ public class GameState : MonoBehaviour, IDisposable
 	private Map levelInstance;
 
 	[SerializeField]
-	private Character playerCharacter;
-
-	[SerializeField]
-	private Exit exit;
-
-	[SerializeField]
 	[Range(1, 100)]
 	private int level = 1;
 
@@ -87,16 +81,9 @@ public class GameState : MonoBehaviour, IDisposable
 		levelInstance = FindObjectOfType<Map>();
 		Debug.Assert(levelInstance);
 
-		playerCharacter = FindObjectOfType<Character>();
-		Debug.Assert(playerCharacter);
-
-		exit = FindObjectOfType<Exit>();
-		Debug.Assert(exit);
-
 		levelInstance.Built += OnTileMapBuilt;
 		levelInstance.GetComponent<MapDungeon>().Built += OnDungeonMapBuilt;
-		playerCharacter.StepTaken += OnStepTaken;
-		exit.Reached += OnExitReached;
+		levelInstance.GetComponent<MapDungeonSpawner>().Built += OnDungeonMapSpawnerBuilt;
 
 		Debug.Assert(dungeonLevelLabel);
 		Debug.Assert(stepsLeftLabel);
@@ -127,14 +114,26 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void LateUpdate()
 	{
-		SetCameraPosition(playerCharacter.transform.position);
+		var playerCharacter = FindObjectOfType<Character>();
+		if (playerCharacter)
+		{
+			SetCameraPosition(playerCharacter.transform.position);
+		}
 	}
 
 	private void UpdateUI()
 	{
 		SetDungeonLevelLabel(currentLevel.Id);
 		SetStepsLeftLabel(currentLevel.StepsLeft);
-		SetStepsTakenLabel(playerCharacter.Steps);
+		var playerCharacter = FindObjectOfType<Character>();
+		if (playerCharacter)
+		{
+			SetStepsTakenLabel(playerCharacter.Steps);
+		}
+		else
+		{
+			SetStepsTakenLabel(0);
+		}
 	}
 
 	private void SetCameraPosition(Vector3 position)
@@ -172,26 +171,12 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private IEnumerator BuildNewTileMap(int width, int height)
 	{
-		DisableSceneObjects();
-
 		yield return 0;
 		var levelParams = new LevelParams();
 		levelParams.Width = width;
 		levelParams.Height = height;
 		IMapParams mapParams = levelParams;
 		levelInstance.Build(ref mapParams);
-	}
-
-	private void DisableSceneObjects()
-	{
-		playerCharacter.Disable();
-		exit.Disable();
-	}
-
-	private void EnableSceneObjects()
-	{
-		playerCharacter.Enable();
-		exit.Enable();
 	}
 
 	#region Callbacks
@@ -216,22 +201,46 @@ public class GameState : MonoBehaviour, IDisposable
 		StartCoroutine(PopulateTileMap(dungeonMapParams));
 	}
 
-	#endregion Callbacks
+	private void OnDungeonMapSpawnerBuilt(IMapDungeonSpawnerParams dungeonMapSpawnerParams)
+	{
+		foreach (var actorSpawner in levelInstance.GetComponent<MapDungeonSpawner>().GetComponents<ActorSpawner>())
+		{
+			actorSpawner.Spawned += OnActorSpawned;
+		}
+	}
 
-	#region Populate Tile Map
+	private void OnActorSpawned(ActorSpawner actorSpawner, GameObject spawnedActor)
+	{
+		if (actorSpawner.IsType<Character>())
+		{
+			var playerCharacter = spawnedActor.GetComponent<Character>();
+			playerCharacter.StepTaken += OnStepTaken;
+		}
+		else
+		{
+			if (actorSpawner.IsType<Exit>())
+			{
+				var exit = spawnedActor.GetComponent<Exit>();
+				exit.Reached += OnExitReached;
+			}
+		}
+
+		actorSpawner.Spawned -= OnActorSpawned;
+	}
+
+	#endregion Callbacks
 
 	private IEnumerator PopulateTileMap(IMapDungeonParams dungeonMapParams)
 	{
-		bool populated = Populate(dungeonMapParams);
+		bool populated = FindObjectOfType<Character>() && FindObjectOfType<Exit>();
 		yield return 0;
 
 		if (!populated)
 		{
-			ResetLevel();
+			StartCoroutine(PopulateTileMap(dungeonMapParams));
 		}
 		else
 		{
-			EnableSceneObjects();
 			currentLevel.SetMaximumSteps(level, dungeonMapParams.Dungeons, levelInstance.WorldPosition);
 		}
 	}
@@ -242,72 +251,6 @@ public class GameState : MonoBehaviour, IDisposable
 		BuildLevel();
 	}
 
-	private bool Populate(IMapDungeonParams dungeonMapParams)
-	{
-		bool playerSet = false, exitSet = false;
-		for (int i = 0; i < dungeonMapParams.Dungeons.Length; i++)
-		{
-			MapDungeon.Room dungeon = dungeonMapParams.Dungeons[i];
-			for (int x = 0; x < dungeon.Width; x++)
-			{
-				for (int y = 0; y < dungeon.Height; y++)
-				{
-					if (levelInstance.Tiles[dungeon.Left + x, dungeon.Top + y].Type == TileType.Floor)
-					{
-						Vector2 tilePosition = new Vector2(dungeon.Left + x, dungeon.Top + y) + Vector2.one * 0.5f;
-						switch (dungeonMapParams.Dungeons.Length)
-						{
-							case 1:
-								if (!playerSet)
-								{
-									SetPlayerPosition(tilePosition);
-									playerSet = true;
-								}
-								else if (!exitSet)
-								{
-									SetExitPosition(tilePosition);
-									exitSet = true;
-								}
-
-								break;
-
-							default:
-								if (i == 0)
-								{
-									SetPlayerPosition(tilePosition);
-									playerSet = true;
-								}
-								else if (i == dungeonMapParams.Dungeons.Length - 1)
-								{
-									SetExitPosition(tilePosition);
-									exitSet = true;
-								}
-								break;
-						}
-						if (playerSet && exitSet)
-						{
-							return true;
-						}
-					}
-				}
-			}
-		}
-		return false;
-	}
-
-	private void SetPlayerPosition(Vector2 position)
-	{
-		playerCharacter.transform.position = position;
-		SetCameraPosition(position);
-	}
-
-	private void SetExitPosition(Vector2 position)
-	{
-		exit.transform.position = position;
-	}
-
-	#endregion Populate Tile Map
-
 	private void OnDestroy()
 	{
 		Dispose();
@@ -316,7 +259,7 @@ public class GameState : MonoBehaviour, IDisposable
 	public void Dispose()
 	{
 		levelInstance.Built -= OnTileMapBuilt;
-		playerCharacter.StepTaken += OnStepTaken;
-		exit.Reached -= OnExitReached;
+		FindObjectOfType<Character>().StepTaken -= OnStepTaken;
+		FindObjectOfType<Exit>().Reached -= OnExitReached;
 	}
 }
