@@ -126,6 +126,7 @@ public class Character : AActor
 	private void HaltMovement()
 	{
 		transform.position = destination;
+		// TODO: singal inputs clear
 		//inputs.Clear();
 		state = CharacterState.Idle;
 	}
@@ -133,6 +134,7 @@ public class Character : AActor
 	private void CollisionFallback()
 	{
 		destination = previousDestination;
+		// TODO: singal inputs clear
 		//inputs.Clear();
 		state = CharacterState.FallingBack;
 
@@ -163,13 +165,11 @@ public class Character : AActor
 		{
 			rigidbody2D.isKinematic = false;
 		}
-		
 	}
 
 	public override void Disable()
 	{
 		base.Disable();
-		
 
 		if (Application.isPlaying)
 		{

@@ -5,6 +5,8 @@ using UnityEngine;
 
 namespace TiledLevel
 {
+	using Input;
+
 #if UNITY_EDITOR
 
 	using UnityEditor;
@@ -183,6 +185,11 @@ namespace TiledLevel
 			Debug.LogWarning(spawnedActor.GetType() + " spawned");
 
 			actorSpawner.Spawned -= OnActorSpawned;
+
+			if (actorSpawner.IsType<Character>() && spawnedActor.CompareTag("Warrior"))
+			{
+				PlayerInputEnqueuer.SetInputDequeuer(spawnedActor.GetComponent<CharacterInputDequeuer>());
+			}
 
 			spawnedActor.transform.SetParent(transform);
 			spawnedActors[actorSpawner.actorType].Add(spawnedActor);

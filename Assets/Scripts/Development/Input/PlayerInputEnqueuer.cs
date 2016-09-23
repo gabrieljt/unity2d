@@ -1,12 +1,17 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Input
 {
 	public class PlayerInputEnqueuer : AInputEnqueuer
 	{
-		[SerializeField]
-		private AInputDequeuer inputDequeuer;
+		public static PlayerInputEnqueuer Instance
+		{
+			get
+			{
+				Debug.Assert(FindObjectsOfType<PlayerInputEnqueuer>().Length == 1);
+				return FindObjectOfType<PlayerInputEnqueuer>();
+			}
+		}
 
 		private void Awake()
 		{
@@ -43,6 +48,9 @@ namespace Input
 			}
 		}
 
-		
+		public static void SetInputDequeuer(CharacterInputDequeuer characterInputDequeuer)
+		{
+			Instance.InputsEnqueued += characterInputDequeuer.OnInputsEnqueued;
+		}
 	}
 }
