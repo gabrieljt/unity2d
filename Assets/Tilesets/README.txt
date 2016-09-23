@@ -76,7 +76,7 @@ Feel free to create any tiles you see here and send them to me at DragonDePlatin
  - Split up some sheets to better categorize them.
  - Dozens of furniture pieces including animated doors, windows, jars, signs, tables, carpets, torches, shelves and chairs.
  - Farmers and female civilian.
- - Mushrooms, more chests, weapons and guns.
+ - Mushdungeons, more chests, weapons and guns.
  - Snow and desert floor and walls.
  - Normal, desolate and snowy mountains/forests.
  - 12 animated ores and swamp/evil pits.

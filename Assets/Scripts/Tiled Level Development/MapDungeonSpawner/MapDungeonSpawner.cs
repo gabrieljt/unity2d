@@ -7,8 +7,8 @@ namespace TiledLevel
 
 	using UnityEditor;
 
-	[CustomEditor(typeof(MapSpawner))]
-	public class MapSpawnerInspector : Editor
+	[CustomEditor(typeof(MapDungeonSpawner))]
+	public class MapDungeonSpawnerInspector : Editor
 	{
 		public override void OnInspectorGUI()
 		{
@@ -16,10 +16,10 @@ namespace TiledLevel
 
 			if (GUILayout.Button("Build Spawners"))
 			{
-				var mapSpawner = (MapSpawner)target;
-				IMapRoomParams mapRoomParams = new MapRoomParams(mapSpawner.MapRoom);
-				IMapSpawnerParams mapSpawnerParams = new MapSpawnerParams();
-				mapSpawner.Build(ref mapRoomParams, ref mapSpawnerParams);
+				var mapDungeonSpawner = (MapDungeonSpawner)target;
+				IMapDungeonParams mapDungeonParams = new MapDungeonParams(mapDungeonSpawner.MapDungeon);
+				IMapDungeonSpawnerParams mapDungeonSpawnerParams = new MapDungeonSpawnerParams();
+				mapDungeonSpawner.Build(ref mapDungeonParams, ref mapDungeonSpawnerParams);
 			}
 		}
 	}
@@ -28,33 +28,33 @@ namespace TiledLevel
 
 	[ExecuteInEditMode]
 	[RequireComponent(
-		typeof(MapRoom)
+		typeof(MapDungeon)
 	)]
-	public class MapSpawner : MonoBehaviour, IDisposable
+	public class MapDungeonSpawner : MonoBehaviour, IDisposable
 	{
 		[SerializeField]
-		private MapRoom mapRoom;
+		private MapDungeon mapDungeon;
 
-		public MapRoom MapRoom { get { return mapRoom; } }
+		public MapDungeon MapDungeon { get { return mapDungeon; } }
 
-		public Action<IMapSpawnerParams> Built = delegate { };
+		public Action<IMapDungeonSpawnerParams> Built = delegate { };
 
 		private void Awake()
 		{
-			mapRoom = GetComponent<MapRoom>();
-			mapRoom.Built += OnMapRoomBuilt;
+			mapDungeon = GetComponent<MapDungeon>();
+			mapDungeon.Built += OnMapDungeonBuilt;
 		}
 
-		private void OnMapRoomBuilt(IMapRoomParams mapRoomParams)
+		private void OnMapDungeonBuilt(IMapDungeonParams mapDungeonParams)
 		{
-			IMapSpawnerParams mapSpawnerParams = new MapSpawnerParams();
-			Build(ref mapRoomParams, ref mapSpawnerParams);
+			IMapDungeonSpawnerParams mapSpawnerParams = new MapDungeonSpawnerParams();
+			Build(ref mapDungeonParams, ref mapSpawnerParams);
 		}
 
-		public void Build(ref IMapRoomParams mapRoomParams, ref IMapSpawnerParams mapSpawnerParams)
+		public void Build(ref IMapDungeonParams mapDungeonParams, ref IMapDungeonSpawnerParams mapDungeonSpawnerParams)
 		{
-			BuildSpawners(mapRoomParams);
-			Built(mapSpawnerParams);
+			BuildSpawners(mapDungeonParams);
+			Built(mapDungeonSpawnerParams);
 		}
 
 		public void DestroySpawners()
@@ -67,22 +67,22 @@ namespace TiledLevel
 			}
 		}
 
-		private void BuildSpawners(IMapRoomParams mapRoomParams)
+		private void BuildSpawners(IMapDungeonParams mapDungeonParams)
 		{
 			DestroySpawners();
 
 			bool playerSet = false, exitSet = false;
-			for (int i = 0; i < mapRoomParams.Rooms.Length; i++)
+			for (int i = 0; i < mapDungeonParams.Dungeons.Length; i++)
 			{
-				MapRoom.Room room = mapRoomParams.Rooms[i];
-				for (int x = 0; x < room.Width; x++)
+				MapDungeon.Room dungeon = mapDungeonParams.Dungeons[i];
+				for (int x = 0; x < dungeon.Width; x++)
 				{
-					for (int y = 0; y < room.Height; y++)
+					for (int y = 0; y < dungeon.Height; y++)
 					{
-						if (mapRoom.Map.Tiles[room.Left + x, room.Top + y].Type == TileType.Floor)
+						if (mapDungeon.Map.Tiles[dungeon.Left + x, dungeon.Top + y].Type == TileType.Floor)
 						{
-							Vector2 tilePosition = new Vector2(room.Left + x, room.Top + y) + Vector2.one * 0.5f;
-							switch (mapRoomParams.Rooms.Length)
+							Vector2 tilePosition = new Vector2(dungeon.Left + x, dungeon.Top + y) + Vector2.one * 0.5f;
+							switch (mapDungeonParams.Dungeons.Length)
 							{
 								case 1:
 									SetPlayerSpawner(ref playerSet, tilePosition);
@@ -94,7 +94,7 @@ namespace TiledLevel
 									{
 										SetPlayerSpawner(ref playerSet, tilePosition);
 									}
-									else if (i == mapRoomParams.Rooms.Length - 1)
+									else if (i == mapDungeonParams.Dungeons.Length - 1)
 									{
 										SetExitSpawner(ref exitSet, tilePosition);
 									}
@@ -145,7 +145,7 @@ namespace TiledLevel
 
 		public void Dispose()
 		{
-			mapRoom.Built -= OnMapRoomBuilt;
+			mapDungeon.Built -= OnMapDungeonBuilt;
 		}
 
 		private void OnDestroy()

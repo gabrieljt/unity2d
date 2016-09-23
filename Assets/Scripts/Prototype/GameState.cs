@@ -62,15 +62,15 @@ public class GameState : MonoBehaviour, IDisposable
 			height = width = id + 9;
 		}
 
-		public void SetMaximumSteps(int level, MapRoom.Room[] rooms, Vector2 tileMapOrigin)
+		public void SetMaximumSteps(int level, MapDungeon.Room[] dungeons, Vector2 tileMapOrigin)
 		{
 			maximumSteps = stepsTaken = 0;
-			foreach (MapRoom.Room room in rooms)
+			foreach (MapDungeon.Room dungeon in dungeons)
 			{
-				maximumSteps += (int)Vector2.Distance(room.Center, tileMapOrigin);
+				maximumSteps += (int)Vector2.Distance(dungeon.Center, tileMapOrigin);
 			}
 
-			maximumSteps = Mathf.Clamp(maximumSteps / level * rooms.Length, level + rooms.Length, maximumSteps + level + rooms.Length);
+			maximumSteps = Mathf.Clamp(maximumSteps / level * dungeons.Length, level + dungeons.Length, maximumSteps + level + dungeons.Length);
 		}
 	}
 
@@ -94,7 +94,7 @@ public class GameState : MonoBehaviour, IDisposable
 		Debug.Assert(exit);
 
 		levelInstance.Built += OnTileMapBuilt;
-		levelInstance.GetComponent<MapRoom>().Built += OnRoomMapBuilt;
+		levelInstance.GetComponent<MapDungeon>().Built += OnDungeonMapBuilt;
 		playerCharacter.StepTaken += OnStepTaken;
 		exit.Reached += OnExitReached;
 
@@ -211,18 +211,18 @@ public class GameState : MonoBehaviour, IDisposable
 	{
 	}
 
-	public void OnRoomMapBuilt(IMapRoomParams roomMapParams)
+	public void OnDungeonMapBuilt(IMapDungeonParams dungeonMapParams)
 	{
-		StartCoroutine(PopulateTileMap(roomMapParams));
+		StartCoroutine(PopulateTileMap(dungeonMapParams));
 	}
 
 	#endregion Callbacks
 
 	#region Populate Tile Map
 
-	private IEnumerator PopulateTileMap(IMapRoomParams roomMapParams)
+	private IEnumerator PopulateTileMap(IMapDungeonParams dungeonMapParams)
 	{
-		bool populated = Populate(roomMapParams);
+		bool populated = Populate(dungeonMapParams);
 		yield return 0;
 
 		if (!populated)
@@ -232,7 +232,7 @@ public class GameState : MonoBehaviour, IDisposable
 		else
 		{
 			EnableSceneObjects();
-			currentLevel.SetMaximumSteps(level, roomMapParams.Rooms, levelInstance.WorldPosition);
+			currentLevel.SetMaximumSteps(level, dungeonMapParams.Dungeons, levelInstance.WorldPosition);
 		}
 	}
 
@@ -242,20 +242,20 @@ public class GameState : MonoBehaviour, IDisposable
 		BuildLevel();
 	}
 
-	private bool Populate(IMapRoomParams roomMapParams)
+	private bool Populate(IMapDungeonParams dungeonMapParams)
 	{
 		bool playerSet = false, exitSet = false;
-		for (int i = 0; i < roomMapParams.Rooms.Length; i++)
+		for (int i = 0; i < dungeonMapParams.Dungeons.Length; i++)
 		{
-			MapRoom.Room room = roomMapParams.Rooms[i];
-			for (int x = 0; x < room.Width; x++)
+			MapDungeon.Room dungeon = dungeonMapParams.Dungeons[i];
+			for (int x = 0; x < dungeon.Width; x++)
 			{
-				for (int y = 0; y < room.Height; y++)
+				for (int y = 0; y < dungeon.Height; y++)
 				{
-					if (levelInstance.Tiles[room.Left + x, room.Top + y].Type == TileType.Floor)
+					if (levelInstance.Tiles[dungeon.Left + x, dungeon.Top + y].Type == TileType.Floor)
 					{
-						Vector2 tilePosition = new Vector2(room.Left + x, room.Top + y) + Vector2.one * 0.5f;
-						switch (roomMapParams.Rooms.Length)
+						Vector2 tilePosition = new Vector2(dungeon.Left + x, dungeon.Top + y) + Vector2.one * 0.5f;
+						switch (dungeonMapParams.Dungeons.Length)
 						{
 							case 1:
 								if (!playerSet)
@@ -277,7 +277,7 @@ public class GameState : MonoBehaviour, IDisposable
 									SetPlayerPosition(tilePosition);
 									playerSet = true;
 								}
-								else if (i == roomMapParams.Rooms.Length - 1)
+								else if (i == dungeonMapParams.Dungeons.Length - 1)
 								{
 									SetExitPosition(tilePosition);
 									exitSet = true;

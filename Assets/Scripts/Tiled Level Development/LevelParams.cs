@@ -4,7 +4,7 @@ using UnityEngine;
 namespace TiledLevel
 {
 	[Serializable]
-	public class LevelParams : IMapParams, IMapRoomParams
+	public class LevelParams : IMapParams, IMapDungeonParams
 	{
 		[SerializeField]
 		private int width;
@@ -16,7 +16,7 @@ namespace TiledLevel
 		private Tile[,] tiles;
 
 		[SerializeField]
-		private MapRoom.Room[] rooms;
+		private MapDungeon.Room[] dungeons;
 
 		public int Width
 		{
@@ -57,16 +57,16 @@ namespace TiledLevel
 			}
 		}
 
-		public MapRoom.Room[] Rooms
+		public MapDungeon.Room[] Dungeons
 		{
 			get
 			{
-				return rooms;
+				return dungeons;
 			}
 
 			set
 			{
-				rooms = value;
+				dungeons = value;
 			}
 		}
 
@@ -77,8 +77,8 @@ namespace TiledLevel
 			Height = levelMap.Height;
 			Tiles = levelMap.Tiles;
 
-			var levelRoomMap = level.GetComponent<MapRoom>();
-			Rooms = levelRoomMap.Rooms;
+			var levelDungeonMap = level.GetComponent<MapDungeon>();
+			Dungeons = levelDungeonMap.Dungeons;
 		}
 
 		public LevelParams()
