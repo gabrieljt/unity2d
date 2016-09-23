@@ -1,10 +1,9 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace TiledLevel
 {
-	using System;
-	using System.Collections.Generic;
-
 #if UNITY_EDITOR
 
 	using UnityEditor;

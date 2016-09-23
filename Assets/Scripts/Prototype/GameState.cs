@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Actor;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TiledLevel;
@@ -90,6 +91,11 @@ public class GameState : MonoBehaviour, IDisposable
 	[SerializeField]
 	private Level currentLevel;
 
+	private bool playerCharacterSet;
+	private bool exitSet;
+	private Character playerCharacter;
+	private Exit exit;
+
 	private void Awake()
 	{
 		camera = FindObjectOfType<Camera>();
@@ -100,7 +106,7 @@ public class GameState : MonoBehaviour, IDisposable
 
 		levelInstance.Built += OnTileMapBuilt;
 		levelInstance.GetComponent<MapDungeon>().Built += OnDungeonMapBuilt;
-		levelInstance.GetComponent<MapDungeonSpawner>().Built += OnDungeonMapSpawnerBuilt;
+		levelInstance.GetComponent<MapDungeonActorSpawner>().Built += OnDungeonMapSpawnerBuilt;
 
 		Debug.Assert(dungeonLevelLabel);
 		Debug.Assert(stepsLeftLabel);
@@ -172,6 +178,7 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void BuildLevel()
 	{
+		playerCharacterSet = exitSet = false;
 		state = GameStateType.LoadingLevel;
 		if (level > levels.Count)
 		{
@@ -217,7 +224,7 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void OnDungeonMapSpawnerBuilt()
 	{
-		foreach (var actorSpawner in levelInstance.GetComponent<MapDungeonSpawner>().GetComponents<ActorSpawner>())
+		foreach (var actorSpawner in levelInstance.GetComponent<MapDungeonActorSpawner>().GetComponents<ActorSpawner>())
 		{
 			actorSpawner.Spawned += OnActorSpawned;
 		}
@@ -225,6 +232,19 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void OnActorSpawned(ActorSpawner actorSpawner, GameObject spawnedActor)
 	{
+		if (actorSpawner.IsType<Character>())
+		{
+			playerCharacter = spawnedActor.GetComponent<Character>();
+			playerCharacter.Disable();
+			playerCharacterSet = true;
+		}
+		else if (actorSpawner.IsType<Exit>())
+		{
+			exit = spawnedActor.GetComponent<Exit>();
+			exit.Disable();
+			exitSet = true;
+		}
+
 		actorSpawner.Spawned -= OnActorSpawned;
 	}
 
@@ -234,10 +254,7 @@ public class GameState : MonoBehaviour, IDisposable
 	{
 		yield return 0;
 
-		var playerCharacter = FindObjectOfType<Character>();
-		var exit = FindObjectOfType<Exit>();
-
-		bool populated = playerCharacter && exit;
+		bool populated = playerCharacterSet && exitSet;
 		if (!populated)
 		{
 			StartCoroutine(PopulateTileMap());
@@ -258,31 +275,39 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void RegisterActorEvents()
 	{
-		var playerCharacter = FindObjectOfType<Character>();
 		if (playerCharacter)
 		{
 			playerCharacter.StepTaken += OnStepTaken;
 		}
 
-		var exit = FindObjectOfType<Exit>();
 		if (exit)
 		{
 			exit.Reached += OnExitReached;
 		}
+
+		StartCoroutine(EnableActors(playerCharacter, exit));
+	}
+
+	private IEnumerator EnableActors(Character playerCharacter, Exit exit)
+	{
+		yield return 0;
+
+		playerCharacter.Enable();
+		exit.Enable();
 	}
 
 	private void UnregisterActorEvents()
 	{
-		var playerCharacter = FindObjectOfType<Character>();
 		if (playerCharacter)
 		{
 			playerCharacter.StepTaken -= OnStepTaken;
+			playerCharacter.Disable();
 		}
 
-		var exit = FindObjectOfType<Exit>();
 		if (exit)
 		{
 			exit.Reached -= OnExitReached;
+			exit.Disable();
 		}
 	}
 
@@ -302,8 +327,16 @@ public class GameState : MonoBehaviour, IDisposable
 	{
 		levelInstance.Built -= OnTileMapBuilt;
 		levelInstance.GetComponent<MapDungeon>().Built -= OnDungeonMapBuilt;
-		levelInstance.GetComponent<MapDungeonSpawner>().Built -= OnDungeonMapSpawnerBuilt;
-		FindObjectOfType<Character>().StepTaken -= OnStepTaken;
-		FindObjectOfType<Exit>().Reached -= OnExitReached;
+		levelInstance.GetComponent<MapDungeonActorSpawner>().Built -= OnDungeonMapSpawnerBuilt;
+
+		if (playerCharacterSet)
+		{
+			FindObjectOfType<Character>().StepTaken -= OnStepTaken;
+		}
+
+		if (exitSet)
+		{
+			FindObjectOfType<Exit>().Reached -= OnExitReached;
+		}
 	}
 }
