@@ -7,6 +7,14 @@ using UnityEngine.UI;
 
 public class GameState : MonoBehaviour, IDisposable
 {
+	public enum GameStateType
+	{
+		Idle,
+		LoadingLevel,
+		InGame,
+		Ended,
+	}
+
 	[SerializeField]
 	private Camera camera;
 
@@ -35,6 +43,11 @@ public class GameState : MonoBehaviour, IDisposable
 		public int StepsTaken { get { return stepsTaken; } }
 
 		[SerializeField]
+		private static int totalStepsTaken = 0;
+
+		public static int TotalStepsTaken { get { return totalStepsTaken; } }
+
+		[SerializeField]
 		private int maximumSteps;
 
 		public int MaximumSteps { get { return maximumSteps; } }
@@ -49,6 +62,7 @@ public class GameState : MonoBehaviour, IDisposable
 		public void StepTaken()
 		{
 			++stepsTaken;
+			++totalStepsTaken;
 		}
 
 		public void SetSize(out int width, out int height)
@@ -56,17 +70,20 @@ public class GameState : MonoBehaviour, IDisposable
 			height = width = id + 9;
 		}
 
-		public void SetMaximumSteps(int level, MapDungeon.Room[] dungeons, Vector2 tileMapOrigin)
+		public void SetMaximumSteps(int level, MapDungeon.Room[] rooms, Vector2 tileMapOrigin)
 		{
 			maximumSteps = stepsTaken = 0;
-			foreach (MapDungeon.Room dungeon in dungeons)
+			foreach (MapDungeon.Room room in rooms)
 			{
-				maximumSteps += (int)Vector2.Distance(dungeon.Center, tileMapOrigin);
+				maximumSteps += (int)Vector2.Distance(room.Center, tileMapOrigin);
 			}
 
-			maximumSteps = Mathf.Clamp(maximumSteps / level * dungeons.Length, level + dungeons.Length, maximumSteps + level + dungeons.Length);
+			maximumSteps = Mathf.Clamp(maximumSteps / level * rooms.Length, level + rooms.Length, maximumSteps + level + rooms.Length);
 		}
 	}
+
+	[SerializeField]
+	private GameStateType state = GameStateType.Idle;
 
 	private Stack<Level> levels = new Stack<Level>();
 
@@ -98,26 +115,31 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void Update()
 	{
-		if (Input.GetKeyDown(KeyCode.Escape))
+		if (state == GameStateType.InGame)
 		{
-			ResetLevel();
-			return;
-		}
+			if (Input.GetKeyDown(KeyCode.Escape))
+			{
+				ResetLevel();
+				return;
+			}
 
-		if (currentLevel.StepsLeft == 0)
-		{
-			ResetLevel();
+			if (currentLevel.StepsLeft == 0)
+			{
+				ResetLevel();
+			}
+			UpdateUI();
 		}
-
-		UpdateUI();
 	}
 
 	private void LateUpdate()
 	{
-		var playerCharacter = FindObjectOfType<Character>();
-		if (playerCharacter)
+		if (state == GameStateType.InGame)
 		{
-			SetCameraPosition(playerCharacter.transform.position);
+			var playerCharacter = FindObjectOfType<Character>();
+			if (playerCharacter)
+			{
+				SetCameraPosition(playerCharacter.transform.position);
+			}
 		}
 	}
 
@@ -125,15 +147,7 @@ public class GameState : MonoBehaviour, IDisposable
 	{
 		SetDungeonLevelLabel(currentLevel.Id);
 		SetStepsLeftLabel(currentLevel.StepsLeft);
-		var playerCharacter = FindObjectOfType<Character>();
-		if (playerCharacter)
-		{
-			SetStepsTakenLabel(playerCharacter.Steps);
-		}
-		else
-		{
-			SetStepsTakenLabel(0);
-		}
+		SetStepsTakenLabel(Level.TotalStepsTaken);
 	}
 
 	private void SetCameraPosition(Vector3 position)
@@ -158,6 +172,7 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void BuildLevel()
 	{
+		state = GameStateType.LoadingLevel;
 		if (level > levels.Count)
 		{
 			levels.Push(currentLevel = new Level(level));
@@ -185,6 +200,8 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void OnExitReached()
 	{
+		state = GameStateType.Ended;
+		UnregisterActorEvents();
 		++level;
 		BuildLevel();
 	}
@@ -208,20 +225,6 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private void OnActorSpawned(ActorSpawner actorSpawner, GameObject spawnedActor)
 	{
-		if (actorSpawner.IsType<Character>())
-		{
-			var playerCharacter = spawnedActor.GetComponent<Character>();
-			playerCharacter.StepTaken += OnStepTaken;
-		}
-		else
-		{
-			if (actorSpawner.IsType<Exit>())
-			{
-				var exit = spawnedActor.GetComponent<Exit>();
-				exit.Reached += OnExitReached;
-			}
-		}
-
 		actorSpawner.Spawned -= OnActorSpawned;
 	}
 
@@ -229,21 +232,63 @@ public class GameState : MonoBehaviour, IDisposable
 
 	private IEnumerator PopulateTileMap()
 	{
-		bool populated = FindObjectOfType<Character>() && FindObjectOfType<Exit>();
 		yield return 0;
 
+		var playerCharacter = FindObjectOfType<Character>();
+		var exit = FindObjectOfType<Exit>();
+
+		bool populated = playerCharacter && exit;
 		if (!populated)
 		{
 			StartCoroutine(PopulateTileMap());
 		}
 		else
 		{
-			currentLevel.SetMaximumSteps(level, levelInstance.GetComponent<MapDungeon>().Rooms, levelInstance.WorldPosition);
+			StartCoroutine(StartNewLevel());
+		}
+	}
+
+	private IEnumerator StartNewLevel()
+	{
+		yield return 0;
+		state = GameStateType.InGame;
+		RegisterActorEvents();
+		currentLevel.SetMaximumSteps(level, levelInstance.GetComponent<MapDungeon>().Rooms, levelInstance.WorldPosition);
+	}
+
+	private void RegisterActorEvents()
+	{
+		var playerCharacter = FindObjectOfType<Character>();
+		if (playerCharacter)
+		{
+			playerCharacter.StepTaken += OnStepTaken;
+		}
+
+		var exit = FindObjectOfType<Exit>();
+		if (exit)
+		{
+			exit.Reached += OnExitReached;
+		}
+	}
+
+	private void UnregisterActorEvents()
+	{
+		var playerCharacter = FindObjectOfType<Character>();
+		if (playerCharacter)
+		{
+			playerCharacter.StepTaken -= OnStepTaken;
+		}
+
+		var exit = FindObjectOfType<Exit>();
+		if (exit)
+		{
+			exit.Reached -= OnExitReached;
 		}
 	}
 
 	private void ResetLevel()
 	{
+		UnregisterActorEvents();
 		levels.Pop();
 		BuildLevel();
 	}

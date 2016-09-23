@@ -85,12 +85,6 @@ namespace TiledLevel
 
 		public void Build()
 		{
-			if (actors.Count == 0)
-			{
-				SetActorsLists();
-			}
-
-			ClearActorsLists();
 			DestroySpawners();
 
 			BuildSpawners();
@@ -99,6 +93,12 @@ namespace TiledLevel
 
 		public void DestroySpawners()
 		{
+			if (actors.Count == 0)
+			{
+				SetActorsLists();
+			}
+
+			ClearActorsLists();
 			var actorSpawners = GetComponents<ActorSpawner>();
 
 			for (int i = 0; i < actorSpawners.Length; i++)
