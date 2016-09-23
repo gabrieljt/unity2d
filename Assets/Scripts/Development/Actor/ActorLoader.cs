@@ -4,8 +4,6 @@ namespace Actor
 {
 	public class ActorLoader : MonoBehaviour
 	{
-		public static ActorLoader Instance { get; private set; }
-
 		[SerializeField]
 		private GameObject[] actors;
 
@@ -14,12 +12,8 @@ namespace Actor
 		{
 			get
 			{
-				if (Instance == null)
-				{
-					Instance = FindObjectOfType<ActorLoader>();
-				}
-
-				return Instance.actors;
+				Debug.Assert(FindObjectsOfType<ActorLoader>().Length == 1);
+				return FindObjectOfType<ActorLoader>().actors;
 			}
 		}
 

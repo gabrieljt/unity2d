@@ -5,12 +5,17 @@ namespace TiledLevel
 	[ExecuteInEditMode]
 	public class MapTilesetLoader : MonoBehaviour
 	{
-		public static MapTilesetLoader Instance { get; private set; }
-
 		[SerializeField]
 		private int pixelsPerUnit;
 
-		public static int PixelsPerUnit { get { return Instance.pixelsPerUnit; } }
+		public static int PixelsPerUnit
+		{
+			get
+			{
+				Debug.Assert(FindObjectsOfType<MapTilesetLoader>().Length == 1);
+				return FindObjectOfType<MapTilesetLoader>().pixelsPerUnit;
+			}
+		}
 
 		[SerializeField]
 		private MapTileset[] mapTilesets;
@@ -19,12 +24,8 @@ namespace TiledLevel
 		{
 			get
 			{
-				if (Instance == null)
-				{
-					Instance = FindObjectOfType<MapTilesetLoader>();
-				}
-
-				return Instance.mapTilesets;
+				Debug.Assert(FindObjectsOfType<MapTilesetLoader>().Length == 1);
+				return FindObjectOfType<MapTilesetLoader>().mapTilesets;
 			}
 		}
 
