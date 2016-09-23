@@ -18,9 +18,7 @@ namespace TiledLevel
 			if (GUILayout.Button("Build Colliders"))
 			{
 				var mapCollision = (MapCollision)target;
-				IMapParams mapParams = new MapParams(mapCollision.Map);
-				IMapCollisionParams mapCollisionParams = new MapCollisionParams();
-				mapCollision.Build(mapParams, mapCollisionParams);
+				mapCollision.Build();
 			}
 
 			if (GUILayout.Button("Destroy Colliders"))
@@ -34,6 +32,9 @@ namespace TiledLevel
 #endif
 
 	[ExecuteInEditMode]
+	[RequireComponent(
+		typeof(Map)
+		)]
 	public class MapCollision : MonoBehaviour, IDisposable
 	{
 		[SerializeField]
@@ -44,7 +45,7 @@ namespace TiledLevel
 
 		public Map Map { get { return map; } }
 
-		public Action<IMapCollisionParams> Built = delegate { };
+		public Action Built = delegate { };
 
 		private void Awake()
 		{
@@ -52,18 +53,17 @@ namespace TiledLevel
 			map.Updated += OnMapUpdated;
 		}
 
-		private void OnMapUpdated(IMapParams mapParams)
+		private void OnMapUpdated()
 		{
-			IMapCollisionParams mapTextureParams = new MapCollisionParams();
-			Build(mapParams, mapTextureParams);
+			Build();
 		}
 
-		public void Build(IMapParams mapParams, IMapCollisionParams MapCollisionParams)
+		public void Build()
 		{
 			DestroyColliders();
 			BuildColliders();
 
-			Built(MapCollisionParams);
+			Built();
 		}
 
 		public void DestroyColliders()

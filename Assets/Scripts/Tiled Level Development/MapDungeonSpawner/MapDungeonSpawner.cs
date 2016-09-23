@@ -19,9 +19,13 @@ namespace TiledLevel
 			if (GUILayout.Button("Build Spawners"))
 			{
 				var mapDungeonSpawner = (MapDungeonSpawner)target;
-				IMapDungeonParams mapDungeonParams = new MapDungeonParams(mapDungeonSpawner.MapDungeon);
-				IMapDungeonSpawnerParams mapDungeonSpawnerParams = new MapDungeonSpawnerParams();
-				mapDungeonSpawner.Build(ref mapDungeonParams, ref mapDungeonSpawnerParams);
+				mapDungeonSpawner.Build();
+			}
+
+			if (GUILayout.Button("Destroy Spawners"))
+			{
+				var mapDungeonSpawner = (MapDungeonSpawner)target;
+				mapDungeonSpawner.DestroySpawners();
 			}
 		}
 	}
@@ -34,12 +38,14 @@ namespace TiledLevel
 	)]
 	public class MapDungeonSpawner : MonoBehaviour, IDisposable
 	{
+		// TODO: better input params
+
 		[SerializeField]
 		private MapDungeon mapDungeon;
 
 		public MapDungeon MapDungeon { get { return mapDungeon; } }
 
-		public Action<IMapDungeonSpawnerParams> Built = delegate { };
+		public Action Built = delegate { };
 
 		private Dictionary<ActorType, List<GameObject>> actors = new Dictionary<ActorType, List<GameObject>>();
 
@@ -72,13 +78,12 @@ namespace TiledLevel
 			}
 		}
 
-		private void OnMapDungeonBuilt(IMapDungeonParams mapDungeonParams)
+		private void OnMapDungeonBuilt()
 		{
-			IMapDungeonSpawnerParams mapSpawnerParams = new MapDungeonSpawnerParams();
-			Build(ref mapDungeonParams, ref mapSpawnerParams);
+			Build();
 		}
 
-		public void Build(ref IMapDungeonParams mapDungeonParams, ref IMapDungeonSpawnerParams mapDungeonSpawnerParams)
+		public void Build()
 		{
 			if (actors.Count == 0)
 			{
@@ -88,8 +93,8 @@ namespace TiledLevel
 			ClearActorsLists();
 			DestroySpawners();
 
-			BuildSpawners(mapDungeonParams);
-			Built(mapDungeonSpawnerParams);
+			BuildSpawners();
+			Built();
 		}
 
 		public void DestroySpawners()
@@ -102,12 +107,12 @@ namespace TiledLevel
 			}
 		}
 
-		private void BuildSpawners(IMapDungeonParams mapDungeonParams)
+		private void BuildSpawners()
 		{
 			bool playerSet = false, exitSet = false;
-			for (int i = 0; i < mapDungeonParams.Dungeons.Length; i++)
+			for (int i = 0; i < mapDungeon.Rooms.Length; i++)
 			{
-				MapDungeon.Room dungeon = mapDungeonParams.Dungeons[i];
+				MapDungeon.Room dungeon = mapDungeon.Rooms[i];
 				for (int x = 0; x < dungeon.Width; x++)
 				{
 					for (int y = 0; y < dungeon.Height; y++)
@@ -115,7 +120,7 @@ namespace TiledLevel
 						if (mapDungeon.Map.Tiles[dungeon.Left + x, dungeon.Top + y].Type == TileType.Floor)
 						{
 							Vector2 tilePosition = new Vector2(dungeon.Left + x, dungeon.Top + y) + Vector2.one * 0.5f;
-							switch (mapDungeonParams.Dungeons.Length)
+							switch (mapDungeon.Rooms.Length)
 							{
 								case 1:
 									SetPlayerSpawner(ref playerSet, tilePosition);
@@ -127,7 +132,7 @@ namespace TiledLevel
 									{
 										SetPlayerSpawner(ref playerSet, tilePosition);
 									}
-									else if (i == mapDungeonParams.Dungeons.Length - 1)
+									else if (i == mapDungeon.Rooms.Length - 1)
 									{
 										SetExitSpawner(ref exitSet, tilePosition);
 									}

@@ -6,7 +6,8 @@ namespace TiledLevel
 {
 	[ExecuteInEditMode]
 	[RequireComponent(
-		typeof(SpriteRenderer)
+		typeof(SpriteRenderer),
+		typeof(Map)
 	)]
 	public class MapRenderer : MonoBehaviour, IDisposable
 	{
@@ -17,11 +18,14 @@ namespace TiledLevel
 		private MapTilesetType mapTilesetType;
 
 		[SerializeField]
+		private Material spriteMaterial;
+
+		[SerializeField]
 		private Map map;
 
 		public Map Map { get { return map; } }
 
-		public Action<IMapRendererParams> Built = delegate { };
+		public Action Built = delegate { };
 
 		private void Awake()
 		{
@@ -31,22 +35,22 @@ namespace TiledLevel
 			map.Updated += OnMapUpdated;
 		}
 
-		private void OnMapUpdated(IMapParams mapParams)
+		private void OnMapUpdated()
 		{
-			IMapRendererParams mapRendererParams = new MapRendererParams();
-			Build(mapParams, mapRendererParams);
+			Build();
 		}
 
-		public void Build(IMapParams mapParams, IMapRendererParams mapTextureRendererParams)
+		public void Build()
 		{
 			Debug.Assert(mapTilesetType == MapTilesetLoader.MapTilesets[(int)mapTilesetType].Type);
 			Debug.Assert((int)mapTilesetType < MapTilesetLoader.MapTilesets.Length);
 
-			var texture = MapTileset.BuildTexture(mapParams,
+			var texture = MapTileset.BuildTexture(map,
 				MapTilesetLoader.MapTilesets[(int)mapTilesetType].TilesetTexture,
 				MapTilesetLoader.MapTilesets[(int)mapTilesetType].TilesetTiles);
 
 			spriteRenderer.sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), Vector2.one * 0.5f, MapTilesetLoader.PixelsPerUnit);
+			spriteRenderer.material = spriteMaterial;
 		}
 
 		public void Dispose()

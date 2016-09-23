@@ -172,11 +172,8 @@ public class GameState : MonoBehaviour, IDisposable
 	private IEnumerator BuildNewTileMap(int width, int height)
 	{
 		yield return 0;
-		var levelParams = new LevelParams();
-		levelParams.Width = width;
-		levelParams.Height = height;
-		IMapParams mapParams = levelParams;
-		levelInstance.Build(ref mapParams);
+
+		levelInstance.Build(width, height, out levelInstance);
 	}
 
 	#region Callbacks
@@ -192,16 +189,16 @@ public class GameState : MonoBehaviour, IDisposable
 		BuildLevel();
 	}
 
-	public void OnTileMapBuilt(IMapParams mapParams)
+	public void OnTileMapBuilt()
 	{
 	}
 
-	public void OnDungeonMapBuilt(IMapDungeonParams dungeonMapParams)
+	public void OnDungeonMapBuilt()
 	{
-		StartCoroutine(PopulateTileMap(dungeonMapParams));
+		StartCoroutine(PopulateTileMap());
 	}
 
-	private void OnDungeonMapSpawnerBuilt(IMapDungeonSpawnerParams dungeonMapSpawnerParams)
+	private void OnDungeonMapSpawnerBuilt()
 	{
 		foreach (var actorSpawner in levelInstance.GetComponent<MapDungeonSpawner>().GetComponents<ActorSpawner>())
 		{
@@ -230,18 +227,18 @@ public class GameState : MonoBehaviour, IDisposable
 
 	#endregion Callbacks
 
-	private IEnumerator PopulateTileMap(IMapDungeonParams dungeonMapParams)
+	private IEnumerator PopulateTileMap()
 	{
 		bool populated = FindObjectOfType<Character>() && FindObjectOfType<Exit>();
 		yield return 0;
 
 		if (!populated)
 		{
-			StartCoroutine(PopulateTileMap(dungeonMapParams));
+			StartCoroutine(PopulateTileMap());
 		}
 		else
 		{
-			currentLevel.SetMaximumSteps(level, dungeonMapParams.Dungeons, levelInstance.WorldPosition);
+			currentLevel.SetMaximumSteps(level, levelInstance.GetComponent<MapDungeon>().Rooms, levelInstance.WorldPosition);
 		}
 	}
 
@@ -259,6 +256,8 @@ public class GameState : MonoBehaviour, IDisposable
 	public void Dispose()
 	{
 		levelInstance.Built -= OnTileMapBuilt;
+		levelInstance.GetComponent<MapDungeon>().Built -= OnDungeonMapBuilt;
+		levelInstance.GetComponent<MapDungeonSpawner>().Built -= OnDungeonMapSpawnerBuilt;
 		FindObjectOfType<Character>().StepTaken -= OnStepTaken;
 		FindObjectOfType<Exit>().Reached -= OnExitReached;
 	}

@@ -50,21 +50,21 @@ namespace TiledLevel
 			return System.Array.Find(tilesetTiles, tilesetTile => tilesetTile.Type == type).TilesetIndex;
 		}
 
-		public static Texture2D BuildTexture(IMapParams mapParams, Texture2D tilesetTexture, TilesetTile[] tilesetTiles)
+		public static Texture2D BuildTexture(Map map, Texture2D tilesetTexture, TilesetTile[] tilesetTiles)
 		{
 			Debug.Assert(tilesetTexture);
 			Debug.Assert(tilesetTiles.Length > 0);
 
-			var textureWidth = mapParams.Width * tileResolution;
-			var textureHeight = mapParams.Height * tileResolution;
+			var textureWidth = map.Width * tileResolution;
+			var textureHeight = map.Height * tileResolution;
 			var texture = new Texture2D(textureWidth, textureHeight);
 			var tilesPixels = GetPixelsFromTexture(tilesetTexture, tileResolution);
 
-			for (int y = 0; y < mapParams.Height; y++)
+			for (int y = 0; y < map.Height; y++)
 			{
-				for (int x = 0; x < mapParams.Width; x++)
+				for (int x = 0; x < map.Width; x++)
 				{
-					Color[] pixels = tilesPixels[GetTilesetTileIndexByType(tilesetTiles, mapParams.Tiles[x, y].Type)];
+					Color[] pixels = tilesPixels[GetTilesetTileIndexByType(tilesetTiles, map.Tiles[x, y].Type)];
 					texture.SetPixels(x * tileResolution, y * tileResolution, tileResolution, tileResolution, pixels);
 				}
 			}

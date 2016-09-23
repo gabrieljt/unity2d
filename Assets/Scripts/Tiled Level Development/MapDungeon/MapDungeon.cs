@@ -15,12 +15,18 @@ namespace TiledLevel
 		{
 			DrawDefaultInspector();
 
-			if (GUILayout.Button("Build Dungeons"))
+			if (GUILayout.Button("Build Dungeon"))
 			{
 				var mapDungeon = (MapDungeon)target;
-				IMapParams mapParams = new MapParams(mapDungeon.Map);
-				IMapDungeonParams mapDungeonParams = new MapDungeonParams();
-				mapDungeon.Build(ref mapParams, ref mapDungeonParams);
+				mapDungeon.Build();
+			}
+
+			if (GUILayout.Button("Destroy Dungeon"))
+			{
+				var mapDungeon = (MapDungeon)target;
+				var map = mapDungeon.Map;
+				mapDungeon.DestroyDungeon(ref map);
+				map.Updated();
 			}
 		}
 	}
@@ -73,9 +79,9 @@ namespace TiledLevel
 		}
 
 		[SerializeField]
-		private Room[] dungeons = new Room[0];
+		private Room[] rooms = new Room[0];
 
-		public Room[] Dungeons { get { return dungeons; } }
+		public Room[] Rooms { get { return rooms; } }
 
 		[SerializeField]
 		[Range(10, 50)]
@@ -90,7 +96,7 @@ namespace TiledLevel
 
 		public Map Map { get { return map; } }
 
-		public Action<IMapDungeonParams> Built = delegate { };
+		public Action Built = delegate { };
 
 		private void Awake()
 		{
@@ -98,73 +104,77 @@ namespace TiledLevel
 			map.Built += OnMapBuilt;
 		}
 
-		private void OnMapBuilt(IMapParams mapParams)
+		private void OnMapBuilt()
 		{
-			IMapDungeonParams mapDungeonParams = new MapDungeonParams();
-			Build(ref mapParams, ref mapDungeonParams);
+			Build();
 		}
 
-		public void Build(ref IMapParams mapParams, ref IMapDungeonParams mapDungeonParams)
+		public void Build()
 		{
-			if (dungeons.Length > 0)
-			{
-				// TODO: clear corridors
-				//ClearDungeons(ref mapParams, ref dungeons);
+			DestroyDungeon(ref map);
 
-				// Hard Reset
-				map.SetValues(mapParams);
-				map.FillTiles(TileType.Water);
-				mapParams.Tiles = map.Tiles;
-			}
+			BuildDungeon(ref map);
 
-			BuildDungeons(ref mapParams, out dungeons);
+			map.Updated();
 
-			BuildCorridors(ref mapParams, ref dungeons);
-
-			BuildWalls(ref mapParams, ref dungeons);
-
-			map.UpdateValues(mapParams);
-
-			mapDungeonParams = new MapDungeonParams(this);
-
-			Built(mapDungeonParams);
+			Built();
 		}
 
-		private void ClearDungeons(ref IMapParams mapParams, ref Room[] dungeons)
+		public void DestroyDungeon(ref Map map)
 		{
-			foreach (var dungeon in dungeons)
+			// TODO: clear corridors
+			//ClearDungeons(ref map, ref rooms);
+
+			// Hard Reset
+
+			map.FillTiles(TileType.Water);
+			rooms = new Room[0];
+		}
+
+		private void ClearRooms(ref Map map, ref Room[] rooms)
+		{
+			foreach (var room in rooms)
 			{
-				for (int x = 0; x < dungeon.Width; x++)
+				for (int x = 0; x < room.Width; x++)
 				{
-					for (int y = 0; y < dungeon.Height; y++)
+					for (int y = 0; y < room.Height; y++)
 					{
-						mapParams.Tiles[dungeon.Left + x, dungeon.Top + y] = new Tile(TileType.Water);
+						map.Tiles[room.Left + x, room.Top + y] = new Tile(TileType.Water);
 					}
 				}
 			}
-			dungeons = new Room[0];
+			rooms = new Room[0];
 		}
 
-		private void BuildDungeons(ref IMapParams mapParams, out Room[] dungeons)
+		private void BuildDungeon(ref Map map)
 		{
-			var dungeonList = new List<Room>();
+			BuildRooms(ref map, out rooms);
+
+			BuildCorridors(ref map, ref rooms);
+
+			BuildWalls(ref map, ref rooms);
+		}
+
+		private void BuildRooms(ref Map map, out Room[] rooms)
+		{
+			var roomsList = new List<Room>();
 			var attemptsLeft = maximumAttempts;
 
-			while (dungeonList.Count < maximumDungeons && attemptsLeft > 0)
+			while (roomsList.Count < maximumDungeons && attemptsLeft > 0)
 			{
-				var dungeonWidth = (int)UnityEngine.Random.Range(4f, Mathf.Clamp(map.Width * UnityEngine.Random.Range(0.1f, 0.35f), 4f, map.Width * 0.35f));
-				var dungeonHeight = (int)UnityEngine.Random.Range(3f, Mathf.Clamp(map.Height * UnityEngine.Random.Range(0.1f, 0.35f), 3f, map.Height * 0.35f));
+				var dungeonWidth = (int)UnityEngine.Random.Range(4f, Mathf.Clamp(this.map.Width * UnityEngine.Random.Range(0.1f, 0.35f), 4f, this.map.Width * 0.35f));
+				var dungeonHeight = (int)UnityEngine.Random.Range(3f, Mathf.Clamp(this.map.Height * UnityEngine.Random.Range(0.1f, 0.35f), 3f, this.map.Height * 0.35f));
 
 				var dungeon = new Room(
-					new Rect(UnityEngine.Random.Range(0, map.Width - dungeonWidth),
-						UnityEngine.Random.Range(0, map.Height - dungeonHeight),
+					new Rect(UnityEngine.Random.Range(0, this.map.Width - dungeonWidth),
+						UnityEngine.Random.Range(0, this.map.Height - dungeonHeight),
 						dungeonWidth,
 						dungeonHeight)
 				);
 
-				if (!DungeonCollides(dungeonList, dungeon))
+				if (!RoomCollides(roomsList, dungeon))
 				{
-					dungeonList.Add(dungeon);
+					roomsList.Add(dungeon);
 				}
 				else
 				{
@@ -172,21 +182,21 @@ namespace TiledLevel
 				}
 			}
 
-			foreach (var dungeon in dungeonList)
+			foreach (var room in roomsList)
 			{
-				BuildDungeon(ref mapParams, dungeon);
+				BuildRoom(ref map, room);
 			}
 
-			Debug.Log(dungeonList.Count + " dungeon(s) built");
+			Debug.Log(roomsList.Count + " rooms(s) built");
 
-			dungeons = dungeonList.ToArray();
+			rooms = roomsList.ToArray();
 		}
 
-		private bool DungeonCollides(List<Room> dungeons, Room dungeon)
+		private bool RoomCollides(List<Room> rooms, Room room)
 		{
-			foreach (var otherDungeon in dungeons)
+			foreach (var otherDungeon in rooms)
 			{
-				if (dungeon.CollidesWith(otherDungeon))
+				if (room.CollidesWith(otherDungeon))
 				{
 					return true;
 				}
@@ -195,68 +205,68 @@ namespace TiledLevel
 			return false;
 		}
 
-		private void BuildDungeon(ref IMapParams mapParams, Room dungeon)
+		private void BuildRoom(ref Map map, Room room)
 		{
-			for (int x = 0; x < dungeon.Width; x++)
+			for (int x = 0; x < room.Width; x++)
 			{
-				for (int y = 0; y < dungeon.Height; y++)
+				for (int y = 0; y < room.Height; y++)
 				{
-					if (x == 0 || x == dungeon.Width - 1 || y == 0 || y == dungeon.Height - 1)
+					if (x == 0 || x == room.Width - 1 || y == 0 || y == room.Height - 1)
 					{
-						mapParams.Tiles[dungeon.Left + x, dungeon.Top + y] = new Tile(TileType.Wall);
+						map.Tiles[room.Left + x, room.Top + y] = new Tile(TileType.Wall);
 					}
 					else
 					{
-						mapParams.Tiles[dungeon.Left + x, dungeon.Top + y] = new Tile(TileType.Floor);
+						map.Tiles[room.Left + x, room.Top + y] = new Tile(TileType.Floor);
 					}
 				}
 			}
 		}
 
-		private void BuildCorridors(ref IMapParams mapParams, ref Room[] dungeons)
+		private void BuildCorridors(ref Map map, ref Room[] rooms)
 		{
-			for (int i = 0; i < dungeons.Length; i++)
+			for (int i = 0; i < rooms.Length; i++)
 			{
-				if (!dungeons[i].isConnected)
+				if (!rooms[i].isConnected)
 				{
-					var j = UnityEngine.Random.Range(1, dungeons.Length);
-					BuildCorridor(ref mapParams, ref dungeons[i], ref dungeons[(i + j) % dungeons.Length]);
+					var j = UnityEngine.Random.Range(1, rooms.Length);
+					BuildCorridor(ref map, ref rooms[i], ref rooms[(i + j) % rooms.Length]);
 				}
 			}
 		}
 
-		private void BuildCorridor(ref IMapParams mapParams, ref Room sourceDungeon, ref Room targetDungeon)
+		private void BuildCorridor(ref Map map, ref Room sourceRoom, ref Room targetRoom)
 		{
-			var x = sourceDungeon.CenterX;
-			var y = sourceDungeon.CenterY;
+			var x = sourceRoom.CenterX;
+			var y = sourceRoom.CenterY;
 
-			while (x != targetDungeon.CenterX)
+			while (x != targetRoom.CenterX)
 			{
-				mapParams.Tiles[x, y] = new Tile(TileType.Floor);
+				map.Tiles[x, y] = new Tile(TileType.Floor);
 
-				x += x < targetDungeon.CenterX ? 1 : -1;
+				x += x < targetRoom.CenterX ? 1 : -1;
 			}
 
-			while (y != targetDungeon.CenterY)
+			while (y != targetRoom.CenterY)
 			{
-				mapParams.Tiles[x, y] = new Tile(TileType.Floor);
+				map.Tiles[x, y] = new Tile(TileType.Floor);
 
-				y += y < targetDungeon.CenterY ? 1 : -1;
+				y += y < targetRoom.CenterY ? 1 : -1;
 			}
 
-			sourceDungeon.isConnected = true;
-			targetDungeon.isConnected = true;
+			sourceRoom.isConnected = true;
+			targetRoom.isConnected = true;
 		}
 
-		private void BuildWalls(ref IMapParams mapParams, ref Room[] dungeons)
+		private void BuildWalls(ref Map map, ref Room[] rooms)
 		{
-			for (int x = 0; x < map.Width; x++)
+			for (int x = 0; x < this.map.Width; x++)
 			{
-				for (int y = 0; y < map.Height; y++)
+				for (int y = 0; y < this.map.Height; y++)
 				{
-					if (mapParams.Tiles[x, y].Type == TileType.Water && Map.HasAdjacentFloor(mapParams, x, y))
+					if (map.Tiles[x, y].Type == TileType.Water && Map.HasAdjacentFloor(map, x, y))
 					{
-						mapParams.Tiles[x, y] = new Tile(TileType.Wall);
+						map.Tiles[x, y] = new Tile(TileType.Wall);
 					}
 				}
 			}

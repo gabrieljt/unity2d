@@ -19,11 +19,9 @@ namespace TiledLevel
 			if (GUILayout.Button("Create Level"))
 			{
 				var levelLoader = (LevelLoader)target;
-				var levelParams = levelLoader.levelParams;
-
 				GameObject loadedLevel;
 				if (LevelLoader.LoadLevelStatus.Created == levelLoader.CreateLevel(
-					levelLoader.Index, ref levelParams, out loadedLevel, false)
+					levelLoader.Index, out loadedLevel, false)
 				)
 				{
 					levelLoader.LoadLevel(levelLoader.Index);
@@ -33,11 +31,10 @@ namespace TiledLevel
 			if (GUILayout.Button("Recreate Level"))
 			{
 				var levelLoader = (LevelLoader)target;
-				var levelParams = levelLoader.levelParams;
 
 				GameObject loadedLevel;
 				if (LevelLoader.LoadLevelStatus.Created == levelLoader.CreateLevel(
-					levelLoader.Index, ref levelParams, out loadedLevel, true)
+					levelLoader.Index, out loadedLevel, true)
 				)
 				{
 					levelLoader.LoadLevel(levelLoader.Index);
@@ -47,7 +44,6 @@ namespace TiledLevel
 			if (GUILayout.Button("Load Level"))
 			{
 				var levelLoader = (LevelLoader)target;
-				var levelParams = levelLoader.levelParams;
 				levelLoader.LoadLevel(levelLoader.Index);
 			}
 
@@ -85,14 +81,12 @@ namespace TiledLevel
 
 		public int Index { get { return index; } }
 
-		public LevelParams levelParams;
-
 		[SerializeField]
 		private int[] levelIndexes;
 
 		private static Dictionary<int, GameObject> levels = new Dictionary<int, GameObject>();
 
-		public Action<int, GameObject, LevelParams> LevelLoaded = delegate { };
+		public Action<int, GameObject> LevelLoaded = delegate { };
 
 		private void Awake()
 		{
@@ -107,40 +101,35 @@ namespace TiledLevel
 			Clear();
 		}
 
-		public LoadLevelStatus CreateLevel(int index, ref LevelParams levelParams, out GameObject loadedLevel, bool overwrite = false)
+		public LoadLevelStatus CreateLevel(int index, out GameObject loadedLevel, bool overwrite = false)
 		{
 			var status = LoadLevelStatus.Failed;
 			loadedLevel = null;
 
 			if (!levels.ContainsKey(index))
 			{
-				levelParams = SetStatusCreated(index, levelParams, out loadedLevel, ref status);
+				SetStatusCreated(index, out loadedLevel, ref status);
 			}
 			else if (overwrite)
 			{
 				DestroyLevel(index);
-				levelParams = SetStatusCreated(index, levelParams, out loadedLevel, ref status);
+				SetStatusCreated(index, out loadedLevel, ref status);
 			}
-
-			this.levelParams = levelParams;
 
 			Debug.LogWarning(GetType() + " " + status);
 			return status;
 		}
 
-		private LevelParams SetStatusCreated(int index, LevelParams levelParams, out GameObject loadedLevel, ref LoadLevelStatus status)
+		private void SetStatusCreated(int index, out GameObject loadedLevel, ref LoadLevelStatus status)
 		{
 			loadedLevel = Instantiate(levelPrefab);
-			IMapParams mapParams = levelParams;
-			loadedLevel.GetComponent<Map>().Build(ref mapParams);
+			loadedLevel.GetComponent<Map>().Build();
 			loadedLevel.transform.SetParent(transform, true);
 			loadedLevel.name = "Level " + index;
 			levels[index] = loadedLevel;
 			levelIndexes = new int[levels.Count];
 			levels.Keys.CopyTo(levelIndexes, 0);
 			status = LoadLevelStatus.Created;
-
-			return levelParams;
 		}
 
 		private LoadLevelStatus DestroyLevel(int index)
@@ -169,19 +158,19 @@ namespace TiledLevel
 
 			if (levels.ContainsKey(index))
 			{
-				levelParams = SetStatusLoaded(index, ref status);
+				SetStatusLoaded(index, ref status);
 			}
 
 			if (status == LoadLevelStatus.Loaded)
 			{
-				LevelLoaded(index, activeLevel, levelParams);
+				LevelLoaded(index, activeLevel);
 			}
 
 			Debug.LogWarning(GetType() + " " + status);
 			return status;
 		}
 
-		private LevelParams SetStatusLoaded(int index, ref LoadLevelStatus status)
+		private void SetStatusLoaded(int index, ref LoadLevelStatus status)
 		{
 			this.index = index;
 
@@ -193,8 +182,6 @@ namespace TiledLevel
 			activeLevel = levels[index];
 			activeLevel.SetActive(true);
 			status = LoadLevelStatus.Loaded;
-
-			return new LevelParams(activeLevel);
 		}
 
 		public void Dispose()

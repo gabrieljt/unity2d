@@ -18,10 +18,8 @@ namespace TiledLevel
 			if (GUILayout.Button("Build Map"))
 			{
 				var map = (Map)target;
-				IMapParams mapParams = new MapParams();
-				mapParams.Height = map.Height;
-				mapParams.Width = map.Width;
-				map.Build(ref mapParams);
+
+				map.Build();
 			}
 		}
 	}
@@ -50,41 +48,32 @@ namespace TiledLevel
 
 		public Vector2 WorldPosition { get { return new Vector2(width / 2f, height / 2f); } }
 
-		public Action<IMapParams> Built = delegate { };
+		public Action Built = delegate { };
 
-		public Action<IMapParams> Updated = delegate { };
+		public Action Updated = delegate { };
 
 		private void Awake()
 		{
 			gameObject.isStatic = true;
 		}
 
-		public void Build(ref IMapParams mapParams)
+		public void Build(int width, int height, out Map map)
 		{
-			SetValues(mapParams);
+			this.width = width;
+			this.height = height;
 
+			Build();
+
+			map = this;
+		}
+
+		public void Build()
+		{
 			SetWorldPosition();
 
 			FillTiles(TileType.Water);
 
-			mapParams = new MapParams(this);
-
-			Built(mapParams);
-		}
-
-		public void SetValues(IMapParams mapParams)
-		{
-			this.width = mapParams.Width;
-			this.height = mapParams.Height;
-			this.tiles = new Tile[width, height];
-		}
-
-		public void UpdateValues(IMapParams mapParams)
-		{
-			SetValues(mapParams);
-			this.tiles = mapParams.Tiles;
-
-			Updated(mapParams);
+			Built();
 		}
 
 		private void SetWorldPosition()
@@ -92,10 +81,9 @@ namespace TiledLevel
 			transform.position = WorldPosition;
 		}
 
-		#region Build Map
-
 		public void FillTiles(TileType type)
 		{
+			tiles = new Tile[width, height];
 			for (int x = 0; x < width; x++)
 			{
 				for (int y = 0; y < height; y++)
@@ -105,16 +93,16 @@ namespace TiledLevel
 			}
 		}
 
-		public static bool HasAdjacentFloor(IMapParams mapParams, int x, int y)
+		public static bool HasAdjacentFloor(Map map, int x, int y)
 		{
-			return HasAdjacentType(mapParams, x, y, TileType.Floor);
+			return HasAdjacentType(map, x, y, TileType.Floor);
 		}
 
-		public static bool HasAdjacentType(IMapParams mapParams, int x, int y, TileType type)
+		public static bool HasAdjacentType(Map map, int x, int y, TileType type)
 		{
-			var tiles = mapParams.Tiles;
-			var width = mapParams.Width;
-			var height = mapParams.Height;
+			var tiles = map.Tiles;
+			var width = map.Width;
+			var height = map.Height;
 
 			return (x > 0 && tiles[x - 1, y].Type == type)
 				|| (x < width - 1 && tiles[x + 1, y].Type == type)
@@ -126,11 +114,11 @@ namespace TiledLevel
 				|| (x < width - 1 && y < height - 1 && tiles[x + 1, y + 1].Type == type);
 		}
 
-		public static bool HasAdjacentType(IMapParams mapParams, int x, int y, TileType type, out Tile[] adjacentTiles)
+		public static bool HasAdjacentType(Map map, int x, int y, TileType type, out Tile[] adjacentTiles)
 		{
-			var tiles = mapParams.Tiles;
-			var width = mapParams.Width;
-			var height = mapParams.Height;
+			var tiles = map.Tiles;
+			var width = map.Width;
+			var height = map.Height;
 			var adjacentTilesList = new List<Tile>();
 
 			if (x > 0 && tiles[x - 1, y].Type == type)
@@ -176,7 +164,5 @@ namespace TiledLevel
 			adjacentTiles = adjacentTilesList.ToArray();
 			return adjacentTiles.Length > 0;
 		}
-
-		#endregion Build Map
 	}
 }
