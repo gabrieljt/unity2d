@@ -157,7 +157,7 @@ namespace TiledLevel
 		{
 			if (!playerSet)
 			{
-				BuildActorSpawner(tilePosition, ActorType.Warrior);
+				BuildActorSpawner(tilePosition, ActorType.Player);
 				playerSet = true;
 			}
 		}
@@ -186,7 +186,7 @@ namespace TiledLevel
 
 			actorSpawner.Spawned -= OnActorSpawned;
 
-			if (actorSpawner.IsType<Character>() && spawnedActor.CompareTag("Warrior"))
+			if (actorSpawner.IsType<Character>() && spawnedActor.CompareTag("Player"))
 			{
 				PlayerInputEnqueuer.SetInputDequeuer(spawnedActor.GetComponent<CharacterInputDequeuer>());
 			}

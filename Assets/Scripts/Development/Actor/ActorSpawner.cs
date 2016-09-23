@@ -26,7 +26,7 @@ namespace Actor
 
 	public enum ActorType
 	{
-		Warrior = 0,
+		Player = 0,
 		Exit = 1,
 		Slime = 2,
 	}
