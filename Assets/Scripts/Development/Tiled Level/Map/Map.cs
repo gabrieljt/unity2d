@@ -52,11 +52,6 @@ namespace TiledLevel
 
 		public Action Updated = delegate { };
 
-		private void Awake()
-		{
-			gameObject.isStatic = true;
-		}
-
 		public void Build(int width, int height, out Map map)
 		{
 			this.width = width;

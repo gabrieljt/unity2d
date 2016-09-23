@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using Actor;
+using System;
 using UnityEngine;
 
 public enum CharacterState
@@ -15,10 +14,12 @@ public enum CharacterState
 	typeof(Rigidbody2D),
 	typeof(CircleCollider2D)
 )]
-public class Character : MonoBehaviour
+public class Character : AActor
 {
 	[SerializeField]
 	private CharacterState state = CharacterState.Idle;
+
+	public CharacterState State { get { return state; } }
 
 	[SerializeField]
 	private int steps = 0;
@@ -28,16 +29,6 @@ public class Character : MonoBehaviour
 	[SerializeField]
 	[Range(0.5f, 3f)]
 	private float speed = 3f;
-
-	private Queue<KeyCode> inputs = new Queue<KeyCode>();
-
-	public bool HasInputs { get { return inputs.Count > 0; } }
-
-	[SerializeField]
-	[Range(0, 10)]
-	private int maximumInputsPerFrame = 1;
-
-	public int MaximumInputsPerFrame { get; private set; }
 
 	[SerializeField]
 	private Vector2 previousDestination, destination;
@@ -64,14 +55,10 @@ public class Character : MonoBehaviour
 		rigidbody2D.gravityScale = 0f;
 		rigidbody2D.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
 		rigidbody2D.freezeRotation = true;
-
-		MaximumInputsPerFrame = maximumInputsPerFrame;
 	}
 
 	private void Update()
 	{
-		GetInput();
-		ProcessInputs();
 		UpdateMovementState();
 	}
 
@@ -80,69 +67,7 @@ public class Character : MonoBehaviour
 		MoveToDestination();
 	}
 
-	private void GetInput()
-	{
-		if (Input.anyKey && inputs.Count < maximumInputsPerFrame)
-		{
-			if (Input.GetKey(KeyCode.UpArrow))
-			{
-				inputs.Enqueue(KeyCode.UpArrow);
-				return;
-			}
-
-			if (Input.GetKey(KeyCode.DownArrow))
-			{
-				inputs.Enqueue(KeyCode.DownArrow);
-				return;
-			}
-
-			if (Input.GetKey(KeyCode.LeftArrow))
-			{
-				inputs.Enqueue(KeyCode.LeftArrow);
-				return;
-			}
-
-			if (Input.GetKey(KeyCode.RightArrow))
-			{
-				inputs.Enqueue(KeyCode.RightArrow);
-				return;
-			}
-		}
-	}
-
-	private void ProcessInputs()
-	{
-		if (state == CharacterState.Idle)
-		{
-			if (HasInputs)
-			{
-				Vector2 direction = Vector2.zero;
-				KeyCode input = inputs.Dequeue();
-				switch (input)
-				{
-					case KeyCode.UpArrow:
-						direction = Vector2.up;
-						break;
-
-					case KeyCode.DownArrow:
-						direction = Vector2.down;
-						break;
-
-					case KeyCode.LeftArrow:
-						direction = Vector2.left;
-						break;
-
-					case KeyCode.RightArrow:
-						direction = Vector2.right;
-						break;
-				}
-
-				SetDestination(direction);
-			}
-		}
-	}
-
-	private void SetDestination(Vector2 direction)
+	public void SetDestination(Vector2 direction)
 	{
 		spriteRenderer.flipX = direction.x > 0f;
 
@@ -201,14 +126,14 @@ public class Character : MonoBehaviour
 	private void HaltMovement()
 	{
 		transform.position = destination;
-		inputs.Clear();
+		//inputs.Clear();
 		state = CharacterState.Idle;
 	}
 
 	private void CollisionFallback()
 	{
 		destination = previousDestination;
-		inputs.Clear();
+		//inputs.Clear();
 		state = CharacterState.FallingBack;
 
 		Debug.Log("Collided: falling back to " + destination);
@@ -229,32 +154,22 @@ public class Character : MonoBehaviour
 		}
 	}
 
-	public void Enable()
+	public override void Enable()
 	{
+		base.Enable();
 		gameObject.SetActive(true);
 		if (Application.isPlaying)
 
 		{
 			rigidbody2D.isKinematic = false;
 		}
-
-		StartCoroutine(UnlockInputsCoroutine());
+		
 	}
 
-	private IEnumerator UnlockInputsCoroutine()
+	public override void Disable()
 	{
-		/*
-		int targetFrameRate = Application.targetFrameRate == 0 ? 60 : Application.targetFrameRate;
-		yield return new WaitForSeconds(1f / (targetFrameRate * 0.1f));
-		*/
-		yield return new WaitForSeconds(1f);
-		maximumInputsPerFrame = MaximumInputsPerFrame;
-	}
-
-	public void Disable()
-	{
-		//HaltMovement();
-		LockInputs();
+		base.Disable();
+		
 
 		if (Application.isPlaying)
 		{
@@ -264,8 +179,7 @@ public class Character : MonoBehaviour
 		gameObject.SetActive(false);
 	}
 
-	private void LockInputs()
+	public override void Dispose()
 	{
-		maximumInputsPerFrame = 0;
 	}
 }

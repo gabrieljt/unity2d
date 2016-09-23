@@ -123,7 +123,7 @@ public class GameState : MonoBehaviour, IDisposable
 	{
 		if (state == GameStateType.InGame)
 		{
-			if (Input.GetKeyDown(KeyCode.Escape))
+			if (UnityEngine.Input.GetKeyDown(KeyCode.Escape))
 			{
 				ResetLevel();
 				return;
@@ -230,7 +230,7 @@ public class GameState : MonoBehaviour, IDisposable
 		}
 	}
 
-	private void OnActorSpawned(ActorSpawner actorSpawner, GameObject spawnedActor)
+	private void OnActorSpawned(ActorSpawner actorSpawner, AActor spawnedActor)
 	{
 		if (actorSpawner.IsType<Character>())
 		{

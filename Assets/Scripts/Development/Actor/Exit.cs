@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Actor;
+using System;
 using UnityEngine;
 
 [RequireComponent(
 	typeof(SpriteRenderer),
 	typeof(CircleCollider2D)
 )]
-public class Exit : MonoBehaviour
+public class Exit : AActor
 {
 	private CircleCollider2D circleCollider2D;
 
@@ -26,13 +27,17 @@ public class Exit : MonoBehaviour
 		}
 	}
 
-	public void Enable()
+	public override void Enable()
 	{
 		gameObject.SetActive(true);
 	}
 
-	public void Disable()
+	public override void Disable()
 	{
 		gameObject.SetActive(false);
+	}
+
+	public override void Dispose()
+	{
 	}
 }

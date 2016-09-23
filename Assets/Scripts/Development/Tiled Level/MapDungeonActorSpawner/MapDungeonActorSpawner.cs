@@ -1,10 +1,10 @@
-﻿namespace TiledLevel
-{
-	using System;
-	using UnityEngine;
-	using Actor;
-	using System.Collections.Generic;
+﻿using Actor;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
 
+namespace TiledLevel
+{
 #if UNITY_EDITOR
 
 	using UnityEditor;
@@ -47,7 +47,7 @@
 
 		public Action Built = delegate { };
 
-		private Dictionary<ActorType, List<GameObject>> spawnedActors = new Dictionary<ActorType, List<GameObject>>();
+		private Dictionary<ActorType, List<AActor>> spawnedActors = new Dictionary<ActorType, List<AActor>>();
 
 		private void Awake()
 		{
@@ -62,7 +62,7 @@
 			var actorTypes = Enum.GetValues(typeof(ActorType));
 			foreach (var actorType in actorTypes)
 			{
-				spawnedActors[(ActorType)actorType] = new List<GameObject>();
+				spawnedActors[(ActorType)actorType] = new List<AActor>();
 			}
 		}
 
@@ -72,7 +72,7 @@
 			{
 				foreach (var actor in actorsList)
 				{
-					DestroyImmediate(actor);
+					DestroyImmediate(actor.gameObject);
 				}
 				actorsList.Clear();
 			}
@@ -155,7 +155,7 @@
 		{
 			if (!playerSet)
 			{
-				BuildActorSpawner(tilePosition, ActorType.Character);
+				BuildActorSpawner(tilePosition, ActorType.Warrior);
 				playerSet = true;
 			}
 		}
@@ -178,12 +178,9 @@
 			actorSpawner.Spawned += OnActorSpawned;
 		}
 
-		private void OnActorSpawned(ActorSpawner actorSpawner, GameObject spawnedActor)
+		private void OnActorSpawned(ActorSpawner actorSpawner, AActor spawnedActor)
 		{
-			if (actorSpawner.IsType<Character>())
-			{
-				Debug.LogWarning(spawnedActor.GetType() + " spawned");
-			}
+			Debug.LogWarning(spawnedActor.GetType() + " spawned");
 
 			actorSpawner.Spawned -= OnActorSpawned;
 

@@ -17,10 +17,7 @@ namespace Actor
 			if (GUILayout.Button("Spawn Actor"))
 			{
 				var actorSpawner = (ActorSpawner)target;
-
 				actorSpawner.Spawn();
-
-				Debug.Log(actorSpawner.IsType<Character>());
 			}
 		}
 	}
@@ -29,7 +26,7 @@ namespace Actor
 
 	public enum ActorType
 	{
-		Character = 0,
+		Warrior = 0,
 		Exit = 1,
 		Slime = 2,
 	}
@@ -41,7 +38,7 @@ namespace Actor
 
 		public Vector2 position;
 
-		public Action<ActorSpawner, GameObject> Spawned = delegate { };
+		public Action<ActorSpawner, AActor> Spawned = delegate { };
 
 		public bool IsType<TActor>() where TActor : MonoBehaviour
 		{
@@ -55,7 +52,7 @@ namespace Actor
 			var actor = Instantiate(ActorLoader.Actors[(int)actorType], position, Quaternion.identity) as GameObject;
 			actor.tag = actorType.ToString();
 
-			Spawned(this, actor);
+			Spawned(this, actor.GetComponent<AActor>());
 		}
 
 		private void Start()

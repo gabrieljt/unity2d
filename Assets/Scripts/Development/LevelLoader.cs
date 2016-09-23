@@ -4,6 +4,8 @@ using UnityEngine;
 
 namespace TiledLevel
 {
+	using Actor;
+
 #if UNITY_EDITOR
 
 	using UnityEditor;
@@ -199,6 +201,12 @@ namespace TiledLevel
 
 			levels.Clear();
 			levelIndexes = new int[0];
+
+			var actors = FindObjectsOfType<AActor>();
+			for (int i = 0; i < actors.Length; i++)
+			{
+				DestroyImmediate(actors[i].gameObject);
+			}
 		}
 
 		private void OnDestroy()
