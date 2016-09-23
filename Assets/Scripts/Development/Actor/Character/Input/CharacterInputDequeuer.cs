@@ -5,7 +5,7 @@ namespace Input
 	[RequireComponent(
 	typeof(Character)
 	)]
-	public class CharacterInputDequeuer : MonoBehaviour
+	public class CharacterInputDequeuer : AInputDequeuer
 	{
 		[SerializeField]
 		private Character character;
@@ -17,7 +17,7 @@ namespace Input
 			character = GetComponent<Character>();
 		}
 
-		public void OnInputsEnqueued(AInputEnqueuer inputQueue)
+		public override void OnInputsEnqueued(AInputEnqueuer inputQueue)
 		{
 			if (character.State == CharacterState.Idle)
 			{

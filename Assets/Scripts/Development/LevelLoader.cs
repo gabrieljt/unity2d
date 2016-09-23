@@ -125,7 +125,7 @@ namespace TiledLevel
 		{
 			loadedLevel = Instantiate(levelPrefab);
 			loadedLevel.GetComponent<Map>().Build();
-			loadedLevel.transform.SetParent(transform, true);
+			loadedLevel.transform.SetParent(transform);
 			loadedLevel.name = "Level " + index;
 			levels[index] = loadedLevel;
 			levelIndexes = new int[levels.Count];

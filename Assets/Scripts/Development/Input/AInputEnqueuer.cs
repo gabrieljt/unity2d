@@ -21,16 +21,9 @@ namespace Input
 		[Range(0.1f, 5f)]
 		protected float unlockInputsDelay = 0.5f;
 
-		public int MaximumInputsPerFrame { get; private set; }
-
 		public Action<AInputEnqueuer> InputsEnqueued = delegate { };
 
 		protected abstract void EnqueueInputs();
-
-		private void Awake()
-		{
-			MaximumInputsPerFrame = maximumInputsPerFrame;
-		}
 
 		private void Update()
 		{
@@ -54,7 +47,6 @@ namespace Input
 		private IEnumerator UnlockInputsCoroutine(float waitTime)
 		{
 			yield return new WaitForSeconds(waitTime);
-			maximumInputsPerFrame = MaximumInputsPerFrame;
 		}
 	}
 }

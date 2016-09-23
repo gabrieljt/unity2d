@@ -1,9 +1,18 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Input
 {
-	public class PlayerInputQueue : AInputEnqueuer
+	public class PlayerInputEnqueuer : AInputEnqueuer
 	{
+		[SerializeField]
+		private AInputDequeuer inputDequeuer;
+
+		private void Awake()
+		{
+			gameObject.isStatic = true;
+		}
+
 		protected override void EnqueueInputs()
 		{
 			if (UnityEngine.Input.anyKey && inputs.Count < maximumInputsPerFrame)
@@ -33,5 +42,7 @@ namespace Input
 				}
 			}
 		}
+
+		
 	}
 }
