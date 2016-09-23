@@ -17,10 +17,10 @@ namespace TiledLevel
 
 			if (GUILayout.Button("Build Rooms"))
 			{
-				var roomMap = (MapRoom)target;
-				IMapParams mapParams = new MapParams(roomMap.Map);
-				IMapRoomParams roomMapParams = new MapRoomParams();
-				roomMap.Build(ref mapParams, ref roomMapParams);
+				var mapRoom = (MapRoom)target;
+				IMapParams mapParams = new MapParams(mapRoom.Map);
+				IMapRoomParams mapRoomParams = new MapRoomParams();
+				mapRoom.Build(ref mapParams, ref mapRoomParams);
 			}
 		}
 	}
@@ -100,11 +100,11 @@ namespace TiledLevel
 
 		private void OnMapBuilt(IMapParams mapParams)
 		{
-			IMapRoomParams roomMapParams = new MapRoomParams();
-			Build(ref mapParams, ref roomMapParams);
+			IMapRoomParams mapRoomParams = new MapRoomParams();
+			Build(ref mapParams, ref mapRoomParams);
 		}
 
-		public void Build(ref IMapParams mapParams, ref IMapRoomParams roomMapParams)
+		public void Build(ref IMapParams mapParams, ref IMapRoomParams mapRoomParams)
 		{
 			if (rooms.Length > 0)
 			{
@@ -125,9 +125,9 @@ namespace TiledLevel
 
 			map.UpdateValues(mapParams);
 
-			roomMapParams = new MapRoomParams(this);
+			mapRoomParams = new MapRoomParams(this);
 
-			Built(roomMapParams);
+			Built(mapRoomParams);
 		}
 
 		private void ClearRooms(ref IMapParams mapParams, ref Room[] rooms)
@@ -264,7 +264,7 @@ namespace TiledLevel
 
 		public void Dispose()
 		{
-			map.Built += OnMapBuilt;
+			map.Built -= OnMapBuilt;
 		}
 
 		private void OnDestroy()

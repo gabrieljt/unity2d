@@ -124,7 +124,7 @@ namespace TiledLevel
 
 			this.levelParams = levelParams;
 
-			Debug.LogWarning(GetType() + "LevelLoader.CreateLevel.status: " + status);
+			Debug.LogWarning(GetType() + " " + status);
 			return status;
 		}
 
@@ -152,7 +152,7 @@ namespace TiledLevel
 				SetStatusDestroyed(index, ref status);
 			}
 
-			Debug.LogWarning(GetType() + "LevelLoader.DestroyLevel.status: " + status);
+			Debug.LogWarning(GetType() + " " + status);
 			return status;
 		}
 
@@ -177,7 +177,7 @@ namespace TiledLevel
 				LevelLoaded(index, activeLevel, levelParams);
 			}
 
-			Debug.LogWarning(GetType() + "LevelLoader.LoadLevel.status: " + status);
+			Debug.LogWarning(GetType() + " " + status);
 			return status;
 		}
 
