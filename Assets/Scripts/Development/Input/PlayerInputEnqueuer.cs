@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Input
 {
@@ -48,9 +49,14 @@ namespace Input
 			}
 		}
 
-		public static void SetInputDequeuer(CharacterInputDequeuer characterInputDequeuer)
+		public static void SetInputDequeuer(AInputDequeuer inputDequeuer)
 		{
-			Instance.InputsEnqueued += characterInputDequeuer.OnInputsEnqueued;
+			Instance.InputsEnqueued += inputDequeuer.OnInputsEnqueued;
+		}
+
+		public override void Dispose()
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

@@ -68,7 +68,7 @@ namespace Input
 			}
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
 			InputsEnqueued -= characterInputDequeuer.OnInputsEnqueued;
 			character.Enabled -= OnCharacterEnabled;

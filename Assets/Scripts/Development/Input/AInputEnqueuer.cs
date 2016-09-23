@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Input
 {
-	public abstract class AInputEnqueuer : MonoBehaviour
+	public abstract class AInputEnqueuer : MonoBehaviour, IDisposable
 	{
 		protected Queue<KeyCode> inputs = new Queue<KeyCode>();
 
@@ -47,6 +47,13 @@ namespace Input
 		private IEnumerator UnlockInputsCoroutine(float waitTime)
 		{
 			yield return new WaitForSeconds(waitTime);
+		}
+
+		public abstract void Dispose();
+
+		private void OnDestroy()
+		{
+			Dispose();
 		}
 	}
 }

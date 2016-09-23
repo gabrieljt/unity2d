@@ -186,7 +186,7 @@ namespace TiledLevel
 
 			actorSpawner.Spawned -= OnActorSpawned;
 
-			if (actorSpawner.IsType<Character>() && spawnedActor.CompareTag("Player"))
+			if (actorSpawner.IsType<Character>() && spawnedActor.CompareTag(ActorType.Player.ToString()))
 			{
 				PlayerInputEnqueuer.SetInputDequeuer(spawnedActor.GetComponent<CharacterInputDequeuer>());
 			}
