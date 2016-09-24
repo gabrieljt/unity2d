@@ -50,8 +50,9 @@ namespace Game.Input
 			}
 		}
 
-		private void Awake()
+		protected override void Awake()
 		{
+			base.Awake();
 			gameObject.isStatic = true;
 		}
 
@@ -91,7 +92,7 @@ namespace Game.Input
 
 			instance.Add(ref instance, ref inputDequeuer);
 
-			Debug.LogWarning("Player InputDequeuers: " + instance.InputDequeuers.Count);
+			Debug.LogWarning("PlayerInputEnqueuer set to " + inputDequeuer.name + " | TotalInputDequeuers: " + instance.InputDequeuers.Count);
 		}
 
 		public static void Remove(ref AInputDequeuer inputDequeuer)
@@ -100,14 +101,17 @@ namespace Game.Input
 
 			instance.Remove(ref instance, ref inputDequeuer);
 
-			Debug.LogWarning("Player InputDequeuers: " + instance.InputDequeuers.Count);
+			Debug.LogWarning("PlayerInputEnqueuer releasing from " + inputDequeuer.name + " | TotalInputDequeuers: " + instance.InputDequeuers.Count);
 		}
 
 		protected override void OnInputDequeuerDestroyed(MonoBehaviour inputDequeuerBehaviour)
 		{
-			var instance = Instance as AInputEnqueuer;
-			var inputDequeuer = inputDequeuerBehaviour.GetComponent<AInputDequeuer>();
-			instance.Remove(ref instance, ref inputDequeuer);
+			if (Instance)
+			{
+				var instance = Instance as AInputEnqueuer;
+				var inputDequeuer = inputDequeuerBehaviour.GetComponent<AInputDequeuer>();
+				instance.Remove(ref instance, ref inputDequeuer);
+			}
 		}
 
 		public override void Dispose()

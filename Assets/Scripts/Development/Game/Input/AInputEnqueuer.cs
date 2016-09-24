@@ -21,6 +21,8 @@ namespace Game.Input
 		[Range(0, 10)]
 		protected int maximumInputsPerFrame = 1;
 
+		private int MaximumInputsPerFrame { get; set; }
+
 		[SerializeField]
 		[Range(0.1f, 5f)]
 		protected float unlockInputsDelay = 0.5f;
@@ -30,6 +32,11 @@ namespace Game.Input
 		private Action<MonoBehaviour> destroyed = delegate { };
 
 		public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
+
+		protected virtual void Awake()
+		{
+			MaximumInputsPerFrame = maximumInputsPerFrame;
+		}
 
 		public void Add(ref AInputEnqueuer instance, ref AInputDequeuer inputDequeuer)
 		{
@@ -117,6 +124,7 @@ namespace Game.Input
 		private IEnumerator UnlockInputsCoroutine(float waitTime)
 		{
 			yield return new WaitForSeconds(waitTime);
+			maximumInputsPerFrame = MaximumInputsPerFrame;
 		}
 
 		public abstract void Dispose();

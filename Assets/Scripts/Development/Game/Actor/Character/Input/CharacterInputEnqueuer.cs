@@ -15,8 +15,9 @@ namespace Game.Actor
 		[SerializeField]
 		private CharacterInputDequeuer characterInputDequeuer;
 
-		private void Awake()
+		protected override void Awake()
 		{
+			base.Awake();
 			character = GetComponent<Character>();
 			characterInputDequeuer = GetComponent<CharacterInputDequeuer>();
 

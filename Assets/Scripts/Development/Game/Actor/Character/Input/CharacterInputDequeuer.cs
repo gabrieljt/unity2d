@@ -46,14 +46,14 @@ namespace Game.Actor
 			}
 		}
 
-		public override void OnInputsEnqueued(AInputEnqueuer inputQueue)
+		public override void OnInputsEnqueued(AInputEnqueuer inputEnqueuer)
 		{
 			if (character.State == CharacterState.Idle)
 			{
-				if (inputQueue.HasInputs)
+				if (inputEnqueuer.HasInputs)
 				{
 					Vector2 direction = Vector2.zero;
-					KeyCode input = inputQueue.Inputs.Dequeue();
+					KeyCode input = inputEnqueuer.Inputs.Dequeue();
 					switch (input)
 					{
 						case KeyCode.UpArrow:
@@ -76,7 +76,7 @@ namespace Game.Actor
 					character.SetDestination(direction);
 				}
 
-				Debug.LogWarning(name + " InputEnqueuers: " + inputEnqueuers.Count);
+				Debug.LogWarning(name + " InputDequeuer dequeueing from " + inputEnqueuer.name + " | TotalInputEnqueuers: " + inputEnqueuers.Count);
 			}
 		}
 
