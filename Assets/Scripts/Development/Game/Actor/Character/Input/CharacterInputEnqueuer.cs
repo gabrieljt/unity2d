@@ -1,4 +1,5 @@
 ﻿using Game.Input;
+using System;
 using UnityEngine;
 
 namespace Game.Actor
@@ -18,23 +19,14 @@ namespace Game.Actor
 		private void Awake()
 		{
 			character = GetComponent<Character>();
-			character.Enabled += OnCharacterEnabled;
-			character.Disabled += OnCharacterDisabled;
-
 			characterInputDequeuer = GetComponent<CharacterInputDequeuer>();
-			InputsEnqueued += characterInputDequeuer.OnInputsEnqueued;
+
+			var instance = this as AInputEnqueuer;
+			var characterInputDequeuerInstance = characterInputDequeuer as AInputDequeuer;
+			Add(ref instance, ref characterInputDequeuerInstance);
 		}
 
-		private void OnCharacterEnabled(AActor actor)
-		{
-			UnlockInputs();
-		}
-
-		private void OnCharacterDisabled(AActor actor)
-		{
-			LockInputs();
-		}
-
+		// TODO: character input logic (AI)
 		protected override void EnqueueInputs()
 		{
 			if (inputs.Count < 1)
@@ -69,9 +61,13 @@ namespace Game.Actor
 
 		public override void Dispose()
 		{
-			InputsEnqueued -= characterInputDequeuer.OnInputsEnqueued;
-			character.Enabled -= OnCharacterEnabled;
-			character.Disabled -= OnCharacterDisabled;
+			var instance = this as AInputEnqueuer;
+			var characterInputDequeuerInstance = characterInputDequeuer as AInputDequeuer;
+			Remove(ref instance, ref characterInputDequeuerInstance);
+		}
+
+		protected override void OnInputDequeuerDestroyed(MonoBehaviour obj)
+		{
 		}
 	}
 }

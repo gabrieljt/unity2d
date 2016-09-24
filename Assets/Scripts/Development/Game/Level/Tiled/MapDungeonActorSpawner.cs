@@ -191,7 +191,8 @@ namespace Game.Level.Tiled
 
 			if (actorSpawner.IsType<Character>() && spawnedActor.CompareTag(ActorType.Player.ToString()))
 			{
-				PlayerInputEnqueuer.Add(spawnedActor.GetComponent<CharacterInputDequeuer>());
+				var playerCharacterInputDequeuer = spawnedActor.GetComponent<CharacterInputDequeuer>() as AInputDequeuer;
+				PlayerInputEnqueuer.Add(ref playerCharacterInputDequeuer);
 			}
 
 			spawnedActor.transform.SetParent(transform);

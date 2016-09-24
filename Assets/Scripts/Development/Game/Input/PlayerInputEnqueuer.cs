@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Game.Input
 {
@@ -18,15 +17,15 @@ namespace Game.Input
 			if (GUILayout.Button("Control selected actor"))
 			{
 				var playerInputEnqueuer = (PlayerInputEnqueuer)target;
-
-				PlayerInputEnqueuer.Add(playerInputEnqueuer.SelectedActor.GetComponent<AInputDequeuer>());
+				var playerInputDequeuer = playerInputEnqueuer.SelectedActor.GetComponent<AInputDequeuer>();
+				PlayerInputEnqueuer.Add(ref playerInputDequeuer);
 			}
 
 			if (GUILayout.Button("Release selected actor"))
 			{
 				var playerInputEnqueuer = (PlayerInputEnqueuer)target;
-
-				PlayerInputEnqueuer.Remove(playerInputEnqueuer.SelectedActor.GetComponent<AInputDequeuer>());
+				var playerInputDequeuer = playerInputEnqueuer.SelectedActor.GetComponent<AInputDequeuer>();
+				PlayerInputEnqueuer.Remove(ref playerInputDequeuer);
 			}
 		}
 	}
@@ -43,13 +42,10 @@ namespace Game.Input
 		public AActor SelectedActor { get { return selectedActor; } }
 #endif
 
-		private HashSet<AInputDequeuer> inputDequeuers = new HashSet<AInputDequeuer>();
-
 		public static PlayerInputEnqueuer Instance
 		{
 			get
 			{
-				Debug.Assert(FindObjectsOfType<PlayerInputEnqueuer>().Length == 1);
 				return FindObjectOfType<PlayerInputEnqueuer>();
 			}
 		}
@@ -89,70 +85,41 @@ namespace Game.Input
 			}
 		}
 
-		public static void Add(AInputDequeuer inputDequeuer)
+		public static void Add(ref AInputDequeuer inputDequeuer)
 		{
-			var instance = RegisterInputDequeuer(inputDequeuer);
+			var instance = Instance as AInputEnqueuer;
 
-			Debug.Assert(!instance.inputDequeuers.Contains(inputDequeuer));
-			Debug.Assert(!inputDequeuer.InputEnqueuers.Contains(instance));
+			instance.Add(ref instance, ref inputDequeuer);
 
-			inputDequeuer.InputEnqueuers.Add(instance);
-			instance.inputDequeuers.Add(inputDequeuer);
+			Debug.LogWarning("Player InputDequeuers: " + instance.InputDequeuers.Count);
 		}
 
-		private static PlayerInputEnqueuer RegisterInputDequeuer(AInputDequeuer inputDequeuer)
+		public static void Remove(ref AInputDequeuer inputDequeuer)
 		{
-			var instance = Instance;
+			var instance = Instance as AInputEnqueuer;
 
-			instance.InputsEnqueued += inputDequeuer.OnInputsEnqueued;
-			(inputDequeuer as IDestroyable).Destroyed += OnInputDequeuerDestroyed;
+			instance.Remove(ref instance, ref inputDequeuer);
 
-			var otherEnqueuer = inputDequeuer.GetComponent<AInputEnqueuer>();
-			if (otherEnqueuer)
-			{
-				otherEnqueuer.enabled = false;
-			}
-
-			return instance;
+			Debug.LogWarning("Player InputDequeuers: " + instance.InputDequeuers.Count);
 		}
 
-		public static void Remove(AInputDequeuer inputDequeuer)
+		protected override void OnInputDequeuerDestroyed(MonoBehaviour inputDequeuerBehaviour)
 		{
-			var instance = UnregisterInputDequeuer(inputDequeuer);
-
-			Debug.Assert(instance.inputDequeuers.Contains(inputDequeuer));
-			Debug.Assert(inputDequeuer.InputEnqueuers.Contains(instance));
-
-			inputDequeuer.InputEnqueuers.Remove(instance);
-			instance.inputDequeuers.Remove(inputDequeuer);
-		}
-
-		private static PlayerInputEnqueuer UnregisterInputDequeuer(AInputDequeuer inputDequeuer)
-		{
-			var instance = Instance;
-
-			instance.InputsEnqueued -= inputDequeuer.OnInputsEnqueued;
-			(inputDequeuer as IDestroyable).Destroyed -= OnInputDequeuerDestroyed;
-
-			var otherEnqueuer = inputDequeuer.GetComponent<AInputEnqueuer>();
-			if (otherEnqueuer)
-			{
-				otherEnqueuer.enabled = true;
-			}
-
-			return instance;
-		}
-
-		private static void OnInputDequeuerDestroyed(MonoBehaviour inputDequeuer)
-		{
-			Remove(inputDequeuer.GetComponent<AInputDequeuer>());
+			var instance = Instance as AInputEnqueuer;
+			var inputDequeuer = inputDequeuerBehaviour.GetComponent<AInputDequeuer>();
+			instance.Remove(ref instance, ref inputDequeuer);
 		}
 
 		public override void Dispose()
 		{
-			foreach (var inputDequeuer in inputDequeuers)
+			if (Instance)
 			{
-				UnregisterInputDequeuer(inputDequeuer);
+				var instance = Instance as AInputEnqueuer;
+				foreach (var inputDequeuer in inputDequeuers)
+				{
+					var inputDequeuerInstance = inputDequeuer;
+					instance.Remove(ref instance, ref inputDequeuerInstance);
+				}
 			}
 
 			inputDequeuers.Clear();

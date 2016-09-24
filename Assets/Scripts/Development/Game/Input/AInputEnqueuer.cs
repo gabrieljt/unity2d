@@ -9,6 +9,10 @@ namespace Game.Input
 	{
 		protected Queue<KeyCode> inputs = new Queue<KeyCode>();
 
+		protected HashSet<AInputDequeuer> inputDequeuers = new HashSet<AInputDequeuer>();
+
+		public HashSet<AInputDequeuer> InputDequeuers { get { return inputDequeuers; } }
+
 		public Queue<KeyCode> Inputs { get { return inputs; } }
 
 		public bool HasInputs { get { return inputs.Count > 0; } }
@@ -23,11 +27,73 @@ namespace Game.Input
 
 		public Action<AInputEnqueuer> InputsEnqueued = delegate { };
 
-		protected abstract void EnqueueInputs();
-
 		private Action<MonoBehaviour> destroyed = delegate { };
 
 		public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
+
+		public void Add(ref AInputEnqueuer instance, ref AInputDequeuer inputDequeuer)
+		{
+			Debug.Assert(!instance.InputDequeuers.Contains(inputDequeuer));
+			Debug.Assert(!inputDequeuer.InputEnqueuers.Contains(instance));
+
+			if (instance.InputDequeuers.Contains(inputDequeuer))
+			{
+				return;
+			}
+
+			RegisterInputDequeuer(ref instance, ref inputDequeuer);
+
+			inputDequeuer.InputEnqueuers.Add(instance);
+			instance.InputDequeuers.Add(inputDequeuer);
+
+			Debug.Assert(inputDequeuer.InputEnqueuers.Count <= 2);
+		}
+
+		private void RegisterInputDequeuer(ref AInputEnqueuer instance, ref AInputDequeuer inputDequeuer)
+		{
+			instance.InputsEnqueued += inputDequeuer.OnInputsEnqueued;
+			(inputDequeuer as IDestroyable).Destroyed += OnInputDequeuerDestroyed;
+
+			var otherEnqueuer = inputDequeuer.GetComponent<AInputEnqueuer>();
+			if (otherEnqueuer)
+			{
+				otherEnqueuer.enabled = false;
+			}
+		}
+
+		public void Remove(ref AInputEnqueuer instance, ref AInputDequeuer inputDequeuer)
+		{
+			Debug.Assert(instance.InputDequeuers.Contains(inputDequeuer));
+			Debug.Assert(inputDequeuer.InputEnqueuers.Contains(instance));
+
+			if (!instance.InputDequeuers.Contains(inputDequeuer))
+			{
+				return;
+			}
+
+			UnregisterInputDequeuer(ref instance, ref inputDequeuer);
+
+			inputDequeuer.InputEnqueuers.Remove(instance);
+			instance.InputDequeuers.Remove(inputDequeuer);
+
+			Debug.Assert(inputDequeuer.InputEnqueuers.Count >= 0);
+		}
+
+		private void UnregisterInputDequeuer(ref AInputEnqueuer instance, ref AInputDequeuer inputDequeuer)
+		{
+			instance.InputsEnqueued -= inputDequeuer.OnInputsEnqueued;
+			(inputDequeuer as IDestroyable).Destroyed -= OnInputDequeuerDestroyed;
+
+			var otherEnqueuer = inputDequeuer.GetComponent<AInputEnqueuer>();
+			if (otherEnqueuer)
+			{
+				otherEnqueuer.enabled = true;
+			}
+		}
+
+		protected abstract void OnInputDequeuerDestroyed(MonoBehaviour obj);
+
+		protected abstract void EnqueueInputs();
 
 		private void Update()
 		{
@@ -38,12 +104,12 @@ namespace Game.Input
 			}
 		}
 
-		protected void LockInputs()
+		public void LockInputs()
 		{
 			maximumInputsPerFrame = 0;
 		}
 
-		protected void UnlockInputs()
+		public void UnlockInputs()
 		{
 			StartCoroutine(UnlockInputsCoroutine(unlockInputsDelay));
 		}

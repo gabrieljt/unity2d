@@ -1,5 +1,4 @@
 ﻿using Game.Input;
-using System;
 using UnityEngine;
 
 namespace Game.Actor
@@ -19,6 +18,8 @@ namespace Game.Actor
 			character = GetComponent<Character>();
 
 			character.MovementHalted += OnCharacterMovementHalt;
+			character.Disabled += OnCharacterDisabled;
+			character.Enabled += OnCharacterEnabled;
 
 			base.Awake();
 		}
@@ -28,6 +29,22 @@ namespace Game.Actor
 			foreach (var inputEnqueuer in inputEnqueuers)
 			{
 				inputEnqueuer.Inputs.Clear();
+			}
+		}
+
+		private void OnCharacterDisabled(AActor actor)
+		{
+			foreach (var inputEnqueuer in inputEnqueuers)
+			{
+				inputEnqueuer.LockInputs();
+			}
+		}
+
+		private void OnCharacterEnabled(AActor actor)
+		{
+			foreach (var inputEnqueuer in inputEnqueuers)
+			{
+				inputEnqueuer.UnlockInputs();
 			}
 		}
 
@@ -60,12 +77,16 @@ namespace Game.Actor
 
 					character.SetDestination(direction);
 				}
+
+				Debug.LogWarning(name + " InputEnqueuers: " + inputEnqueuers.Count);
 			}
 		}
 
 		public override void Dispose()
 		{
 			character.MovementHalted -= OnCharacterMovementHalt;
+			character.Disabled -= OnCharacterDisabled;
+			character.Enabled -= OnCharacterEnabled;
 		}
 	}
 }
