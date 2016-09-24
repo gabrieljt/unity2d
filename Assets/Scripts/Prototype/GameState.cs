@@ -1,8 +1,8 @@
-﻿using Actor;
+﻿using Game.Actor;
+using Game.Level.Tiled;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using TiledLevel;
 using UnityEngine;
 using UnityEngine.UI;
 
