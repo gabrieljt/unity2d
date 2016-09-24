@@ -49,6 +49,7 @@ namespace Input
 			}
 		}
 
+		// TODO: handle input switch
 		public static void SetInputDequeuer(AInputDequeuer inputDequeuer)
 		{
 			Instance.InputsEnqueued += inputDequeuer.OnInputsEnqueued;
