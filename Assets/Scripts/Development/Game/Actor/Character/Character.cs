@@ -129,8 +129,7 @@ namespace Game.Actor
 		private void HaltMovement()
 		{
 			transform.position = destination;
-			// TODO: singal inputs clear
-			//inputs.Clear();
+
 			MovementHalted();
 
 			state = CharacterState.Idle;
@@ -139,8 +138,7 @@ namespace Game.Actor
 		private void CollisionFallback()
 		{
 			destination = previousDestination;
-			// TODO: singal inputs clear
-			//inputs.Clear();
+
 			MovementHalted();
 
 			state = CharacterState.FallingBack;
