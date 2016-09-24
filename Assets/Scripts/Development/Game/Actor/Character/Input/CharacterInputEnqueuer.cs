@@ -1,5 +1,4 @@
 ﻿using Game.Input;
-using System;
 using UnityEngine;
 
 namespace Game.Actor

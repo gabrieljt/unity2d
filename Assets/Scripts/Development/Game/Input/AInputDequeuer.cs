@@ -14,15 +14,6 @@ namespace Game.Input
 
 		public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
-		protected virtual void Awake()
-		{
-			var inputEnqueuer = GetComponent<AInputEnqueuer>();
-			if (inputEnqueuer)
-			{
-				inputEnqueuers.Add(inputEnqueuer);
-			}
-		}
-
 		public abstract void Dispose();
 
 		public void OnDestroy()

@@ -13,15 +13,13 @@ namespace Game.Actor
 
 		public Character Character { get { return character; } }
 
-		protected override void Awake()
+		private void Awake()
 		{
 			character = GetComponent<Character>();
 
 			character.MovementHalted += OnCharacterMovementHalt;
 			character.Disabled += OnCharacterDisabled;
 			character.Enabled += OnCharacterEnabled;
-
-			base.Awake();
 		}
 
 		private void OnCharacterMovementHalt()
