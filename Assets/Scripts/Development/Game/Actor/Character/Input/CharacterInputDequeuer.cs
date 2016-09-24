@@ -1,4 +1,5 @@
 ﻿using Game.Input;
+using System;
 using UnityEngine;
 
 namespace Game.Actor
@@ -13,9 +14,21 @@ namespace Game.Actor
 
 		public Character Character { get { return character; } }
 
-		private void Awake()
+		protected override void Awake()
 		{
 			character = GetComponent<Character>();
+
+			character.MovementHalted += OnCharacterMovementHalt;
+
+			base.Awake();
+		}
+
+		private void OnCharacterMovementHalt()
+		{
+			foreach (var inputEnqueuer in inputEnqueuers)
+			{
+				inputEnqueuer.Inputs.Clear();
+			}
 		}
 
 		public override void OnInputsEnqueued(AInputEnqueuer inputQueue)
@@ -52,6 +65,7 @@ namespace Game.Actor
 
 		public override void Dispose()
 		{
+			character.MovementHalted -= OnCharacterMovementHalt;
 		}
 	}
 }

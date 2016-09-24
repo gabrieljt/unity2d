@@ -5,7 +5,11 @@ namespace Game.Input
 {
 	public class PlayerInputEnqueuer : AInputEnqueuer
 	{
-		[SerializeField]
+#if UNITY_EDITOR
+
+
+#endif
+
 		private HashSet<AInputDequeuer> inputDequeuers = new HashSet<AInputDequeuer>();
 
 		public static PlayerInputEnqueuer Instance
@@ -55,13 +59,17 @@ namespace Game.Input
 		public static void Add(AInputDequeuer inputDequeuer)
 		{
 			var instance = RegisterInputDequeuer(inputDequeuer);
+
+			Debug.Assert(!instance.inputDequeuers.Contains(inputDequeuer));
+			Debug.Assert(!inputDequeuer.InputEnqueuers.Contains(instance));
+
+			inputDequeuer.InputEnqueuers.Add(instance);
 			instance.inputDequeuers.Add(inputDequeuer);
 		}
 
 		private static PlayerInputEnqueuer RegisterInputDequeuer(AInputDequeuer inputDequeuer)
 		{
 			var instance = Instance;
-			Debug.Assert(!instance.inputDequeuers.Contains(inputDequeuer));
 
 			instance.InputsEnqueued += inputDequeuer.OnInputsEnqueued;
 			(inputDequeuer as IDestroyable).Destroyed += OnInputDequeuerDestroyed;
@@ -79,13 +87,16 @@ namespace Game.Input
 		{
 			var instance = UnregisterInputDequeuer(inputDequeuer);
 
+			Debug.Assert(instance.inputDequeuers.Contains(inputDequeuer));
+			Debug.Assert(inputDequeuer.InputEnqueuers.Contains(instance));
+
+			inputDequeuer.InputEnqueuers.Remove(instance);
 			instance.inputDequeuers.Remove(inputDequeuer);
 		}
 
 		private static PlayerInputEnqueuer UnregisterInputDequeuer(AInputDequeuer inputDequeuer)
 		{
 			var instance = Instance;
-			Debug.Assert(instance.inputDequeuers.Contains(inputDequeuer));
 
 			instance.InputsEnqueued -= inputDequeuer.OnInputsEnqueued;
 			(inputDequeuer as IDestroyable).Destroyed -= OnInputDequeuerDestroyed;

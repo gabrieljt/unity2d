@@ -48,6 +48,8 @@ namespace Game.Actor
 
 		public Action StepTaken = delegate { };
 
+		public Action MovementHalted = delegate { };
+
 		private void Awake()
 		{
 			spriteRenderer = GetComponent<SpriteRenderer>();
@@ -129,6 +131,8 @@ namespace Game.Actor
 			transform.position = destination;
 			// TODO: singal inputs clear
 			//inputs.Clear();
+			MovementHalted();
+
 			state = CharacterState.Idle;
 		}
 
@@ -137,6 +141,8 @@ namespace Game.Actor
 			destination = previousDestination;
 			// TODO: singal inputs clear
 			//inputs.Clear();
+			MovementHalted();
+
 			state = CharacterState.FallingBack;
 
 			Debug.Log("Collided: falling back to " + destination);
