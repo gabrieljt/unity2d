@@ -30,6 +30,12 @@ namespace Game.Level.Tiled
 				var mapDungeonLevel = (MapDungeonLevel)target;
 				mapDungeonLevel.Dispose();
 			}
+
+			if (GUILayout.Button("Destroy"))
+			{
+				var mapDungeonLevel = (MapDungeonLevel)target;
+				Destroy(mapDungeonLevel.gameObject);
+			}
 		}
 	}
 
