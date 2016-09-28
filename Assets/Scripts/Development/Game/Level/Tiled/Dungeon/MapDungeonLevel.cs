@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Game.Level.Tiled
 {
@@ -13,6 +12,12 @@ namespace Game.Level.Tiled
 		public override void OnInspectorGUI()
 		{
 			DrawDefaultInspector();
+
+			if (GUILayout.Button("Load"))
+			{
+				var mapDungeonLevel = (MapDungeonLevel)target;
+				mapDungeonLevel.Load(mapDungeonLevel.MapDungeonLevelParams.Level);
+			}
 
 			if (GUILayout.Button("Build"))
 			{
@@ -30,40 +35,21 @@ namespace Game.Level.Tiled
 
 #endif
 
-	public enum LevelState
-	{
-		Unbuilt,
-		Building,
-		Built,
-		Ready,
-		InGame,
-		Ended
-	}
-
 	[ExecuteInEditMode]
 	[RequireComponent(
 		typeof(MapDungeonLevelBuilder)
 	)]
-	public class MapDungeonLevel : MonoBehaviour, IBuildable, IDestroyable, IDisposable
+	public class MapDungeonLevel : ALevel
 	{
 		[SerializeField]
-		private int level;
+		private MapDungeonLevelParams mapDungeonLevelParams;
 
-		[SerializeField]
-		private LevelState state = LevelState.Unbuilt;
+		public MapDungeonLevelParams MapDungeonLevelParams { get { return mapDungeonLevelParams; } }
 
 		[SerializeField]
 		private MapDungeonLevelBuilder mapDungeonLevelBuilder;
 
 		public MapDungeonLevelBuilder MapDungeonLevelBuilder { get { return mapDungeonLevelBuilder; } }
-
-		private Action built = delegate { };
-
-		public Action Built { get { return built; } set { built = value; } }
-
-		private Action<MonoBehaviour> destroyed = delegate { };
-
-		public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
 		private void Awake()
 		{
@@ -72,7 +58,15 @@ namespace Game.Level.Tiled
 			mapDungeonLevelBuilder = GetComponent<MapDungeonLevelBuilder>();
 		}
 
-		public void Build()
+		public override void Load(int level)
+		{
+			var mapDungeonLevelParams = new MapDungeonLevelParams(level);
+
+			var map = mapDungeonLevelBuilder.Map;
+			mapDungeonLevelParams.SetMapSize(ref map);
+		}
+
+		public override void Build()
 		{
 			state = LevelState.Building;
 			mapDungeonLevelBuilder.Built += OnMapDungeonLevelBuilderBuilt;
@@ -83,18 +77,17 @@ namespace Game.Level.Tiled
 		{
 			mapDungeonLevelBuilder.Built -= OnMapDungeonLevelBuilderBuilt;
 			state = LevelState.Built;
+
+			// calculate rules from level components; e.g. maximum steps from rooms
+			// get game info from level compononets; e.g. player, exit
+
+			Built();
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
 			state = LevelState.Unbuilt;
 			mapDungeonLevelBuilder.Built = null;
-		}
-
-		public void OnDestroy()
-		{
-			Destroyed(this);
-			Dispose();
 		}
 	}
 }

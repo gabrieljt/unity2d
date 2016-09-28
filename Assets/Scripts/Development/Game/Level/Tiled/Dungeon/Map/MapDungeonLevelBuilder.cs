@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Game.Level.Tiled
@@ -41,7 +40,7 @@ namespace Game.Level.Tiled
 		typeof(MapCollision),
 		typeof(MapRenderer)
 	)]
-	public class MapDungeonLevelBuilder : MonoBehaviour, IBuildable, IDestroyable, IDisposable
+	public class MapDungeonLevelBuilder : ALevelComponent
 	{
 		private Queue<IBuildable> buildableComponentsQueue = new Queue<IBuildable>();
 
@@ -71,14 +70,6 @@ namespace Game.Level.Tiled
 		private MapRenderer mapRenderer;
 
 		public MapRenderer MapRenderer { get { return mapRenderer; } }
-
-		private Action built = delegate { };
-
-		public Action Built { get { return built; } set { built = value; } }
-
-		private Action<MonoBehaviour> destroyed = delegate { };
-
-		public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
 		private void Awake()
 		{
@@ -114,22 +105,16 @@ namespace Game.Level.Tiled
 			{
 				buildableComponentsQueue.Enqueue(levelComponent);
 			}
-		}		
+		}
 
-		public void Build()
+		public override void Build()
 		{
 			SetBuildableComponentsQueue();
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
 			buildableComponentsQueue.Clear();
-		}
-
-		public void OnDestroy()
-		{
-			Destroyed(this);
-			Dispose();
 		}
 	}
 }

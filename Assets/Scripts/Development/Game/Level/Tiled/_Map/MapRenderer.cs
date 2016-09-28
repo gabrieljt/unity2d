@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Game.Level.Tiled
 {
@@ -35,7 +34,7 @@ namespace Game.Level.Tiled
 		typeof(SpriteRenderer),
 		typeof(Map)
 	)]
-	public class MapRenderer : MonoBehaviour, IBuildable, IDestroyable, IDisposable
+	public class MapRenderer : ALevelComponent
 	{
 		[SerializeField]
 		private SpriteRenderer spriteRenderer;
@@ -51,14 +50,6 @@ namespace Game.Level.Tiled
 
 		public Map Map { get { return map; } }
 
-		private Action built = delegate { };
-
-		public Action Built { get { return built; } set { built = value; } }
-
-		private Action<MonoBehaviour> destroyed = delegate { };
-
-		public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
-
 		private void Awake()
 		{
 			spriteRenderer = GetComponent<SpriteRenderer>();
@@ -66,7 +57,7 @@ namespace Game.Level.Tiled
 			map = GetComponent<Map>();
 		}
 
-		public void Build()
+		public override void Build()
 		{
 			Debug.Assert(mapTilesetType == MapTilesetLoader.MapTilesets[(int)mapTilesetType].Type);
 			Debug.Assert((int)mapTilesetType < MapTilesetLoader.MapTilesets.Length);
@@ -81,15 +72,9 @@ namespace Game.Level.Tiled
 			spriteRenderer.material = spriteMaterial;
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
 			spriteRenderer.sprite = null;
-		}
-
-		public void OnDestroy()
-		{
-			Destroyed(this);
-			Dispose();
 		}
 	}
 }

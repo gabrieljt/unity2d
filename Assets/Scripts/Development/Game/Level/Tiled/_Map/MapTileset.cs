@@ -55,16 +55,16 @@ namespace Game.Level.Tiled
 			Debug.Assert(tilesetTexture);
 			Debug.Assert(tilesetTiles.Length > 0);
 
-			var textureWidth = map.Width * tileResolution;
-			var textureHeight = map.Height * tileResolution;
+			var textureWidth = map.width * tileResolution;
+			var textureHeight = map.height * tileResolution;
 			var texture = new Texture2D(textureWidth, textureHeight);
 			var tilesPixels = GetPixelsFromTexture(tilesetTexture, tileResolution);
 
-			for (int y = 0; y < map.Height; y++)
+			for (int y = 0; y < map.height; y++)
 			{
-				for (int x = 0; x < map.Width; x++)
+				for (int x = 0; x < map.width; x++)
 				{
-					Color[] pixels = tilesPixels[GetTilesetTileIndexByType(tilesetTiles, map.Tiles[x, y].Type)];
+					Color[] pixels = tilesPixels[GetTilesetTileIndexByType(tilesetTiles, map.tiles[x, y].Type)];
 					texture.SetPixels(x * tileResolution, y * tileResolution, tileResolution, tileResolution, pixels);
 				}
 			}

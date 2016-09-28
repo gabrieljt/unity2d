@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Game.Level.Tiled
 {
@@ -34,7 +33,7 @@ namespace Game.Level.Tiled
 	[RequireComponent(
 		typeof(Map)
 		)]
-	public class MapCollision : MonoBehaviour, IBuildable, IDestroyable, IDisposable
+	public class MapCollision : ALevelComponent
 	{
 		[SerializeField]
 		private int collidersCount;
@@ -44,20 +43,12 @@ namespace Game.Level.Tiled
 
 		public Map Map { get { return map; } }
 
-		private Action built = delegate { };
-
-		public Action Built { get { return built; } set { built = value; } }
-
-		private Action<MonoBehaviour> destroyed = delegate { };
-
-		public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
-
 		private void Awake()
 		{
 			map = GetComponent<Map>();
 		}
 
-		public void Build()
+		public override void Build()
 		{
 			BuildColliders();
 
@@ -77,11 +68,11 @@ namespace Game.Level.Tiled
 
 		private void BuildColliders()
 		{
-			for (int x = 0; x < map.Width; x++)
+			for (int x = 0; x < map.width; x++)
 			{
-				for (int y = 0; y < map.Height; y++)
+				for (int y = 0; y < map.height; y++)
 				{
-					if (map.Tiles[x, y].Type == TileType.Wall)
+					if (map.tiles[x, y].Type == TileType.Wall)
 					{
 						var collider = gameObject.AddComponent<BoxCollider2D>();
 						collider.offset = new Vector2(x, y) + Vector2.one * 0.5f - map.WorldPosition;
@@ -92,15 +83,9 @@ namespace Game.Level.Tiled
 			}
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
 			DestroyColliders();
-		}
-
-		public void OnDestroy()
-		{
-			Destroyed(this);
-			Dispose();
 		}
 	}
 }

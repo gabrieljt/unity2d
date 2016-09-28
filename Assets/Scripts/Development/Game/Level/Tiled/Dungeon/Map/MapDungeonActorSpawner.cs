@@ -37,7 +37,7 @@ namespace Game.Level.Tiled
 	[RequireComponent(
 		typeof(MapDungeon)
 	)]
-	public class MapDungeonActorSpawner : MonoBehaviour, IBuildable, IDestroyable, IDisposable
+	public class MapDungeonActorSpawner : ALevelComponent
 	{
 		// TODO: better input params
 		private Dictionary<ActorType, List<AActor>> spawnedActors = new Dictionary<ActorType, List<AActor>>();
@@ -46,14 +46,6 @@ namespace Game.Level.Tiled
 		private MapDungeon mapDungeon;
 
 		public MapDungeon MapDungeon { get { return mapDungeon; } }
-
-		private Action built = delegate { };
-
-		public Action Built { get { return built; } set { built = value; } }
-
-		private Action<MonoBehaviour> destroyed = delegate { };
-
-		public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
 		private void Awake()
 		{
@@ -81,7 +73,7 @@ namespace Game.Level.Tiled
 			}
 		}
 
-		public void Build()
+		public override void Build()
 		{
 			if (spawnedActors.Count == 0)
 			{
@@ -110,7 +102,7 @@ namespace Game.Level.Tiled
 				{
 					for (int y = 0; y < dungeon.Height; y++)
 					{
-						if (mapDungeon.Map.Tiles[dungeon.Left + x, dungeon.Top + y].Type == TileType.Floor)
+						if (mapDungeon.Map.tiles[dungeon.Left + x, dungeon.Top + y].Type == TileType.Floor)
 						{
 							Vector2 tilePosition = new Vector2(dungeon.Left + x, dungeon.Top + y) + Vector2.one * 0.5f;
 							switch (mapDungeon.Rooms.Length)
@@ -187,17 +179,11 @@ namespace Game.Level.Tiled
 			spawnedActors[actorSpawner.actorType].Add(spawnedActor);
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
 			DestroyActorSpawners();
 			ClearSpawnedActorsLists();
 			spawnedActors.Clear();
-		}
-
-		public void OnDestroy()
-		{
-			Destroyed(this);
-			Dispose();
 		}
 	}
 }

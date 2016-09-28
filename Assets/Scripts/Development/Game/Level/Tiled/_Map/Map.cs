@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Game.Level.Tiled
@@ -32,41 +31,25 @@ namespace Game.Level.Tiled
 #endif
 
 	[ExecuteInEditMode]
-	public class Map : MonoBehaviour, IBuildable, IDestroyable, IDisposable
+	public class Map : ALevelComponent
 	{
-		[SerializeField]
 		[Range(4, 128)]
-		private int width = 16;
+		public int width = 16;
 
-		public int Width { get { return width; } }
-
-		[SerializeField]
 		[Range(3, 128)]
-		private int height = 9;
+		public int height = 9;
 
-		public int Height { get { return height; } }
-
-		[SerializeField]
-		private Tile[,] tiles = new Tile[0, 0];
-
-		public Tile[,] Tiles { get { return tiles; } }
+		public Tile[,] tiles = new Tile[0, 0];
 
 		public Vector2 WorldPosition { get { return new Vector2(width / 2f, height / 2f); } }
 
-		private Action built = delegate { };
-
-		public Action Built { get { return built; } set { built = value; } }
-
-		private Action<MonoBehaviour> destroyed = delegate { };
-
-		public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
-
+		// ALevel
 		private void Awake()
 		{
 			gameObject.isStatic = true;
 		}
 
-		public void Build()
+		public override void Build()
 		{
 			SetWorldPosition();
 
@@ -99,9 +82,9 @@ namespace Game.Level.Tiled
 
 		public static bool HasAdjacentType(Map map, int x, int y, TileType type)
 		{
-			var tiles = map.Tiles;
-			var width = map.Width;
-			var height = map.Height;
+			var tiles = map.tiles;
+			var width = map.width;
+			var height = map.height;
 
 			return (x > 0 && tiles[x - 1, y].Type == type)
 				|| (x < width - 1 && tiles[x + 1, y].Type == type)
@@ -115,64 +98,58 @@ namespace Game.Level.Tiled
 
 		public static bool HasAdjacentType(Map map, int x, int y, TileType type, out Tile[] adjacentTiles)
 		{
-			var tiles = map.Tiles;
-			var width = map.Width;
-			var height = map.Height;
+			var tiles = map.tiles;
+			var width = map.width;
+			var height = map.height;
 			var adjacentTilesList = new List<Tile>();
 
 			if (x > 0 && tiles[x - 1, y].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x - 1, y]);
+				adjacentTilesList.Add((Tile)tiles[x - 1, y]);
 			}
 
 			if (x < width - 1 && tiles[x + 1, y].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x + 1, y]);
+				adjacentTilesList.Add((Tile)tiles[x + 1, y]);
 			}
 
 			if (y > 0 && tiles[x, y - 1].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x, y - 1]);
+				adjacentTilesList.Add((Tile)tiles[x, y - 1]);
 			}
 
 			if (y < height - 1 && tiles[x, y + 1].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x, y + 1]);
+				adjacentTilesList.Add((Tile)tiles[x, y + 1]);
 			}
 
 			if (x > 0 && y > 0 && tiles[x - 1, y - 1].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x - 1, y - 1]);
+				adjacentTilesList.Add((Tile)tiles[x - 1, y - 1]);
 			}
 
 			if (x < width - 1 && y > 0 && tiles[x + 1, y - 1].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x + 1, y - 1]);
+				adjacentTilesList.Add((Tile)tiles[x + 1, y - 1]);
 			}
 
 			if (x > 0 && y < height - 1 && tiles[x - 1, y + 1].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x - 1, y + 1]);
+				adjacentTilesList.Add((Tile)tiles[x - 1, y + 1]);
 			}
 
 			if (x < width - 1 && y < height - 1 && tiles[x + 1, y + 1].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x + 1, y + 1]);
+				adjacentTilesList.Add((Tile)tiles[x + 1, y + 1]);
 			}
 
 			adjacentTiles = adjacentTilesList.ToArray();
 			return adjacentTiles.Length > 0;
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
 			tiles = new Tile[0, 0];
-		}
-
-		public void OnDestroy()
-		{
-			Destroyed(this);
-			Dispose();
 		}
 	}
 }
