@@ -15,18 +15,16 @@ namespace Game.Level.Tiled
 		{
 			DrawDefaultInspector();
 
-			if (GUILayout.Button("Build Dungeon"))
+			if (GUILayout.Button("Build"))
 			{
 				var mapDungeon = (MapDungeon)target;
 				mapDungeon.Build();
 			}
 
-			if (GUILayout.Button("Destroy Dungeon"))
+			if (GUILayout.Button("Dispose"))
 			{
 				var mapDungeon = (MapDungeon)target;
-				var map = mapDungeon.Map;
-				mapDungeon.DestroyDungeon(ref map);
-				map.Updated();
+				mapDungeon.Dispose();
 			}
 		}
 	}
@@ -37,7 +35,7 @@ namespace Game.Level.Tiled
 	[RequireComponent(
 		typeof(Map)
 	)]
-	public class MapDungeon : MonoBehaviour, IDestroyable
+	public class MapDungeon : MonoBehaviour, ILevelComponent, IDestroyable
 	{
 		[Serializable]
 		public class Room
@@ -96,7 +94,9 @@ namespace Game.Level.Tiled
 
 		public Map Map { get { return map; } }
 
-		public Action Built = delegate { };
+		private Action built = delegate { };
+
+		public Action Built { get { return built; } set { built = value; } }
 
 		private Action<MonoBehaviour> destroyed = delegate { };
 
@@ -105,38 +105,18 @@ namespace Game.Level.Tiled
 		private void Awake()
 		{
 			map = GetComponent<Map>();
-			map.Built += OnMapBuilt;
-		}
-
-		private void OnMapBuilt()
-		{
-			Build();
 		}
 
 		public void Build()
 		{
-			DestroyDungeon(ref map);
-
 			BuildDungeon(ref map);
-
-			map.Updated();
 
 			Built();
 		}
 
-		public void DestroyDungeon(ref Map map)
+		private void DestroyRooms(ref Map map, ref Room[] rooms)
 		{
-			// TODO: clear corridors
-			//ClearDungeons(ref map, ref rooms);
-
-			// Hard Reset
-
-			map.FillTiles(TileType.Water);
-			rooms = new Room[0];
-		}
-
-		private void ClearRooms(ref Map map, ref Room[] rooms)
-		{
+			// TODO: clear corridors and walls
 			foreach (var room in rooms)
 			{
 				for (int x = 0; x < room.Width; x++)
@@ -278,7 +258,7 @@ namespace Game.Level.Tiled
 
 		public void Dispose()
 		{
-			map.Built -= OnMapBuilt;
+			DestroyRooms(ref map, ref rooms);
 		}
 
 		public void OnDestroy()

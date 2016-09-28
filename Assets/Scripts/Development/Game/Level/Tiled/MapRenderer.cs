@@ -2,14 +2,40 @@
 using UnityEngine;
 
 namespace Game.Level.Tiled
-
 {
+#if UNITY_EDITOR
+
+	using UnityEditor;
+
+	[CustomEditor(typeof(MapRenderer))]
+	public class MapRendererInspector : Editor
+	{
+		public override void OnInspectorGUI()
+		{
+			DrawDefaultInspector();
+
+			if (GUILayout.Button("Build"))
+			{
+				var mapRenderer = (MapRenderer)target;
+				mapRenderer.Build();
+			}
+
+			if (GUILayout.Button("Dispose"))
+			{
+				var mapRenderer = (MapRenderer)target;
+				mapRenderer.Dispose();
+			}
+		}
+	}
+
+#endif
+
 	[ExecuteInEditMode]
 	[RequireComponent(
 		typeof(SpriteRenderer),
 		typeof(Map)
 	)]
-	public class MapRenderer : MonoBehaviour, IDestroyable
+	public class MapRenderer : MonoBehaviour, ILevelComponent, IDestroyable
 	{
 		[SerializeField]
 		private SpriteRenderer spriteRenderer;
@@ -25,7 +51,9 @@ namespace Game.Level.Tiled
 
 		public Map Map { get { return map; } }
 
-		public Action Built = delegate { };
+		private Action built = delegate { };
+
+		public Action Built { get { return built; } set { built = value; } }
 
 		private Action<MonoBehaviour> destroyed = delegate { };
 
@@ -36,12 +64,6 @@ namespace Game.Level.Tiled
 			spriteRenderer = GetComponent<SpriteRenderer>();
 
 			map = GetComponent<Map>();
-			map.Updated += OnMapUpdated;
-		}
-
-		private void OnMapUpdated()
-		{
-			Build();
 		}
 
 		public void Build()
@@ -61,7 +83,7 @@ namespace Game.Level.Tiled
 
 		public void Dispose()
 		{
-			map.Updated -= OnMapUpdated;
+			spriteRenderer.sprite = null;
 		}
 
 		public void OnDestroy()

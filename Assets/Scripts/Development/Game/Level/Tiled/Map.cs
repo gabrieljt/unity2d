@@ -15,11 +15,16 @@ namespace Game.Level.Tiled
 		{
 			DrawDefaultInspector();
 
-			if (GUILayout.Button("Build Map"))
+			if (GUILayout.Button("Build"))
 			{
 				var map = (Map)target;
-
 				map.Build();
+			}
+
+			if (GUILayout.Button("Dispose"))
+			{
+				var map = (Map)target;
+				map.Dispose();
 			}
 		}
 	}
@@ -27,7 +32,7 @@ namespace Game.Level.Tiled
 #endif
 
 	[ExecuteInEditMode]
-	public class Map : MonoBehaviour
+	public class Map : MonoBehaviour, ILevelComponent, IDestroyable
 	{
 		[SerializeField]
 		[Range(4, 128)]
@@ -42,15 +47,19 @@ namespace Game.Level.Tiled
 		public int Height { get { return height; } }
 
 		[SerializeField]
-		private Tile[,] tiles;
+		private Tile[,] tiles = new Tile[0, 0];
 
 		public Tile[,] Tiles { get { return tiles; } }
 
 		public Vector2 WorldPosition { get { return new Vector2(width / 2f, height / 2f); } }
 
-		public Action Built = delegate { };
+		private Action built = delegate { };
 
-		public Action Updated = delegate { };
+		public Action Built { get { return built; } set { built = value; } }
+
+		private Action<MonoBehaviour> destroyed = delegate { };
+
+		public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
 		private void Awake()
 		{
@@ -163,6 +172,17 @@ namespace Game.Level.Tiled
 
 			adjacentTiles = adjacentTilesList.ToArray();
 			return adjacentTiles.Length > 0;
+		}
+
+		public void Dispose()
+		{
+			tiles = new Tile[0, 0];
+		}
+
+		public void OnDestroy()
+		{
+			Destroyed(this);
+			Dispose();
 		}
 	}
 }

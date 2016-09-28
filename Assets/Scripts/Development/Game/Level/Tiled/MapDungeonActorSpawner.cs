@@ -17,16 +17,16 @@ namespace Game.Level.Tiled
 		{
 			DrawDefaultInspector();
 
-			if (GUILayout.Button("Build Actor Spawners"))
+			if (GUILayout.Button("Build"))
 			{
 				var mapDungeonActorSpawner = (MapDungeonActorSpawner)target;
 				mapDungeonActorSpawner.Build();
 			}
 
-			if (GUILayout.Button("Destroy Actor Spawners"))
+			if (GUILayout.Button("Dispose"))
 			{
 				var mapDungeonSpawner = (MapDungeonActorSpawner)target;
-				mapDungeonSpawner.DestroyActorSpawners();
+				mapDungeonSpawner.Dispose();
 			}
 		}
 	}
@@ -37,18 +37,19 @@ namespace Game.Level.Tiled
 	[RequireComponent(
 		typeof(MapDungeon)
 	)]
-	public class MapDungeonActorSpawner : MonoBehaviour, IDestroyable
+	public class MapDungeonActorSpawner : MonoBehaviour, ILevelComponent, IDestroyable
 	{
 		// TODO: better input params
+		private Dictionary<ActorType, List<AActor>> spawnedActors = new Dictionary<ActorType, List<AActor>>();
 
 		[SerializeField]
 		private MapDungeon mapDungeon;
 
 		public MapDungeon MapDungeon { get { return mapDungeon; } }
 
-		private Dictionary<ActorType, List<AActor>> spawnedActors = new Dictionary<ActorType, List<AActor>>();
+		private Action built = delegate { };
 
-		public Action Built = delegate { };
+		public Action Built { get { return built; } set { built = value; } }
 
 		private Action<MonoBehaviour> destroyed = delegate { };
 
@@ -57,9 +58,6 @@ namespace Game.Level.Tiled
 		private void Awake()
 		{
 			mapDungeon = GetComponent<MapDungeon>();
-			mapDungeon.Built += OnMapDungeonBuilt;
-
-			SetSpawnedActorsLists();
 		}
 
 		private void SetSpawnedActorsLists()
@@ -83,29 +81,19 @@ namespace Game.Level.Tiled
 			}
 		}
 
-		private void OnMapDungeonBuilt()
-		{
-			Build();
-		}
-
 		public void Build()
 		{
-			DestroyActorSpawners();
-
+			if (spawnedActors.Count == 0)
+			{
+				SetSpawnedActorsLists();
+			}
 			BuildActorSpawners();
 			Built();
 		}
 
 		public void DestroyActorSpawners()
 		{
-			if (spawnedActors.Count == 0)
-			{
-				SetSpawnedActorsLists();
-			}
-
-			ClearSpawnedActorsLists();
 			var actorSpawners = GetComponents<ActorSpawner>();
-
 			for (int i = 0; i < actorSpawners.Length; i++)
 			{
 				DestroyImmediate(actorSpawners[i]);
@@ -156,30 +144,30 @@ namespace Game.Level.Tiled
 		}
 
 		// TODO: decouple game rules
-		private void SetPlayerSpawner(ref bool playerSet, Vector2 tilePosition)
+		private void SetPlayerSpawner(ref bool playerSet, Vector2 position)
 		{
 			if (!playerSet)
 			{
-				BuildActorSpawner(tilePosition, ActorType.Player);
+				BuildActorSpawner(position, ActorType.Player);
 				playerSet = true;
 			}
 		}
 
 		// TODO: decouple game rules
-		private void SetExitSpawner(ref bool exitSet, Vector2 tilePosition)
+		private void SetExitSpawner(ref bool exitSet, Vector2 position)
 		{
 			if (!exitSet)
 			{
-				BuildActorSpawner(tilePosition, ActorType.Exit);
+				BuildActorSpawner(position, ActorType.Exit);
 				exitSet = true;
 			}
 		}
 
-		private void BuildActorSpawner(Vector2 tilePosition, ActorType actorType)
+		private void BuildActorSpawner(Vector2 position, ActorType actorType)
 		{
 			var actorSpawner = gameObject.AddComponent<ActorSpawner>();
 			actorSpawner.actorType = actorType;
-			actorSpawner.position = tilePosition;
+			actorSpawner.position = position;
 			actorSpawner.Spawned += OnActorSpawned;
 		}
 
@@ -201,7 +189,7 @@ namespace Game.Level.Tiled
 
 		public void Dispose()
 		{
-			mapDungeon.Built -= OnMapDungeonBuilt;
+			DestroyActorSpawners();
 			ClearSpawnedActorsLists();
 			spawnedActors.Clear();
 		}

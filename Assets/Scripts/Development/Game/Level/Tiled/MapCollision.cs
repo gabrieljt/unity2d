@@ -2,7 +2,6 @@
 using UnityEngine;
 
 namespace Game.Level.Tiled
-
 {
 #if UNITY_EDITOR
 
@@ -15,16 +14,16 @@ namespace Game.Level.Tiled
 		{
 			DrawDefaultInspector();
 
-			if (GUILayout.Button("Build Colliders"))
+			if (GUILayout.Button("Build"))
 			{
 				var mapCollision = (MapCollision)target;
 				mapCollision.Build();
 			}
 
-			if (GUILayout.Button("Destroy Colliders"))
+			if (GUILayout.Button("Dispose"))
 			{
 				var mapCollision = (MapCollision)target;
-				mapCollision.DestroyColliders();
+				mapCollision.Dispose();
 			}
 		}
 	}
@@ -35,7 +34,7 @@ namespace Game.Level.Tiled
 	[RequireComponent(
 		typeof(Map)
 		)]
-	public class MapCollision : MonoBehaviour, IDestroyable
+	public class MapCollision : MonoBehaviour, ILevelComponent, IDestroyable
 	{
 		[SerializeField]
 		private int collidersCount;
@@ -45,7 +44,9 @@ namespace Game.Level.Tiled
 
 		public Map Map { get { return map; } }
 
-		public Action Built = delegate { };
+		private Action built = delegate { };
+
+		public Action Built { get { return built; } set { built = value; } }
 
 		private Action<MonoBehaviour> destroyed = delegate { };
 
@@ -54,17 +55,10 @@ namespace Game.Level.Tiled
 		private void Awake()
 		{
 			map = GetComponent<Map>();
-			map.Updated += OnMapUpdated;
-		}
-
-		private void OnMapUpdated()
-		{
-			Build();
 		}
 
 		public void Build()
 		{
-			DestroyColliders();
 			BuildColliders();
 
 			Built();
@@ -100,7 +94,7 @@ namespace Game.Level.Tiled
 
 		public void Dispose()
 		{
-			map.Updated -= OnMapUpdated;
+			DestroyColliders();
 		}
 
 		public void OnDestroy()
