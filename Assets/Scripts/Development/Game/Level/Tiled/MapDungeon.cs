@@ -35,7 +35,7 @@ namespace Game.Level.Tiled
 	[RequireComponent(
 		typeof(Map)
 	)]
-	public class MapDungeon : MonoBehaviour, ILevelComponent, IDestroyable
+	public class MapDungeon : MonoBehaviour, IBuildable, IDestroyable, IDisposable
 	{
 		[Serializable]
 		public class Room
@@ -117,13 +117,16 @@ namespace Game.Level.Tiled
 		private void DestroyRooms(ref Map map, ref Room[] rooms)
 		{
 			// TODO: clear corridors and walls
-			foreach (var room in rooms)
+			if (map.Tiles.Length > 0)
 			{
-				for (int x = 0; x < room.Width; x++)
+				foreach (var room in rooms)
 				{
-					for (int y = 0; y < room.Height; y++)
+					for (int x = 0; x < room.Width; x++)
 					{
-						map.Tiles[room.Left + x, room.Top + y] = new Tile(TileType.Water);
+						for (int y = 0; y < room.Height; y++)
+						{
+							map.Tiles[room.Left + x, room.Top + y] = new Tile(TileType.Water);
+						}
 					}
 				}
 			}

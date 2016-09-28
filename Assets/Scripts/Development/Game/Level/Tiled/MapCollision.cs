@@ -34,7 +34,7 @@ namespace Game.Level.Tiled
 	[RequireComponent(
 		typeof(Map)
 		)]
-	public class MapCollision : MonoBehaviour, ILevelComponent, IDestroyable
+	public class MapCollision : MonoBehaviour, IBuildable, IDestroyable, IDisposable
 	{
 		[SerializeField]
 		private int collidersCount;
@@ -71,7 +71,7 @@ namespace Game.Level.Tiled
 
 			for (int i = 0; i < colliders.Length; i++)
 			{
-				DestroyImmediate(colliders[i]);
+				Destroy(colliders[i]);
 			}
 		}
 

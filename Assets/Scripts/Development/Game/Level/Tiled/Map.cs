@@ -32,7 +32,7 @@ namespace Game.Level.Tiled
 #endif
 
 	[ExecuteInEditMode]
-	public class Map : MonoBehaviour, ILevelComponent, IDestroyable
+	public class Map : MonoBehaviour, IBuildable, IDestroyable, IDisposable
 	{
 		[SerializeField]
 		[Range(4, 128)]
@@ -64,16 +64,6 @@ namespace Game.Level.Tiled
 		private void Awake()
 		{
 			gameObject.isStatic = true;
-		}
-
-		public void Build(int width, int height, out Map map)
-		{
-			this.width = width;
-			this.height = height;
-
-			Build();
-
-			map = this;
 		}
 
 		public void Build()

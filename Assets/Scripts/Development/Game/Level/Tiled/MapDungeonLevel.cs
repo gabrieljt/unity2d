@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Game.Level.Tiled
@@ -31,49 +30,32 @@ namespace Game.Level.Tiled
 
 #endif
 
+	public enum LevelState
+	{
+		Unbuilt,
+		Building,
+		Built,
+		Ready,
+		InGame,
+		Ended
+	}
+
 	[ExecuteInEditMode]
 	[RequireComponent(
-		typeof(Map),
-		typeof(MapDungeon),
-		typeof(MapDungeonActorSpawner)
+		typeof(MapDungeonLevelBuilder)
 	)]
-	[RequireComponent(
-		typeof(MapCollision),
-		typeof(MapRenderer)
-	)]
-	public class MapDungeonLevel : MonoBehaviour, ILevelComponent, IDestroyable
+	public class MapDungeonLevel : MonoBehaviour, IBuildable, IDestroyable, IDisposable
 	{
 		[SerializeField]
 		private int level;
 
-		private Queue<ILevelComponent> levelComponentsBuildQueue = new Queue<ILevelComponent>();
-
-		private ILevelComponent[] levelComponentsArray = new ILevelComponent[0];
+		[SerializeField]
+		private LevelState state = LevelState.Unbuilt;
 
 		[SerializeField]
-		private Map map;
+		private MapDungeonLevelBuilder mapDungeonLevelBuilder;
 
-		public Map Map { get { return map; } }
-
-		[SerializeField]
-		private MapDungeon mapDungeon;
-
-		private MapDungeon MapDungeon { get { return mapDungeon; } }
-
-		[SerializeField]
-		private MapDungeonActorSpawner mapDungeonActorSpawner;
-
-		private MapDungeonActorSpawner MapDungeonActorSpawner { get { return mapDungeonActorSpawner; } }
-
-		[SerializeField]
-		private MapCollision mapCollision;
-
-		public MapCollision MapCollision { get { return mapCollision; } }
-
-		[SerializeField]
-		private MapRenderer mapRenderer;
-
-		public MapRenderer MapRenderer { get { return mapRenderer; } }
+		public MapDungeonLevelBuilder MapDungeonLevelBuilder { get { return mapDungeonLevelBuilder; } }
 
 		private Action built = delegate { };
 
@@ -85,60 +67,28 @@ namespace Game.Level.Tiled
 
 		private void Awake()
 		{
-			SetLevelComponentsArray();
-		}
+			state = LevelState.Unbuilt;
 
-		private void Update()
-		{
-			if (levelComponentsBuildQueue.Count > 0)
-			{
-				levelComponentsBuildQueue.Dequeue().Build();
-				if (levelComponentsBuildQueue.Count == 0)
-				{
-					Built();
-				}
-			}
-		}
-
-		private void SetLevelComponentsArray()
-		{
-			levelComponentsArray = new ILevelComponent[5];
-			levelComponentsArray[0] = map = GetComponent<Map>();
-			levelComponentsArray[1] = mapDungeon = GetComponent<MapDungeon>();
-			levelComponentsArray[2] = mapDungeonActorSpawner = GetComponent<MapDungeonActorSpawner>();
-			levelComponentsArray[3] = mapCollision = GetComponent<MapCollision>();
-			levelComponentsArray[4] = mapRenderer = GetComponent<MapRenderer>();
-		}
-
-		private void SetLevelComponentsBuildQueue()
-		{
-			Debug.Assert(levelComponentsBuildQueue.Count == 0);
-			foreach (var levelComponent in levelComponentsArray)
-			{
-				levelComponentsBuildQueue.Enqueue(levelComponent);
-			}
-		}
-
-		public void Build(int level)
-		{
-			this.level = level;
-			// TODO: set specific level components parameters by level
-			Build();
+			mapDungeonLevelBuilder = GetComponent<MapDungeonLevelBuilder>();
 		}
 
 		public void Build()
 		{
-			SetLevelComponentsBuildQueue();
+			state = LevelState.Building;
+			mapDungeonLevelBuilder.Built += OnMapDungeonLevelBuilderBuilt;
+			mapDungeonLevelBuilder.Build();
+		}
+
+		private void OnMapDungeonLevelBuilderBuilt()
+		{
+			mapDungeonLevelBuilder.Built -= OnMapDungeonLevelBuilderBuilt;
+			state = LevelState.Built;
 		}
 
 		public void Dispose()
 		{
-			for (int i = levelComponentsArray.Length - 1; i >= 0; i--)
-			{
-				(levelComponentsArray[i] as IDisposable).Dispose();
-			}
-
-			levelComponentsBuildQueue.Clear();
+			state = LevelState.Unbuilt;
+			mapDungeonLevelBuilder.Built = null;
 		}
 
 		public void OnDestroy()

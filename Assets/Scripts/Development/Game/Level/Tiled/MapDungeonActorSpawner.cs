@@ -37,7 +37,7 @@ namespace Game.Level.Tiled
 	[RequireComponent(
 		typeof(MapDungeon)
 	)]
-	public class MapDungeonActorSpawner : MonoBehaviour, ILevelComponent, IDestroyable
+	public class MapDungeonActorSpawner : MonoBehaviour, IBuildable, IDestroyable, IDisposable
 	{
 		// TODO: better input params
 		private Dictionary<ActorType, List<AActor>> spawnedActors = new Dictionary<ActorType, List<AActor>>();
@@ -75,7 +75,7 @@ namespace Game.Level.Tiled
 			{
 				foreach (var actor in actorsList)
 				{
-					DestroyImmediate(actor.gameObject);
+					Destroy(actor.gameObject);
 				}
 				actorsList.Clear();
 			}
@@ -96,7 +96,7 @@ namespace Game.Level.Tiled
 			var actorSpawners = GetComponents<ActorSpawner>();
 			for (int i = 0; i < actorSpawners.Length; i++)
 			{
-				DestroyImmediate(actorSpawners[i]);
+				Destroy(actorSpawners[i]);
 			}
 		}
 

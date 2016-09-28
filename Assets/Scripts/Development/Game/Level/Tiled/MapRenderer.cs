@@ -35,7 +35,7 @@ namespace Game.Level.Tiled
 		typeof(SpriteRenderer),
 		typeof(Map)
 	)]
-	public class MapRenderer : MonoBehaviour, ILevelComponent, IDestroyable
+	public class MapRenderer : MonoBehaviour, IBuildable, IDestroyable, IDisposable
 	{
 		[SerializeField]
 		private SpriteRenderer spriteRenderer;

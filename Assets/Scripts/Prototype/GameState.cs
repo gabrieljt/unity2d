@@ -195,7 +195,7 @@ public class GameState : MonoBehaviour, IDisposable
 	{
 		yield return 0;
 
-		levelInstance.Build(width, height, out levelInstance);
+		//levelInstance.Build(width, height, out levelInstance);
 	}
 
 	#region Callbacks

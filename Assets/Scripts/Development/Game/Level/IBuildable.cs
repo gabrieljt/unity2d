@@ -2,7 +2,7 @@
 
 namespace Game.Level
 {
-	public interface ILevelComponent
+	public interface IBuildable
 	{
 		void Build();
 
