@@ -76,7 +76,7 @@ namespace Game.Actor
 					character.SetDestination(direction);
 				}
 
-				Debug.LogWarning(name + " InputDequeuer dequeueing from " + inputEnqueuer.name + " | TotalInputEnqueuers: " + inputEnqueuers.Count);
+				Debug.LogWarning(name + " InputDequeuer dequeueing from " + inputEnqueuer.name + " | Total InputEnqueuers: " + inputEnqueuers.Count);
 			}
 		}
 

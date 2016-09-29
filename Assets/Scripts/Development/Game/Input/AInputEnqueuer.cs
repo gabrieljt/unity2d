@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Game.Input
 {
-	public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable
+	public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 	{
 		protected Queue<KeyCode> inputs = new Queue<KeyCode>();
 

@@ -59,7 +59,7 @@ namespace Game.Level
 
 #endif
 
-	public class LevelLoader : MonoBehaviour, IDestroyable
+	public class LevelLoader : MonoBehaviour, IDestroyable, IDisposable
 	{
 		public enum LoadLevelStatus
 		{
@@ -129,7 +129,7 @@ namespace Game.Level
 		private void SetStatusCreated(int index, out GameObject loadedLevel, ref LoadLevelStatus status)
 		{
 			loadedLevel = Instantiate(levelPrefab);
-			loadedLevel.GetComponent<Map>().Build();
+			loadedLevel.GetComponent<MapDungeonLevel>().Build();
 			loadedLevel.transform.SetParent(transform);
 			loadedLevel.name = "Level " + index;
 			levels[index] = loadedLevel;
@@ -153,7 +153,7 @@ namespace Game.Level
 
 		private void SetStatusDestroyed(int index, ref LoadLevelStatus status)
 		{
-			DestroyImmediate(levels[index].gameObject);
+			Destroy(levels[index].gameObject);
 			levels.Remove(index);
 			status = LoadLevelStatus.Destroyed;
 		}
@@ -197,11 +197,11 @@ namespace Game.Level
 
 		private void Clear()
 		{
-			var sceneLevelInstances = FindObjectsOfType<Map>();
+			var sceneLevelInstances = FindObjectsOfType<MapDungeonLevel>();
 
 			for (int i = 0; i < sceneLevelInstances.Length; i++)
 			{
-				DestroyImmediate(sceneLevelInstances[i].gameObject);
+				Destroy(sceneLevelInstances[i].gameObject);
 			}
 
 			levels.Clear();
@@ -210,7 +210,7 @@ namespace Game.Level
 			var actors = FindObjectsOfType<AActor>();
 			for (int i = 0; i < actors.Length; i++)
 			{
-				DestroyImmediate(actors[i].gameObject);
+				Destroy(actors[i].gameObject);
 			}
 		}
 

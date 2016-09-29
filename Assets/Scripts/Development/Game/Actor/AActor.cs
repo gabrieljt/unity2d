@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Game.Actor
 {
-	public abstract class AActor : MonoBehaviour, IDestroyable
+	public abstract class AActor : MonoBehaviour, IDestroyable, IDisposable
 	{
 		public Action<AActor> Enabled = delegate { };
 

@@ -1,15 +1,24 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Game.Level.Tiled
-
 {
+#if UNITY_EDITOR
+
+	using UnityEditor;
+
+	[CustomEditor(typeof(MapRenderer))]
+	public class MapRendererInspector : ALevelComponentInspector
+	{
+	}
+
+#endif
+
 	[ExecuteInEditMode]
 	[RequireComponent(
 		typeof(SpriteRenderer),
 		typeof(Map)
 	)]
-	public class MapRenderer : MonoBehaviour, IDestroyable
+	public class MapRenderer : ALevelComponent
 	{
 		[SerializeField]
 		private SpriteRenderer spriteRenderer;
@@ -25,26 +34,14 @@ namespace Game.Level.Tiled
 
 		public Map Map { get { return map; } }
 
-		public Action Built = delegate { };
-
-		private Action<MonoBehaviour> destroyed = delegate { };
-
-		public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
-
 		private void Awake()
 		{
 			spriteRenderer = GetComponent<SpriteRenderer>();
 
 			map = GetComponent<Map>();
-			map.Updated += OnMapUpdated;
 		}
 
-		private void OnMapUpdated()
-		{
-			Build();
-		}
-
-		public void Build()
+		public override void Build()
 		{
 			Debug.Assert(mapTilesetType == MapTilesetLoader.MapTilesets[(int)mapTilesetType].Type);
 			Debug.Assert((int)mapTilesetType < MapTilesetLoader.MapTilesets.Length);
@@ -57,17 +54,13 @@ namespace Game.Level.Tiled
 
 			spriteRenderer.sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), Vector2.one * 0.5f, MapTilesetLoader.PixelsPerUnit);
 			spriteRenderer.material = spriteMaterial;
+
+			Built();
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
-			map.Updated -= OnMapUpdated;
-		}
-
-		public void OnDestroy()
-		{
-			Destroyed(this);
-			Dispose();
+			spriteRenderer.sprite = null;
 		}
 	}
 }

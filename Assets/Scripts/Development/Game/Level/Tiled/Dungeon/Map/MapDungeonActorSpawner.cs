@@ -11,24 +11,8 @@ namespace Game.Level.Tiled
 	using UnityEditor;
 
 	[CustomEditor(typeof(MapDungeonActorSpawner))]
-	public class MapDungeonActorSpawnerInspector : Editor
+	public class MapDungeonActorSpawnerInspector : ALevelComponentInspector
 	{
-		public override void OnInspectorGUI()
-		{
-			DrawDefaultInspector();
-
-			if (GUILayout.Button("Build Actor Spawners"))
-			{
-				var mapDungeonActorSpawner = (MapDungeonActorSpawner)target;
-				mapDungeonActorSpawner.Build();
-			}
-
-			if (GUILayout.Button("Destroy Actor Spawners"))
-			{
-				var mapDungeonSpawner = (MapDungeonActorSpawner)target;
-				mapDungeonSpawner.DestroyActorSpawners();
-			}
-		}
 	}
 
 #endif
@@ -37,29 +21,19 @@ namespace Game.Level.Tiled
 	[RequireComponent(
 		typeof(MapDungeon)
 	)]
-	public class MapDungeonActorSpawner : MonoBehaviour, IDestroyable
+	public class MapDungeonActorSpawner : ALevelComponent
 	{
 		// TODO: better input params
+		public Dictionary<ActorType, List<AActor>> spawnedActors = new Dictionary<ActorType, List<AActor>>();
 
 		[SerializeField]
 		private MapDungeon mapDungeon;
 
 		public MapDungeon MapDungeon { get { return mapDungeon; } }
 
-		private Dictionary<ActorType, List<AActor>> spawnedActors = new Dictionary<ActorType, List<AActor>>();
-
-		public Action Built = delegate { };
-
-		private Action<MonoBehaviour> destroyed = delegate { };
-
-		public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
-
 		private void Awake()
 		{
 			mapDungeon = GetComponent<MapDungeon>();
-			mapDungeon.Built += OnMapDungeonBuilt;
-
-			SetSpawnedActorsLists();
 		}
 
 		private void SetSpawnedActorsLists()
@@ -77,38 +51,50 @@ namespace Game.Level.Tiled
 			{
 				foreach (var actor in actorsList)
 				{
-					DestroyImmediate(actor.gameObject);
+#if UNITY_EDITOR
+					if (Application.isPlaying)
+					{
+						Destroy(actor.gameObject);
+					}
+					else
+					{
+						DestroyImmediate(actor.gameObject);
+					}
+#else
+					Destroy(actor.gameObject);
+#endif
 				}
 				actorsList.Clear();
 			}
 		}
 
-		private void OnMapDungeonBuilt()
+		public override void Build()
 		{
-			Build();
-		}
-
-		public void Build()
-		{
-			DestroyActorSpawners();
-
+			if (spawnedActors.Count == 0)
+			{
+				SetSpawnedActorsLists();
+			}
 			BuildActorSpawners();
 			Built();
 		}
 
 		public void DestroyActorSpawners()
 		{
-			if (spawnedActors.Count == 0)
-			{
-				SetSpawnedActorsLists();
-			}
-
-			ClearSpawnedActorsLists();
 			var actorSpawners = GetComponents<ActorSpawner>();
-
 			for (int i = 0; i < actorSpawners.Length; i++)
 			{
-				DestroyImmediate(actorSpawners[i]);
+#if UNITY_EDITOR
+				if (Application.isPlaying)
+				{
+					Destroy(actorSpawners[i]);
+				}
+				else
+				{
+					DestroyImmediate(actorSpawners[i]);
+				}
+#else
+				Destroy(actorSpawners[i]);
+#endif
 			}
 		}
 
@@ -122,7 +108,7 @@ namespace Game.Level.Tiled
 				{
 					for (int y = 0; y < dungeon.Height; y++)
 					{
-						if (mapDungeon.Map.Tiles[dungeon.Left + x, dungeon.Top + y].Type == TileType.Floor)
+						if (mapDungeon.Map.tiles[dungeon.Left + x, dungeon.Top + y].Type == TileType.Floor)
 						{
 							Vector2 tilePosition = new Vector2(dungeon.Left + x, dungeon.Top + y) + Vector2.one * 0.5f;
 							switch (mapDungeon.Rooms.Length)
@@ -156,30 +142,30 @@ namespace Game.Level.Tiled
 		}
 
 		// TODO: decouple game rules
-		private void SetPlayerSpawner(ref bool playerSet, Vector2 tilePosition)
+		private void SetPlayerSpawner(ref bool playerSet, Vector2 position)
 		{
 			if (!playerSet)
 			{
-				BuildActorSpawner(tilePosition, ActorType.Player);
+				BuildActorSpawner(position, ActorType.Player);
 				playerSet = true;
 			}
 		}
 
 		// TODO: decouple game rules
-		private void SetExitSpawner(ref bool exitSet, Vector2 tilePosition)
+		private void SetExitSpawner(ref bool exitSet, Vector2 position)
 		{
 			if (!exitSet)
 			{
-				BuildActorSpawner(tilePosition, ActorType.Exit);
+				BuildActorSpawner(position, ActorType.Exit);
 				exitSet = true;
 			}
 		}
 
-		private void BuildActorSpawner(Vector2 tilePosition, ActorType actorType)
+		private void BuildActorSpawner(Vector2 position, ActorType actorType)
 		{
 			var actorSpawner = gameObject.AddComponent<ActorSpawner>();
 			actorSpawner.actorType = actorType;
-			actorSpawner.position = tilePosition;
+			actorSpawner.position = position;
 			actorSpawner.Spawned += OnActorSpawned;
 		}
 
@@ -199,17 +185,11 @@ namespace Game.Level.Tiled
 			spawnedActors[actorSpawner.actorType].Add(spawnedActor);
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
-			mapDungeon.Built -= OnMapDungeonBuilt;
+			DestroyActorSpawners();
 			ClearSpawnedActorsLists();
 			spawnedActors.Clear();
-		}
-
-		public void OnDestroy()
-		{
-			Destroyed(this);
-			Dispose();
 		}
 	}
 }

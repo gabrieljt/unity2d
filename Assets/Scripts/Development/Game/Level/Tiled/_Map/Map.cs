@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Game.Level.Tiled
@@ -9,65 +8,31 @@ namespace Game.Level.Tiled
 	using UnityEditor;
 
 	[CustomEditor(typeof(Map))]
-	public class MapInspector : Editor
+	public class MapInspector : ALevelComponentInspector
 	{
-		public override void OnInspectorGUI()
-		{
-			DrawDefaultInspector();
-
-			if (GUILayout.Button("Build Map"))
-			{
-				var map = (Map)target;
-
-				map.Build();
-			}
-		}
 	}
 
 #endif
 
 	[ExecuteInEditMode]
-	public class Map : MonoBehaviour
+	public class Map : ALevelComponent
 	{
-		[SerializeField]
 		[Range(4, 128)]
-		private int width = 16;
+		public int width = 16;
 
-		public int Width { get { return width; } }
-
-		[SerializeField]
 		[Range(3, 128)]
-		private int height = 9;
+		public int height = 9;
 
-		public int Height { get { return height; } }
+		public Tile[,] tiles = new Tile[0, 0];
 
-		[SerializeField]
-		private Tile[,] tiles;
-
-		public Tile[,] Tiles { get { return tiles; } }
-
-		public Vector2 WorldPosition { get { return new Vector2(width / 2f, height / 2f); } }
-
-		public Action Built = delegate { };
-
-		public Action Updated = delegate { };
+		public Vector2 Center { get { return new Vector2(width / 2f, height / 2f); } }
 
 		private void Awake()
 		{
 			gameObject.isStatic = true;
 		}
 
-		public void Build(int width, int height, out Map map)
-		{
-			this.width = width;
-			this.height = height;
-
-			Build();
-
-			map = this;
-		}
-
-		public void Build()
+		public override void Build()
 		{
 			SetWorldPosition();
 
@@ -78,7 +43,7 @@ namespace Game.Level.Tiled
 
 		private void SetWorldPosition()
 		{
-			transform.position = WorldPosition;
+			transform.position = Center;
 		}
 
 		public void FillTiles(TileType type)
@@ -100,9 +65,9 @@ namespace Game.Level.Tiled
 
 		public static bool HasAdjacentType(Map map, int x, int y, TileType type)
 		{
-			var tiles = map.Tiles;
-			var width = map.Width;
-			var height = map.Height;
+			var tiles = map.tiles;
+			var width = map.width;
+			var height = map.height;
 
 			return (x > 0 && tiles[x - 1, y].Type == type)
 				|| (x < width - 1 && tiles[x + 1, y].Type == type)
@@ -116,53 +81,58 @@ namespace Game.Level.Tiled
 
 		public static bool HasAdjacentType(Map map, int x, int y, TileType type, out Tile[] adjacentTiles)
 		{
-			var tiles = map.Tiles;
-			var width = map.Width;
-			var height = map.Height;
+			var tiles = map.tiles;
+			var width = map.width;
+			var height = map.height;
 			var adjacentTilesList = new List<Tile>();
 
 			if (x > 0 && tiles[x - 1, y].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x - 1, y]);
+				adjacentTilesList.Add((Tile)tiles[x - 1, y]);
 			}
 
 			if (x < width - 1 && tiles[x + 1, y].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x + 1, y]);
+				adjacentTilesList.Add((Tile)tiles[x + 1, y]);
 			}
 
 			if (y > 0 && tiles[x, y - 1].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x, y - 1]);
+				adjacentTilesList.Add((Tile)tiles[x, y - 1]);
 			}
 
 			if (y < height - 1 && tiles[x, y + 1].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x, y + 1]);
+				adjacentTilesList.Add((Tile)tiles[x, y + 1]);
 			}
 
 			if (x > 0 && y > 0 && tiles[x - 1, y - 1].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x - 1, y - 1]);
+				adjacentTilesList.Add((Tile)tiles[x - 1, y - 1]);
 			}
 
 			if (x < width - 1 && y > 0 && tiles[x + 1, y - 1].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x + 1, y - 1]);
+				adjacentTilesList.Add((Tile)tiles[x + 1, y - 1]);
 			}
 
 			if (x > 0 && y < height - 1 && tiles[x - 1, y + 1].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x - 1, y + 1]);
+				adjacentTilesList.Add((Tile)tiles[x - 1, y + 1]);
 			}
 
 			if (x < width - 1 && y < height - 1 && tiles[x + 1, y + 1].Type == type)
 			{
-				adjacentTilesList.Add(tiles[x + 1, y + 1]);
+				adjacentTilesList.Add((Tile)tiles[x + 1, y + 1]);
 			}
 
 			adjacentTiles = adjacentTilesList.ToArray();
 			return adjacentTiles.Length > 0;
+		}
+
+		public override void Dispose()
+		{
+			tiles = new Tile[0, 0];
 		}
 	}
 }

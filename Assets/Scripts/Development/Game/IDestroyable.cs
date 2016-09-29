@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Game
 {
-	public interface IDestroyable : IDisposable
+	public interface IDestroyable
 	{
 		void OnDestroy();
 
