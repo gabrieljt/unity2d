@@ -8,24 +8,8 @@ namespace Game.Level.Tiled
 	using UnityEditor;
 
 	[CustomEditor(typeof(MapDungeonLevelBuilder))]
-	public class MapDungeonLevelBuilderInspector : Editor
+	public class MapDungeonLevelBuilderInspector : ALevelComponentInspector
 	{
-		public override void OnInspectorGUI()
-		{
-			DrawDefaultInspector();
-
-			if (GUILayout.Button("Build"))
-			{
-				var mapDungeonLevelBuilder = (MapDungeonLevelBuilder)target;
-				mapDungeonLevelBuilder.Build();
-			}
-
-			if (GUILayout.Button("Dispose"))
-			{
-				var mapDungeonLevelBuilder = (MapDungeonLevelBuilder)target;
-				mapDungeonLevelBuilder.Dispose();
-			}
-		}
 	}
 
 #endif

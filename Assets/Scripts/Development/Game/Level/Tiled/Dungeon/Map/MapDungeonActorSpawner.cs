@@ -11,24 +11,8 @@ namespace Game.Level.Tiled
 	using UnityEditor;
 
 	[CustomEditor(typeof(MapDungeonActorSpawner))]
-	public class MapDungeonActorSpawnerInspector : Editor
+	public class MapDungeonActorSpawnerInspector : ALevelComponentInspector
 	{
-		public override void OnInspectorGUI()
-		{
-			DrawDefaultInspector();
-
-			if (GUILayout.Button("Build"))
-			{
-				var mapDungeonActorSpawner = (MapDungeonActorSpawner)target;
-				mapDungeonActorSpawner.Build();
-			}
-
-			if (GUILayout.Button("Dispose"))
-			{
-				var mapDungeonSpawner = (MapDungeonActorSpawner)target;
-				mapDungeonSpawner.Dispose();
-			}
-		}
 	}
 
 #endif

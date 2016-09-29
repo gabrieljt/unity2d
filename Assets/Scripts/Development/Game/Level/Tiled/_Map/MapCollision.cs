@@ -7,24 +7,8 @@ namespace Game.Level.Tiled
 	using UnityEditor;
 
 	[CustomEditor(typeof(MapCollision))]
-	public class MapCollisionInspector : Editor
+	public class MapCollisionInspector : ALevelComponentInspector
 	{
-		public override void OnInspectorGUI()
-		{
-			DrawDefaultInspector();
-
-			if (GUILayout.Button("Build"))
-			{
-				var mapCollision = (MapCollision)target;
-				mapCollision.Build();
-			}
-
-			if (GUILayout.Button("Dispose"))
-			{
-				var mapCollision = (MapCollision)target;
-				mapCollision.Dispose();
-			}
-		}
 	}
 
 #endif

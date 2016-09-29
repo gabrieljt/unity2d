@@ -7,34 +7,40 @@ namespace Game.Level.Tiled
 	using UnityEditor;
 
 	[CustomEditor(typeof(MapDungeonLevel))]
-	public class MapDungeonLevelInspector : Editor
+	public class MapDungeonLevelInspector : ALevelComponentInspector
 	{
 		public override void OnInspectorGUI()
 		{
 			DrawDefaultInspector();
+			LoadButton();
+			BuildButton();
+			DisposeButton();
+			DestroyButton();
+		}
 
+		private void LoadButton()
+		{
 			if (GUILayout.Button("Load"))
 			{
 				var mapDungeonLevel = (MapDungeonLevel)target;
 				mapDungeonLevel.Load(mapDungeonLevel.MapDungeonLevelParams.Level);
 			}
+		}
 
-			if (GUILayout.Button("Build"))
-			{
-				var mapDungeonLevel = (MapDungeonLevel)target;
-				mapDungeonLevel.Build();
-			}
-
-			if (GUILayout.Button("Dispose"))
-			{
-				var mapDungeonLevel = (MapDungeonLevel)target;
-				mapDungeonLevel.Dispose();
-			}
-
+		private void DestroyButton()
+		{
 			if (GUILayout.Button("Destroy"))
 			{
 				var mapDungeonLevel = (MapDungeonLevel)target;
-				Destroy(mapDungeonLevel.gameObject);
+
+				if (Application.isPlaying)
+				{
+					Destroy(mapDungeonLevel.gameObject);
+				}
+				else
+				{
+					DestroyImmediate(mapDungeonLevel.gameObject);
+				}
 			}
 		}
 	}
@@ -93,6 +99,7 @@ namespace Game.Level.Tiled
 		public override void Dispose()
 		{
 			state = LevelState.Unbuilt;
+			mapDungeonLevelParams = null;
 			mapDungeonLevelBuilder.Built = null;
 		}
 	}
