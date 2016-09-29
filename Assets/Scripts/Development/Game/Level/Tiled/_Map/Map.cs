@@ -25,9 +25,8 @@ namespace Game.Level.Tiled
 
 		public Tile[,] tiles = new Tile[0, 0];
 
-		public Vector2 WorldPosition { get { return new Vector2(width / 2f, height / 2f); } }
+		public Vector2 Center { get { return new Vector2(width / 2f, height / 2f); } }
 
-		// ALevel
 		private void Awake()
 		{
 			gameObject.isStatic = true;
@@ -44,7 +43,7 @@ namespace Game.Level.Tiled
 
 		private void SetWorldPosition()
 		{
-			transform.position = WorldPosition;
+			transform.position = Center;
 		}
 
 		public void FillTiles(TileType type)

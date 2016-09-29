@@ -70,7 +70,7 @@ namespace Game.Level.Tiled
 					if (map.tiles[x, y].Type == TileType.Wall)
 					{
 						var collider = gameObject.AddComponent<BoxCollider2D>();
-						collider.offset = new Vector2(x, y) + Vector2.one * 0.5f - map.WorldPosition;
+						collider.offset = new Vector2(x, y) + Vector2.one * 0.5f - map.Center;
 						collider.size = Vector2.one;
 						++collidersCount;
 					}

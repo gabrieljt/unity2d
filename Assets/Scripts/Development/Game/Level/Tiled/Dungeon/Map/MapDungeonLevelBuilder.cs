@@ -43,12 +43,12 @@ namespace Game.Level.Tiled
 		[SerializeField]
 		private MapDungeon mapDungeon;
 
-		private MapDungeon MapDungeon { get { return mapDungeon; } }
+		public MapDungeon MapDungeon { get { return mapDungeon; } }
 
 		[SerializeField]
 		private MapDungeonActorSpawner mapDungeonActorSpawner;
 
-		private MapDungeonActorSpawner MapDungeonActorSpawner { get { return mapDungeonActorSpawner; } }
+		public MapDungeonActorSpawner MapDungeonActorSpawner { get { return mapDungeonActorSpawner; } }
 
 		[SerializeField]
 		private MapCollision mapCollision;
@@ -99,6 +99,7 @@ namespace Game.Level.Tiled
 		private void OnLevelComponentBuilt()
 		{
 			levelComponents[levelComponentsBuilt].Built -= OnLevelComponentBuilt;
+
 			++levelComponentsBuilt;
 
 			if (levelComponentsBuilt == levelComponents.Length)

@@ -74,7 +74,7 @@ namespace Game.Level.Tiled
 			if (state == LevelState.Unloaded)
 			{
 				state = LevelState.Unbuilt;
-				var mapDungeonLevelParams = new MapDungeonLevelParams(level);
+				mapDungeonLevelParams = new MapDungeonLevelParams(level);
 
 				var map = mapDungeonLevelBuilder.Map;
 				mapDungeonLevelParams.SetMapSize(ref map);

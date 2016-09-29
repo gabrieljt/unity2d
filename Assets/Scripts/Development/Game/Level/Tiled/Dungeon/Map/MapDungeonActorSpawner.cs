@@ -24,7 +24,7 @@ namespace Game.Level.Tiled
 	public class MapDungeonActorSpawner : ALevelComponent
 	{
 		// TODO: better input params
-		private Dictionary<ActorType, List<AActor>> spawnedActors = new Dictionary<ActorType, List<AActor>>();
+		public Dictionary<ActorType, List<AActor>> spawnedActors = new Dictionary<ActorType, List<AActor>>();
 
 		[SerializeField]
 		private MapDungeon mapDungeon;
