@@ -65,30 +65,37 @@ namespace Game.Level.Tiled
 
 		private void Awake()
 		{
-			state = LevelState.Unbuilt;
-
 			mapDungeonLevelBuilder = GetComponent<MapDungeonLevelBuilder>();
 		}
 
 		public override void Load(int level)
 		{
-			var mapDungeonLevelParams = new MapDungeonLevelParams(level);
+			Debug.Assert(state == LevelState.Unloaded);
+			if (state == LevelState.Unloaded)
+			{
+				state = LevelState.Unbuilt;
+				var mapDungeonLevelParams = new MapDungeonLevelParams(level);
 
-			var map = mapDungeonLevelBuilder.Map;
-			mapDungeonLevelParams.SetMapSize(ref map);
+				var map = mapDungeonLevelBuilder.Map;
+				mapDungeonLevelParams.SetMapSize(ref map);
+			}
 		}
 
 		public override void Build()
 		{
-			state = LevelState.Building;
-			mapDungeonLevelBuilder.Built += OnMapDungeonLevelBuilderBuilt;
-			mapDungeonLevelBuilder.Build();
+			Debug.Assert(state == LevelState.Unbuilt);
+			if (state == LevelState.Unbuilt)
+			{
+				state = LevelState.Building;
+				mapDungeonLevelBuilder.Built += OnMapDungeonLevelBuilderBuilt;
+				mapDungeonLevelBuilder.Build();
+			}
 		}
 
 		private void OnMapDungeonLevelBuilderBuilt()
 		{
-			mapDungeonLevelBuilder.Built -= OnMapDungeonLevelBuilderBuilt;
 			state = LevelState.Built;
+			mapDungeonLevelBuilder.Built -= OnMapDungeonLevelBuilderBuilt;
 
 			// calculate rules from level components; e.g. maximum steps from rooms
 			// get game info from level compononets; e.g. player, exit
@@ -98,9 +105,9 @@ namespace Game.Level.Tiled
 
 		public override void Dispose()
 		{
-			state = LevelState.Unbuilt;
+			state = LevelState.Unloaded;
 			mapDungeonLevelParams = null;
-			mapDungeonLevelBuilder.Built = null;
+			mapDungeonLevelBuilder.Dispose();
 		}
 	}
 }

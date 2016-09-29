@@ -51,7 +51,18 @@ namespace Game.Level.Tiled
 			{
 				foreach (var actor in actorsList)
 				{
+#if UNITY_EDITOR
+					if (Application.isPlaying)
+					{
+						Destroy(actor.gameObject);
+					}
+					else
+					{
+						DestroyImmediate(actor.gameObject);
+					}
+#else
 					Destroy(actor.gameObject);
+#endif
 				}
 				actorsList.Clear();
 			}
@@ -72,7 +83,18 @@ namespace Game.Level.Tiled
 			var actorSpawners = GetComponents<ActorSpawner>();
 			for (int i = 0; i < actorSpawners.Length; i++)
 			{
+#if UNITY_EDITOR
+				if (Application.isPlaying)
+				{
+					Destroy(actorSpawners[i]);
+				}
+				else
+				{
+					DestroyImmediate(actorSpawners[i]);
+				}
+#else
 				Destroy(actorSpawners[i]);
+#endif
 			}
 		}
 

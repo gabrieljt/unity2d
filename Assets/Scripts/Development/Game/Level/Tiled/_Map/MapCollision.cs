@@ -46,7 +46,18 @@ namespace Game.Level.Tiled
 
 			for (int i = 0; i < colliders.Length; i++)
 			{
+#if UNITY_EDITOR
+				if (Application.isPlaying)
+				{
+					Destroy(colliders[i]);
+				}
+				else
+				{
+					DestroyImmediate(colliders[i]);
+				}
+#else
 				Destroy(colliders[i]);
+#endif
 			}
 		}
 
