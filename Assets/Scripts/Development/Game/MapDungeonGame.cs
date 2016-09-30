@@ -10,6 +10,7 @@ namespace Game
 {
 	public enum GameState
 	{
+		Unloaded,
 		Loading,
 		InGame,
 		Ended,
@@ -18,7 +19,7 @@ namespace Game
 	public class MapDungeonGame : MonoBehaviour, IDisposable
 	{
 		[SerializeField]
-		private GameState state = GameState.Loading;
+		private GameState state = GameState.Unloaded;
 
 		[SerializeField]
 		private MapDungeonGameParams mapDungeonGameParams = new MapDungeonGameParams(1);
@@ -38,6 +39,8 @@ namespace Game
 
 		private void Awake()
 		{
+			gameObject.isStatic = true;
+
 			camera = FindObjectOfType<Camera>();
 			Debug.Assert(camera);
 

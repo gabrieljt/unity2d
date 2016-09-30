@@ -12,6 +12,8 @@ namespace Game
 
 		private void Awake()
 		{
+			gameObject.isStatic = true;
+
 			defaultVSyncCount = QualitySettings.vSyncCount;
 			frameRate = defaultFrameRate = Application.targetFrameRate;
 		}
