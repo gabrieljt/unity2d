@@ -38,7 +38,7 @@ namespace Game.Level.Tiled
 
 			FillTiles(TileType.Water);
 
-			Built();
+			Built(GetType());
 		}
 
 		private void SetWorldPosition()
@@ -58,17 +58,13 @@ namespace Game.Level.Tiled
 			}
 		}
 
-		public static bool HasAdjacentFloor(Map map, int x, int y)
+		public bool HasAdjacentFloor(int x, int y)
 		{
-			return HasAdjacentType(map, x, y, TileType.Floor);
+			return HasAdjacentType(x, y, TileType.Floor);
 		}
 
-		public static bool HasAdjacentType(Map map, int x, int y, TileType type)
+		public bool HasAdjacentType(int x, int y, TileType type)
 		{
-			var tiles = map.tiles;
-			var width = map.width;
-			var height = map.height;
-
 			return (x > 0 && tiles[x - 1, y].Type == type)
 				|| (x < width - 1 && tiles[x + 1, y].Type == type)
 				|| (y > 0 && tiles[x, y - 1].Type == type)
@@ -79,55 +75,69 @@ namespace Game.Level.Tiled
 				|| (x < width - 1 && y < height - 1 && tiles[x + 1, y + 1].Type == type);
 		}
 
-		public static bool HasAdjacentType(Map map, int x, int y, TileType type, out Tile[] adjacentTiles)
+		public bool HasAdjacentType(int x, int y, TileType type, out Tile[] adjacentTiles)
 		{
-			var tiles = map.tiles;
-			var width = map.width;
-			var height = map.height;
 			var adjacentTilesList = new List<Tile>();
 
 			if (x > 0 && tiles[x - 1, y].Type == type)
 			{
-				adjacentTilesList.Add((Tile)tiles[x - 1, y]);
+				adjacentTilesList.Add(tiles[x - 1, y]);
 			}
 
 			if (x < width - 1 && tiles[x + 1, y].Type == type)
 			{
-				adjacentTilesList.Add((Tile)tiles[x + 1, y]);
+				adjacentTilesList.Add(tiles[x + 1, y]);
 			}
 
 			if (y > 0 && tiles[x, y - 1].Type == type)
 			{
-				adjacentTilesList.Add((Tile)tiles[x, y - 1]);
+				adjacentTilesList.Add(tiles[x, y - 1]);
 			}
 
 			if (y < height - 1 && tiles[x, y + 1].Type == type)
 			{
-				adjacentTilesList.Add((Tile)tiles[x, y + 1]);
+				adjacentTilesList.Add(tiles[x, y + 1]);
 			}
 
 			if (x > 0 && y > 0 && tiles[x - 1, y - 1].Type == type)
 			{
-				adjacentTilesList.Add((Tile)tiles[x - 1, y - 1]);
+				adjacentTilesList.Add(tiles[x - 1, y - 1]);
 			}
 
 			if (x < width - 1 && y > 0 && tiles[x + 1, y - 1].Type == type)
 			{
-				adjacentTilesList.Add((Tile)tiles[x + 1, y - 1]);
+				adjacentTilesList.Add(tiles[x + 1, y - 1]);
 			}
 
 			if (x > 0 && y < height - 1 && tiles[x - 1, y + 1].Type == type)
 			{
-				adjacentTilesList.Add((Tile)tiles[x - 1, y + 1]);
+				adjacentTilesList.Add(tiles[x - 1, y + 1]);
 			}
 
 			if (x < width - 1 && y < height - 1 && tiles[x + 1, y + 1].Type == type)
 			{
-				adjacentTilesList.Add((Tile)tiles[x + 1, y + 1]);
+				adjacentTilesList.Add(tiles[x + 1, y + 1]);
 			}
 
 			adjacentTiles = adjacentTilesList.ToArray();
 			return adjacentTiles.Length > 0;
+		}
+
+		public List<KeyValuePair<Tile, Vector2>> GetTilesOfTypeWithIndex(TileType tileType)
+		{
+			var tilesList = new List<KeyValuePair<Tile, Vector2>>();
+			for (int x = 0; x < width; x++)
+			{
+				for (int y = 0; y < height; y++)
+				{
+					if (tiles[x, y].Type == tileType)
+					{
+						tilesList.Add(new KeyValuePair<Tile, Vector2>(tiles[x, y], new Vector2(x, y)));
+					}
+				}
+			}
+
+			return tilesList;
 		}
 
 		public override void Dispose()

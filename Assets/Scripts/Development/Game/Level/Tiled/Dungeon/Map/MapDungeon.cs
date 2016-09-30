@@ -87,7 +87,7 @@ namespace Game.Level.Tiled
 		{
 			BuildDungeon(ref map);
 
-			Built();
+			Built(GetType());
 		}
 
 		private void DestroyRooms(ref Map map, ref Room[] rooms)
@@ -227,7 +227,7 @@ namespace Game.Level.Tiled
 			{
 				for (int y = 0; y < this.map.height; y++)
 				{
-					if (map.tiles[x, y].Type == TileType.Water && Map.HasAdjacentFloor(map, x, y))
+					if (map.tiles[x, y].Type == TileType.Water && map.HasAdjacentFloor(x, y))
 					{
 						map.tiles[x, y] = new Tile(TileType.Wall);
 					}

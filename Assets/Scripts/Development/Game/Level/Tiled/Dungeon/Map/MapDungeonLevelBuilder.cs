@@ -96,15 +96,14 @@ namespace Game.Level.Tiled
 			}
 		}
 
-		private void OnLevelComponentBuilt()
+		private void OnLevelComponentBuilt(Type levelComponentBuiltType)
 		{
-			levelComponents[levelComponentsBuilt].Built -= OnLevelComponentBuilt;
-
+			Array.Find(levelComponents, levelComponent => levelComponent.GetType() == levelComponentBuiltType).Built -= OnLevelComponentBuilt;
 			++levelComponentsBuilt;
 
 			if (levelComponentsBuilt == levelComponents.Length)
 			{
-				Built();
+				Built(GetType());
 			}
 		}
 

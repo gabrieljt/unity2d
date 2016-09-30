@@ -2,9 +2,6 @@
 
 namespace Game.Level
 {
-	// level params
-	// build/rebuild (int level)
-
 	public enum LevelState
 	{
 		Unloaded,
@@ -18,6 +15,6 @@ namespace Game.Level
 		[SerializeField]
 		protected LevelState state = LevelState.Unloaded;
 
-		public abstract void Load(int level);
+		public abstract void Load(ALevelParams level);
 	}
 }

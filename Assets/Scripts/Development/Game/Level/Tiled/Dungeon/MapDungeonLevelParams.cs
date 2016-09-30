@@ -1,24 +1,30 @@
-﻿using System;
-using UnityEngine;
+﻿using Game.Actor;
+using System;
 
 namespace Game.Level.Tiled
 {
 	[Serializable]
-	public class MapDungeonLevelParams
+	public class MapDungeonLevelParams : ALevelParams
 	{
-		[SerializeField]
-		private int level;
-
-		public int Level { get { return level; } }
-
 		public MapDungeonLevelParams(int level)
+			: base(level)
 		{
-			this.level = level;
 		}
 
-		public void SetMapSize(ref Map map)
+		public void SetSize(ref Map map)
 		{
-			map.width = map.height = level + 9;
+			map.width = map.height = Level + 9;
+		}
+
+		public void SetActors(ref MapDungeonActorSpawner mapDungeonActorSpawner)
+		{
+			mapDungeonActorSpawner.actorSpawnersData = new ActorSpawnerData[3];
+			mapDungeonActorSpawner.actorSpawnersData[0] = new ActorSpawnerData(ActorType.Player, 1);
+			mapDungeonActorSpawner.actorSpawnersData[1] = new ActorSpawnerData(ActorType.Exit, 1);
+
+			var availableTiles = mapDungeonActorSpawner.MapDungeon.Map.GetTilesOfTypeWithIndex(TileType.Floor).Count;
+
+			mapDungeonActorSpawner.actorSpawnersData[2] = new ActorSpawnerData(ActorType.Slime, UnityEngine.Random.Range(0, availableTiles - 2));
 		}
 	}
 }

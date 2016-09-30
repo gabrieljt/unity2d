@@ -2,6 +2,8 @@
 
 namespace Game.Level.Tiled
 {
+	using System;
+
 #if UNITY_EDITOR
 
 	using UnityEditor;
@@ -23,7 +25,7 @@ namespace Game.Level.Tiled
 			if (GUILayout.Button("Load"))
 			{
 				var mapDungeonLevel = (MapDungeonLevel)target;
-				mapDungeonLevel.Load(mapDungeonLevel.MapDungeonLevelParams.Level);
+				mapDungeonLevel.Load(mapDungeonLevel.MapDungeonLevelParams);
 			}
 		}
 
@@ -68,16 +70,13 @@ namespace Game.Level.Tiled
 			mapDungeonLevelBuilder = GetComponent<MapDungeonLevelBuilder>();
 		}
 
-		public override void Load(int level)
+		public override void Load(ALevelParams mapDungeonLevelParams)
 		{
 			Debug.Assert(state == LevelState.Unloaded);
 			if (state == LevelState.Unloaded)
 			{
 				state = LevelState.Unbuilt;
-				mapDungeonLevelParams = new MapDungeonLevelParams(level);
-
-				var map = mapDungeonLevelBuilder.Map;
-				mapDungeonLevelParams.SetMapSize(ref map);
+				this.mapDungeonLevelParams = mapDungeonLevelParams as MapDungeonLevelParams;
 			}
 		}
 
@@ -87,26 +86,34 @@ namespace Game.Level.Tiled
 			if (state == LevelState.Unbuilt)
 			{
 				state = LevelState.Building;
+				MapDungeonLevelBuilder.MapDungeon.Built += OnMapDungeonBuilt;
 				mapDungeonLevelBuilder.Built += OnMapDungeonLevelBuilderBuilt;
+
+				var map = mapDungeonLevelBuilder.Map;
+				mapDungeonLevelParams.SetSize(ref map);
 				mapDungeonLevelBuilder.Build();
 			}
 		}
 
-		private void OnMapDungeonLevelBuilderBuilt()
+		private void OnMapDungeonBuilt(Type levelComponentBuiltType)
+		{
+			MapDungeonLevelBuilder.MapDungeon.Built -= OnMapDungeonBuilt;
+
+			var mapDungeonActorSpawner = mapDungeonLevelBuilder.MapDungeonActorSpawner;
+			mapDungeonLevelParams.SetActors(ref mapDungeonActorSpawner);
+		}
+
+		private void OnMapDungeonLevelBuilderBuilt(Type levelComponentBuiltType)
 		{
 			state = LevelState.Built;
 			mapDungeonLevelBuilder.Built -= OnMapDungeonLevelBuilderBuilt;
 
-			// calculate rules from level components; e.g. maximum steps from rooms
-			// get game info from level compononets; e.g. player, exit
-
-			Built();
+			Built(GetType());
 		}
 
 		public override void Dispose()
 		{
 			state = LevelState.Unloaded;
-			mapDungeonLevelParams = null;
 			mapDungeonLevelBuilder.Dispose();
 		}
 	}
