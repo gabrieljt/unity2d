@@ -13,10 +13,7 @@ namespace Game
 
 		public int Level { get { return level; } }
 
-		[SerializeField]
-		private MapDungeonLevelParams mapDungeonLevelParams;
-
-		public MapDungeonLevelParams MapDungeonLevelParams { get { return mapDungeonLevelParams; } }
+		public MapDungeonLevelParams mapDungeonLevelParams;
 
 		[SerializeField]
 		private int stepsTaken = 0;

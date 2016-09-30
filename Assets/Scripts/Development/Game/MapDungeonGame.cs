@@ -8,6 +8,51 @@ using UnityEngine.UI;
 
 namespace Game
 {
+#if UNITY_EDITOR
+
+	using UnityEditor;
+
+	[CustomEditor(typeof(MapDungeonGame))]
+	public class MapDungeonGameInspector : Editor
+	{
+		public override void OnInspectorGUI()
+		{
+			DrawDefaultInspector();
+			LoadLevelButton();
+			ResetLevelButton();
+			DisposeButton();
+		}
+
+		private void LoadLevelButton()
+		{
+			if (GUILayout.Button("Load Level"))
+			{
+				var game = (MapDungeonGame)target;
+				game.LoadLevel();
+			}
+		}
+
+		private void ResetLevelButton()
+		{
+			if (GUILayout.Button("Reset Level"))
+			{
+				var game = (MapDungeonGame)target;
+				game.ResetLevel();
+			}
+		}
+
+		private void DisposeButton()
+		{
+			if (GUILayout.Button("Dispose"))
+			{
+				var game = (MapDungeonGame)target;
+				game.Dispose();
+			}
+		}
+	}
+
+#endif
+
 	public enum GameState
 	{
 		Unloaded,
@@ -16,16 +61,17 @@ namespace Game
 		Ended,
 	}
 
+	[ExecuteInEditMode]
 	public class MapDungeonGame : MonoBehaviour, IDisposable
 	{
+		[SerializeField]
+		private MapDungeonGameParams gameParams = new MapDungeonGameParams(1);
+
 		[SerializeField]
 		private GameState state = GameState.Unloaded;
 
 		[SerializeField]
-		private MapDungeonGameParams mapDungeonGameParams = new MapDungeonGameParams(1);
-
-		[SerializeField]
-		private MapDungeonLevel mapDungeonLevel;
+		private MapDungeonLevel level;
 
 		[SerializeField]
 		private Camera camera;
@@ -35,7 +81,7 @@ namespace Game
 		private Exit exit;
 
 		[SerializeField]
-		private Text dungeonLevelLabel, stepsLeftLabel, stepsTakenLabel;
+		private Text levelLabel, stepsLeftLabel, stepsTakenLabel;
 
 		private void Awake()
 		{
@@ -44,38 +90,45 @@ namespace Game
 			camera = FindObjectOfType<Camera>();
 			Debug.Assert(camera);
 
-			mapDungeonLevel = FindObjectOfType<MapDungeonLevel>();
-			Debug.Assert(mapDungeonLevel);
+			level = FindObjectOfType<MapDungeonLevel>();
+			Debug.Assert(level);
 
-			Debug.Assert(dungeonLevelLabel);
+			Debug.Assert(levelLabel);
 			Debug.Assert(stepsLeftLabel);
 			Debug.Assert(stepsTakenLabel);
 		}
 
 		#region Start
 
+#if !UNITY_EDITOR
 		private void Start()
 		{
 			LoadLevel();
 		}
+#endif
 
-		private void LoadLevel()
+		public void LoadLevel()
 		{
-			StartCoroutine(StartLevelCoroutine());
+			Debug.Assert(state == GameState.Unloaded);
+			if (state == GameState.Unloaded)
+			{
+				StartCoroutine(StartLevelCoroutine());
+			}
 		}
 
 		private IEnumerator StartLevelCoroutine()
 		{
 			state = GameState.Loading;
+			gameParams = new MapDungeonGameParams(gameParams.Level);
 			camera.gameObject.SetActive(false);
 			yield return 0;
 
 			PlayerInputEnqueuer.Instance.LockInputs();
 
-			mapDungeonLevel.GetComponent<MapDungeonActorSpawner>().Built += OnMapDungeonActorSpawnerBuilt;
-			mapDungeonLevel.Built += OnMapDungeonLevelBuilt;
+			level.GetComponent<MapDungeonActorSpawner>().Built += OnMapDungeonActorSpawnerBuilt;
+			level.Built += OnMapDungeonLevelBuilt;
 
-			mapDungeonLevel.Load(mapDungeonGameParams.MapDungeonLevelParams);
+			level.Load(gameParams.mapDungeonLevelParams);
 
 			StartCoroutine(BuildLevelCoroutine());
 		}
@@ -83,13 +136,13 @@ namespace Game
 		private IEnumerator BuildLevelCoroutine()
 		{
 			yield return 0;
-			mapDungeonLevel.Build();
+			level.Build();
 		}
 
-		private void OnMapDungeonActorSpawnerBuilt(Type mapDungeonActorSpawnerType)
+		private void OnMapDungeonActorSpawnerBuilt(Type levelComponentType)
 		{
-			mapDungeonLevel.GetComponent<MapDungeonActorSpawner>().Built -= OnMapDungeonActorSpawnerBuilt;
-			var actorSpawners = mapDungeonLevel.GetComponents<ActorSpawner>();
+			level.GetComponent<MapDungeonActorSpawner>().Built -= OnMapDungeonActorSpawnerBuilt;
+			var actorSpawners = level.GetComponents<ActorSpawner>();
 
 			foreach (var actorSpawner in actorSpawners)
 			{
@@ -135,7 +188,7 @@ namespace Game
 
 		private void OnStepTaken()
 		{
-			mapDungeonGameParams.StepTaken();
+			gameParams.StepTaken();
 		}
 
 		private void OnExitSpawned(ActorSpawner actorSpawner, AActor actor)
@@ -161,14 +214,16 @@ namespace Game
 			if (character.gameObject.CompareTag(ActorType.Player.ToString()))
 			{
 				state = GameState.Ended;
-				mapDungeonGameParams = new MapDungeonGameParams(mapDungeonGameParams.Level + 1);
+				gameParams = new MapDungeonGameParams(gameParams.Level + 1);
 				ReloadLevel();
 			}
 		}
 
 		private void OnMapDungeonLevelBuilt(Type levelComponentBuiltType)
 		{
-			mapDungeonLevel.Built -= OnMapDungeonLevelBuilt;
+			level.Built -= OnMapDungeonLevelBuilt;
+
+			gameParams.mapDungeonLevelParams = level.MapDungeonLevelParams;
 
 			StartCoroutine(StartLevel());
 		}
@@ -179,12 +234,12 @@ namespace Game
 			state = GameState.InGame;
 
 			UpdateUI();
-			var mapCenter = mapDungeonLevel.GetComponent<Map>().Center;
+			var mapCenter = level.GetComponent<Map>().Center;
 			camera.orthographicSize = Mathf.Min(mapCenter.x, mapCenter.y);
 			SetCameraPosition(player.transform.position);
 			camera.gameObject.SetActive(true);
 
-			mapDungeonGameParams.SetMaximumSteps(mapDungeonLevel.GetComponent<MapDungeon>(), mapDungeonLevel.GetComponent<MapDungeonActorSpawner>(), mapCenter);
+			gameParams.SetMaximumSteps(level.GetComponent<MapDungeon>(), level.GetComponent<MapDungeonActorSpawner>(), mapCenter);
 
 			PlayerInputEnqueuer.Instance.UnlockInputs();
 		}
@@ -203,7 +258,7 @@ namespace Game
 					return;
 				}
 
-				if (mapDungeonGameParams.StepsLeft == 0)
+				if (gameParams.StepsLeft == 0)
 				{
 					ResetLevel();
 				}
@@ -211,9 +266,13 @@ namespace Game
 			}
 		}
 
-		private void ResetLevel()
+		public void ResetLevel()
 		{
-			ReloadLevel();
+			Debug.Assert(state == GameState.InGame);
+			if (state == GameState.InGame)
+			{
+				ReloadLevel();
+			}
 		}
 
 		private void ReloadLevel()
@@ -224,14 +283,14 @@ namespace Game
 
 		private void UpdateUI()
 		{
-			SetDungeonLevelLabel(mapDungeonGameParams.Level);
-			SetStepsLeftLabel(mapDungeonGameParams.StepsLeft);
+			SetDungeonLevelLabel(gameParams.Level);
+			SetStepsLeftLabel(gameParams.StepsLeft);
 			SetStepsTakenLabel(MapDungeonGameParams.TotalStepsTaken);
 		}
 
 		private void SetDungeonLevelLabel(int level)
 		{
-			dungeonLevelLabel.text = "Dungeon Level: " + level;
+			levelLabel.text = "Dungeon Level: " + level;
 		}
 
 		private void SetStepsLeftLabel(int stepsLeft)
@@ -265,8 +324,9 @@ namespace Game
 
 		public void Dispose()
 		{
+			state = GameState.Unloaded;
 			StopAllCoroutines();
-			mapDungeonLevel.Dispose();
+			level.Dispose();
 		}
 
 		private void OnDestroy()
