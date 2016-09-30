@@ -18,9 +18,12 @@ namespace Game
 		public override void OnInspectorGUI()
 		{
 			DrawDefaultInspector();
-			LoadLevelButton();
-			ResetLevelButton();
-			DisposeButton();
+			if (Application.isPlaying)
+			{
+				LoadLevelButton();
+				ResetLevelButton();
+				DisposeButton();
+			}
 		}
 
 		private void LoadLevelButton()
@@ -100,12 +103,17 @@ namespace Game
 
 		#region Start
 
-#if !UNITY_EDITOR
 		private void Start()
 		{
-			LoadLevel();
-		}
+#if UNITY_EDITOR
+			if (Application.isPlaying)
+			{
 #endif
+				LoadLevel();
+#if UNITY_EDITOR
+			}
+#endif
+		}
 
 		public void LoadLevel()
 		{
@@ -118,10 +126,10 @@ namespace Game
 
 		private IEnumerator StartLevelCoroutine()
 		{
+			yield return 0;
 			state = GameState.Loading;
 			gameParams = new MapDungeonGameParams(gameParams.Level);
-			camera.gameObject.SetActive(false);
-			yield return 0;
+			camera.enabled = false;
 
 			PlayerInputEnqueuer.Instance.LockInputs();
 
@@ -236,8 +244,8 @@ namespace Game
 			UpdateUI();
 			var mapCenter = level.GetComponent<Map>().Center;
 			camera.orthographicSize = Mathf.Min(mapCenter.x, mapCenter.y);
-			SetCameraPosition(player.transform.position);
-			camera.gameObject.SetActive(true);
+			SetCameraPosition(mapCenter);
+			camera.enabled = true;
 
 			gameParams.SetMaximumSteps(level.GetComponent<MapDungeon>(), level.GetComponent<MapDungeonActorSpawner>(), mapCenter);
 
@@ -311,7 +319,9 @@ namespace Game
 		{
 			if (state == GameState.InGame)
 			{
-				SetCameraPosition(player.transform.position);
+				/*SetCameraPosition(player.transform.position);
+				camera.orthographicSize = Mathf.Min(Mathf.Clamp(Mathf.Abs(player.transform.position.x), 5, level.GetComponent<Map>().Center.x),
+					Mathf.Clamp(Mathf.Abs(player.transform.position.y), 5, level.GetComponent<Map>().Center.y));*/
 			}
 		}
 
@@ -327,11 +337,6 @@ namespace Game
 			state = GameState.Unloaded;
 			StopAllCoroutines();
 			level.Dispose();
-		}
-
-		private void OnDestroy()
-		{
-			Dispose();
 		}
 	}
 }
