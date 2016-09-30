@@ -98,7 +98,7 @@ namespace Game.Level.Tiled
 			mapDungeonLevelBuilder.MapDungeon.Built -= OnMapDungeonBuilt;
 
 			var mapDungeonActorSpawner = mapDungeonLevelBuilder.MapDungeonActorSpawner;
-			mapDungeonLevelParams.SetActors(ref mapDungeonActorSpawner);
+			mapDungeonLevelParams.SetActors(ref mapDungeonActorSpawner, mapDungeonLevelBuilder.MapDungeon);
 		}
 
 		private void OnMapDungeonLevelBuilderBuilt(Type levelComponentBuiltType)
