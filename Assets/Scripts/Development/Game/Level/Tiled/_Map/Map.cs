@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Game.Level.Tiled
@@ -9,76 +8,42 @@ namespace Game.Level.Tiled
 	using UnityEditor;
 
 	[CustomEditor(typeof(Map))]
-	public class MapInspector : Editor
+	public class MapInspector : ALevelComponentInspector
 	{
-		public override void OnInspectorGUI()
-		{
-			DrawDefaultInspector();
-
-			if (GUILayout.Button("Build Map"))
-			{
-				var map = (Map)target;
-
-				map.Build();
-			}
-		}
 	}
 
 #endif
 
 	[ExecuteInEditMode]
-	public class Map : MonoBehaviour
+	public class Map : ALevelComponent
 	{
-		[SerializeField]
 		[Range(4, 128)]
-		private int width = 16;
+		public int width = 16;
 
-		public int Width { get { return width; } }
-
-		[SerializeField]
 		[Range(3, 128)]
-		private int height = 9;
+		public int height = 9;
 
-		public int Height { get { return height; } }
+		public Tile[,] tiles = new Tile[0, 0];
 
-		[SerializeField]
-		private Tile[,] tiles;
-
-		public Tile[,] Tiles { get { return tiles; } }
-
-		public Vector2 WorldPosition { get { return new Vector2(width / 2f, height / 2f); } }
-
-		public Action Built = delegate { };
-
-		public Action Updated = delegate { };
+		public Vector2 Center { get { return new Vector2(width / 2f, height / 2f); } }
 
 		private void Awake()
 		{
 			gameObject.isStatic = true;
 		}
 
-		public void Build(int width, int height, out Map map)
-		{
-			this.width = width;
-			this.height = height;
-
-			Build();
-
-			map = this;
-		}
-
-		public void Build()
+		public override void Build()
 		{
 			SetWorldPosition();
 
 			FillTiles(TileType.Water);
 
-			Built();
+			Built(GetType());
 		}
 
 		private void SetWorldPosition()
 		{
-			transform.position = WorldPosition;
+			transform.position = Center;
 		}
 
 		public void FillTiles(TileType type)
@@ -93,17 +58,13 @@ namespace Game.Level.Tiled
 			}
 		}
 
-		public static bool HasAdjacentFloor(Map map, int x, int y)
+		public bool HasAdjacentFloor(int x, int y)
 		{
-			return HasAdjacentType(map, x, y, TileType.Floor);
+			return HasAdjacentType(x, y, TileType.Floor);
 		}
 
-		public static bool HasAdjacentType(Map map, int x, int y, TileType type)
+		public bool HasAdjacentType(int x, int y, TileType type)
 		{
-			var tiles = map.Tiles;
-			var width = map.Width;
-			var height = map.Height;
-
 			return (x > 0 && tiles[x - 1, y].Type == type)
 				|| (x < width - 1 && tiles[x + 1, y].Type == type)
 				|| (y > 0 && tiles[x, y - 1].Type == type)
@@ -114,11 +75,8 @@ namespace Game.Level.Tiled
 				|| (x < width - 1 && y < height - 1 && tiles[x + 1, y + 1].Type == type);
 		}
 
-		public static bool HasAdjacentType(Map map, int x, int y, TileType type, out Tile[] adjacentTiles)
+		public bool HasAdjacentType(int x, int y, TileType type, out Tile[] adjacentTiles)
 		{
-			var tiles = map.Tiles;
-			var width = map.Width;
-			var height = map.Height;
 			var adjacentTilesList = new List<Tile>();
 
 			if (x > 0 && tiles[x - 1, y].Type == type)
@@ -163,6 +121,28 @@ namespace Game.Level.Tiled
 
 			adjacentTiles = adjacentTilesList.ToArray();
 			return adjacentTiles.Length > 0;
+		}
+
+		public List<KeyValuePair<Tile, Vector2>> GetTilesOfTypeWithIndex(TileType tileType)
+		{
+			var tilesList = new List<KeyValuePair<Tile, Vector2>>();
+			for (int x = 0; x < width; x++)
+			{
+				for (int y = 0; y < height; y++)
+				{
+					if (tiles[x, y].Type == tileType)
+					{
+						tilesList.Add(new KeyValuePair<Tile, Vector2>(tiles[x, y], new Vector2(x, y)));
+					}
+				}
+			}
+
+			return tilesList;
+		}
+
+		public override void Dispose()
+		{
+			tiles = new Tile[0, 0];
 		}
 	}
 }

@@ -92,7 +92,7 @@ namespace Game.Input
 
 			instance.Add(ref instance, ref inputDequeuer);
 
-			Debug.LogWarning("PlayerInputEnqueuer set to " + inputDequeuer.name + " | TotalInputDequeuers: " + instance.InputDequeuers.Count);
+			Debug.LogWarning("PlayerInputEnqueuer set to " + inputDequeuer.name + " | Total InputDequeuers: " + instance.InputDequeuers.Count);
 		}
 
 		public static void Remove(ref AInputDequeuer inputDequeuer)
@@ -101,7 +101,7 @@ namespace Game.Input
 
 			instance.Remove(ref instance, ref inputDequeuer);
 
-			Debug.LogWarning("PlayerInputEnqueuer releasing from " + inputDequeuer.name + " | TotalInputDequeuers: " + instance.InputDequeuers.Count);
+			Debug.LogWarning("PlayerInputEnqueuer releasing from " + inputDequeuer.name + " | Total InputDequeuers: " + instance.InputDequeuers.Count);
 		}
 
 		protected override void OnInputDequeuerDestroyed(MonoBehaviour inputDequeuerBehaviour)

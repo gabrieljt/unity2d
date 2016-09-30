@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Game.Input
 {
-	public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable
+	public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 	{
 		protected Queue<KeyCode> inputs = new Queue<KeyCode>();
 
@@ -62,7 +62,7 @@ namespace Game.Input
 			(inputDequeuer as IDestroyable).Destroyed += OnInputDequeuerDestroyed;
 
 			var otherEnqueuer = inputDequeuer.GetComponent<AInputEnqueuer>();
-			if (otherEnqueuer)
+			if (otherEnqueuer && otherEnqueuer != instance)
 			{
 				otherEnqueuer.enabled = false;
 			}
@@ -92,7 +92,7 @@ namespace Game.Input
 			(inputDequeuer as IDestroyable).Destroyed -= OnInputDequeuerDestroyed;
 
 			var otherEnqueuer = inputDequeuer.GetComponent<AInputEnqueuer>();
-			if (otherEnqueuer)
+			if (otherEnqueuer && otherEnqueuer != instance)
 			{
 				otherEnqueuer.enabled = true;
 			}

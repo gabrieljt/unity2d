@@ -18,8 +18,6 @@ namespace Game.Actor
 			character = GetComponent<Character>();
 
 			character.MovementHalted += OnCharacterMovementHalt;
-			character.Disabled += OnCharacterDisabled;
-			character.Enabled += OnCharacterEnabled;
 		}
 
 		private void OnCharacterMovementHalt()
@@ -27,22 +25,6 @@ namespace Game.Actor
 			foreach (var inputEnqueuer in inputEnqueuers)
 			{
 				inputEnqueuer.Inputs.Clear();
-			}
-		}
-
-		private void OnCharacterDisabled(AActor actor)
-		{
-			foreach (var inputEnqueuer in inputEnqueuers)
-			{
-				inputEnqueuer.LockInputs();
-			}
-		}
-
-		private void OnCharacterEnabled(AActor actor)
-		{
-			foreach (var inputEnqueuer in inputEnqueuers)
-			{
-				inputEnqueuer.UnlockInputs();
 			}
 		}
 
@@ -76,15 +58,13 @@ namespace Game.Actor
 					character.SetDestination(direction);
 				}
 
-				Debug.LogWarning(name + " InputDequeuer dequeueing from " + inputEnqueuer.name + " | TotalInputEnqueuers: " + inputEnqueuers.Count);
+				Debug.LogWarning(name + " InputDequeuer dequeueing from " + inputEnqueuer.name + " | Total InputEnqueuers: " + inputEnqueuers.Count);
 			}
 		}
 
 		public override void Dispose()
 		{
 			character.MovementHalted -= OnCharacterMovementHalt;
-			character.Disabled -= OnCharacterDisabled;
-			character.Enabled -= OnCharacterEnabled;
 		}
 	}
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Game.Input
 {
-	public abstract class AInputDequeuer : MonoBehaviour, IDestroyable
+	public abstract class AInputDequeuer : MonoBehaviour, IDestroyable, IDisposable
 	{
 		protected HashSet<AInputEnqueuer> inputEnqueuers = new HashSet<AInputEnqueuer>();
 

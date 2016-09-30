@@ -9,26 +9,8 @@ namespace Game.Level.Tiled
 	using UnityEditor;
 
 	[CustomEditor(typeof(MapDungeon))]
-	public class MapDungeonInspector : Editor
+	public class MapDungeonInspector : ALevelComponentInspector
 	{
-		public override void OnInspectorGUI()
-		{
-			DrawDefaultInspector();
-
-			if (GUILayout.Button("Build Dungeon"))
-			{
-				var mapDungeon = (MapDungeon)target;
-				mapDungeon.Build();
-			}
-
-			if (GUILayout.Button("Destroy Dungeon"))
-			{
-				var mapDungeon = (MapDungeon)target;
-				var map = mapDungeon.Map;
-				mapDungeon.DestroyDungeon(ref map);
-				map.Updated();
-			}
-		}
 	}
 
 #endif
@@ -37,7 +19,7 @@ namespace Game.Level.Tiled
 	[RequireComponent(
 		typeof(Map)
 	)]
-	public class MapDungeon : MonoBehaviour, IDestroyable
+	public class MapDungeon : ALevelComponent
 	{
 		[Serializable]
 		public class Room
@@ -96,54 +78,31 @@ namespace Game.Level.Tiled
 
 		public Map Map { get { return map; } }
 
-		public Action Built = delegate { };
-
-		private Action<MonoBehaviour> destroyed = delegate { };
-
-		public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
-
 		private void Awake()
 		{
 			map = GetComponent<Map>();
-			map.Built += OnMapBuilt;
 		}
 
-		private void OnMapBuilt()
+		public override void Build()
 		{
-			Build();
-		}
-
-		public void Build()
-		{
-			DestroyDungeon(ref map);
-
 			BuildDungeon(ref map);
 
-			map.Updated();
-
-			Built();
+			Built(GetType());
 		}
 
-		public void DestroyDungeon(ref Map map)
+		private void DestroyRooms(ref Map map, ref Room[] rooms)
 		{
-			// TODO: clear corridors
-			//ClearDungeons(ref map, ref rooms);
-
-			// Hard Reset
-
-			map.FillTiles(TileType.Water);
-			rooms = new Room[0];
-		}
-
-		private void ClearRooms(ref Map map, ref Room[] rooms)
-		{
-			foreach (var room in rooms)
+			// TODO: clear corridors and walls
+			if (map.tiles.Length > 0)
 			{
-				for (int x = 0; x < room.Width; x++)
+				foreach (var room in rooms)
 				{
-					for (int y = 0; y < room.Height; y++)
+					for (int x = 0; x < room.Width; x++)
 					{
-						map.Tiles[room.Left + x, room.Top + y] = new Tile(TileType.Water);
+						for (int y = 0; y < room.Height; y++)
+						{
+							map.tiles[room.Left + x, room.Top + y] = new Tile(TileType.Water);
+						}
 					}
 				}
 			}
@@ -166,12 +125,12 @@ namespace Game.Level.Tiled
 
 			while (roomsList.Count < maximumDungeons && attemptsLeft > 0)
 			{
-				var dungeonWidth = (int)UnityEngine.Random.Range(4f, Mathf.Clamp(this.map.Width * UnityEngine.Random.Range(0.1f, 0.35f), 4f, this.map.Width * 0.35f));
-				var dungeonHeight = (int)UnityEngine.Random.Range(3f, Mathf.Clamp(this.map.Height * UnityEngine.Random.Range(0.1f, 0.35f), 3f, this.map.Height * 0.35f));
+				var dungeonWidth = (int)UnityEngine.Random.Range(4f, Mathf.Clamp(this.map.width * UnityEngine.Random.Range(0.1f, 0.35f), 4f, this.map.width * 0.35f));
+				var dungeonHeight = (int)UnityEngine.Random.Range(3f, Mathf.Clamp(this.map.height * UnityEngine.Random.Range(0.1f, 0.35f), 3f, this.map.height * 0.35f));
 
 				var dungeon = new Room(
-					new Rect(UnityEngine.Random.Range(0, this.map.Width - dungeonWidth),
-						UnityEngine.Random.Range(0, this.map.Height - dungeonHeight),
+					new Rect(UnityEngine.Random.Range(0, this.map.width - dungeonWidth),
+						UnityEngine.Random.Range(0, this.map.height - dungeonHeight),
 						dungeonWidth,
 						dungeonHeight)
 				);
@@ -217,11 +176,11 @@ namespace Game.Level.Tiled
 				{
 					if (x == 0 || x == room.Width - 1 || y == 0 || y == room.Height - 1)
 					{
-						map.Tiles[room.Left + x, room.Top + y] = new Tile(TileType.Wall);
+						map.tiles[room.Left + x, room.Top + y] = new Tile(TileType.Wall);
 					}
 					else
 					{
-						map.Tiles[room.Left + x, room.Top + y] = new Tile(TileType.Floor);
+						map.tiles[room.Left + x, room.Top + y] = new Tile(TileType.Floor);
 					}
 				}
 			}
@@ -246,14 +205,14 @@ namespace Game.Level.Tiled
 
 			while (x != targetRoom.CenterX)
 			{
-				map.Tiles[x, y] = new Tile(TileType.Floor);
+				map.tiles[x, y] = new Tile(TileType.Floor);
 
 				x += x < targetRoom.CenterX ? 1 : -1;
 			}
 
 			while (y != targetRoom.CenterY)
 			{
-				map.Tiles[x, y] = new Tile(TileType.Floor);
+				map.tiles[x, y] = new Tile(TileType.Floor);
 
 				y += y < targetRoom.CenterY ? 1 : -1;
 			}
@@ -264,27 +223,21 @@ namespace Game.Level.Tiled
 
 		private void BuildWalls(ref Map map, ref Room[] rooms)
 		{
-			for (int x = 0; x < this.map.Width; x++)
+			for (int x = 0; x < this.map.width; x++)
 			{
-				for (int y = 0; y < this.map.Height; y++)
+				for (int y = 0; y < this.map.height; y++)
 				{
-					if (map.Tiles[x, y].Type == TileType.Water && Map.HasAdjacentFloor(map, x, y))
+					if (map.tiles[x, y].Type == TileType.Water && map.HasAdjacentFloor(x, y))
 					{
-						map.Tiles[x, y] = new Tile(TileType.Wall);
+						map.tiles[x, y] = new Tile(TileType.Wall);
 					}
 				}
 			}
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
-			map.Built -= OnMapBuilt;
-		}
-
-		public void OnDestroy()
-		{
-			Destroyed(this);
-			Dispose();
+			DestroyRooms(ref map, ref rooms);
 		}
 	}
 }
