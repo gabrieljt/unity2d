@@ -13,8 +13,7 @@ namespace Game
 	{
 		public enum GameStateType
 		{
-			Idle,
-			LoadingLevel,
+			Loading,
 			InGame,
 			Ended,
 		}
@@ -82,14 +81,14 @@ namespace Game
 		}
 
 		[SerializeField]
-		private GameStateType state = GameStateType.Idle;
+		private GameStateType state = GameStateType.Loading;
 
 		private Stack<Level> levels = new Stack<Level>();
 
 		[SerializeField]
 		private Level currentLevel;
 
-		private Character playerCharacter;
+		private Character player;
 
 		private Exit exit;
 
@@ -134,14 +133,7 @@ namespace Game
 		{
 			if (state == GameStateType.InGame)
 			{
-				if (playerCharacter)
-				{
-					SetCameraPosition(playerCharacter.transform.position);
-				}
-			}
-			else
-			{
-				SetCameraPosition(levelInstance.transform.position);
+				SetCameraPosition(player.transform.position);
 			}
 		}
 
@@ -174,23 +166,98 @@ namespace Game
 
 		private void LoadLevel()
 		{
-			state = GameStateType.LoadingLevel;
+			StartCoroutine(StartLevelCoroutine());
+		}
+
+		private IEnumerator StartLevelCoroutine()
+		{
+			state = GameStateType.Loading;
+			camera.gameObject.SetActive(false);
+			yield return 0;
+			PlayerInputEnqueuer.Instance.LockInputs();
+
 			if (level > levels.Count)
 			{
 				levels.Push(currentLevel = new Level(level));
 			}
 
+			levelInstance.GetComponent<MapDungeonActorSpawner>().Built += OnMapDungeonActorSpawnerBuilt;
 			levelInstance.Built += OnMapDungeonLevelBuilt;
+
 			levelInstance.Load(new MapDungeonLevelParams(currentLevel.Id));
+
 			StartCoroutine(BuildLevelCoroutine());
+		}
+
+		private void OnMapDungeonActorSpawnerBuilt(Type mapDungeonActorSpawnerType)
+		{
+			levelInstance.GetComponent<MapDungeonActorSpawner>().Built -= OnMapDungeonActorSpawnerBuilt;
+			var actorSpawners = levelInstance.GetComponents<ActorSpawner>();
+
+			foreach (var actorSpawner in actorSpawners)
+			{
+				actorSpawner.Spawned += OnActorSpawnerSpawned;
+				if (actorSpawner.actorType == ActorType.Player)
+				{
+					actorSpawner.Spawned += OnPlayerSpawned;
+				}
+
+				if (actorSpawner.actorType == ActorType.Exit)
+				{
+					actorSpawner.Spawned += OnExitSpawned;
+				}
+			}
+		}
+
+		private void OnExitSpawned(ActorSpawner actorSpawner, AActor actor)
+		{
+			actorSpawner.Spawned -= OnExitSpawned;
+			exit = actor as Exit;
+			exit.Reached += OnExitReached;
+			exit.Destroyed += OnExitDestroyed;
+		}
+
+		private void OnExitDestroyed(MonoBehaviour exit)
+		{
+			if (this.exit == exit)
+			{
+				this.exit.Reached -= OnExitReached;
+				this.exit.Destroyed -= OnExitDestroyed;
+				this.exit = null;
+			}
+		}
+
+		private void OnPlayerSpawned(ActorSpawner actorSpawner, AActor actor)
+		{
+			actorSpawner.Spawned -= OnPlayerSpawned;
+			player = actor as Character;
+			player.StepTaken += OnStepTaken;
+			player.Destroyed += OnPlayerDestroyed;
+
+			var playerInputDequeuer = player.GetComponent<CharacterInputDequeuer>() as AInputDequeuer;
+			PlayerInputEnqueuer.Add(ref playerInputDequeuer);
+		}
+
+		private void OnPlayerDestroyed(MonoBehaviour player)
+		{
+			if (this.player == player)
+			{
+				this.player.StepTaken -= OnStepTaken;
+				this.player.Destroyed -= OnPlayerDestroyed;
+				this.player = null;
+			}
+		}
+
+		private void OnActorSpawnerSpawned(ActorSpawner actorSpawner, AActor actor)
+		{
+			actorSpawner.Spawned -= OnActorSpawnerSpawned;
+			actorSpawner.enabled = false;
 		}
 
 		private IEnumerator BuildLevelCoroutine()
 		{
 			yield return 0;
-			{
-				levelInstance.Build();
-			}
+			levelInstance.Build();
 		}
 
 		private void ResetLevel()
@@ -201,97 +268,45 @@ namespace Game
 
 		private void ReloadLevel()
 		{
-			UnregisterActorEvents();
-			DisableActors();
-			levelInstance.Built -= OnMapDungeonLevelBuilt;
-			levelInstance.Dispose();
+			Dispose();
 			LoadLevel();
 		}
-
-		#region Callbacks
 
 		private void OnStepTaken()
 		{
 			currentLevel.StepTaken();
 		}
 
-		private void OnExitReached()
+		private void OnExitReached(Character character)
 		{
-			state = GameStateType.Ended;
-			++level;
-			ReloadLevel();
+			if (character.gameObject.CompareTag(ActorType.Player.ToString()))
+			{
+				state = GameStateType.Ended;
+				++level;
+				ReloadLevel();
+			}
 		}
 
 		private void OnMapDungeonLevelBuilt(Type levelComponentBuiltType)
 		{
 			levelInstance.Built -= OnMapDungeonLevelBuilt;
+
 			StartCoroutine(StartNewLevel());
 		}
-
-		#endregion Callbacks
 
 		private IEnumerator StartNewLevel()
 		{
 			yield return 0;
 			state = GameStateType.InGame;
 
-			var spawnedActors = levelInstance.MapDungeonLevelBuilder.MapDungeonActorSpawner.spawnedActors;
-
-			playerCharacter = spawnedActors[ActorType.Player][0] as Character;
-			if (playerCharacter && playerCharacter.CompareTag(ActorType.Player.ToString()))
-			{
-				var playerCharacterInputDequeuer = playerCharacter.GetComponent<CharacterInputDequeuer>() as AInputDequeuer;
-				PlayerInputEnqueuer.Add(ref playerCharacterInputDequeuer);
-			}
-
-			exit = spawnedActors[ActorType.Exit][0] as Exit;
-
-			var mapCenter = levelInstance.MapDungeonLevelBuilder.Map.Center;
+			var mapCenter = levelInstance.GetComponent<Map>().Center;
 			camera.orthographicSize = Mathf.Min(mapCenter.x, mapCenter.y);
+			SetCameraPosition(player.transform.position);
+			camera.gameObject.SetActive(true);
+
 			currentLevel.SetMaximumSteps(level, levelInstance.GetComponent<MapDungeon>().Rooms, mapCenter);
 
-			RegisterActorEvents();
-			StartCoroutine(EnableActors(playerCharacter, exit));
-		}
-
-		private void RegisterActorEvents()
-		{
-			if (playerCharacter)
-			{
-				playerCharacter.StepTaken += OnStepTaken;
-			}
-
-			if (exit)
-			{
-				exit.Reached += OnExitReached;
-			}
-		}
-
-		private void UnregisterActorEvents()
-		{
-			if (playerCharacter)
-			{
-				playerCharacter.StepTaken -= OnStepTaken;
-			}
-
-			if (exit)
-			{
-				exit.Reached -= OnExitReached;
-			}
-		}
-
-		private IEnumerator EnableActors(Character playerCharacter, Exit exit)
-		{
-			yield return 0;
-
-			playerCharacter.Enable();
-			exit.Enable();
-		}
-
-		private void DisableActors()
-		{
-			playerCharacter.Disable();
-			exit.Disable();
+			PlayerInputEnqueuer.Instance.UnlockInputs();
 		}
 
 		private void OnDestroy()
@@ -301,9 +316,8 @@ namespace Game
 
 		public void Dispose()
 		{
-			levelInstance.Built -= OnMapDungeonLevelBuilt;
-
-			UnregisterActorEvents();
+			StopAllCoroutines();
+			levelInstance.Dispose();
 		}
 	}
 }

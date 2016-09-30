@@ -62,7 +62,7 @@ namespace Game.Input
 			(inputDequeuer as IDestroyable).Destroyed += OnInputDequeuerDestroyed;
 
 			var otherEnqueuer = inputDequeuer.GetComponent<AInputEnqueuer>();
-			if (otherEnqueuer)
+			if (otherEnqueuer && otherEnqueuer != instance)
 			{
 				otherEnqueuer.enabled = false;
 			}
@@ -92,7 +92,7 @@ namespace Game.Input
 			(inputDequeuer as IDestroyable).Destroyed -= OnInputDequeuerDestroyed;
 
 			var otherEnqueuer = inputDequeuer.GetComponent<AInputEnqueuer>();
-			if (otherEnqueuer)
+			if (otherEnqueuer && otherEnqueuer != instance)
 			{
 				otherEnqueuer.enabled = true;
 			}

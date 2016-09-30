@@ -86,9 +86,9 @@ namespace Game.Level.Tiled
 			levelComponents = new ALevelComponent[5];
 			levelComponents[0] = map = GetComponent<Map>();
 			levelComponents[1] = mapDungeon = GetComponent<MapDungeon>();
-			levelComponents[2] = mapDungeonActorSpawner = GetComponent<MapDungeonActorSpawner>();
-			levelComponents[3] = mapCollision = GetComponent<MapCollision>();
-			levelComponents[4] = mapRenderer = GetComponent<MapRenderer>();
+			levelComponents[2] = mapCollision = GetComponent<MapCollision>();
+			levelComponents[3] = mapRenderer = GetComponent<MapRenderer>();
+			levelComponents[4] = mapDungeonActorSpawner = GetComponent<MapDungeonActorSpawner>();
 
 			foreach (var levelComponent in levelComponents)
 			{

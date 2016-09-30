@@ -63,8 +63,6 @@ namespace Game.Level.Tiled
 		[SerializeField]
 		private MapDungeonLevelBuilder mapDungeonLevelBuilder;
 
-		public MapDungeonLevelBuilder MapDungeonLevelBuilder { get { return mapDungeonLevelBuilder; } }
-
 		private void Awake()
 		{
 			mapDungeonLevelBuilder = GetComponent<MapDungeonLevelBuilder>();
@@ -86,7 +84,7 @@ namespace Game.Level.Tiled
 			if (state == LevelState.Unbuilt)
 			{
 				state = LevelState.Building;
-				MapDungeonLevelBuilder.MapDungeon.Built += OnMapDungeonBuilt;
+				mapDungeonLevelBuilder.MapDungeon.Built += OnMapDungeonBuilt;
 				mapDungeonLevelBuilder.Built += OnMapDungeonLevelBuilderBuilt;
 
 				var map = mapDungeonLevelBuilder.Map;
@@ -97,7 +95,7 @@ namespace Game.Level.Tiled
 
 		private void OnMapDungeonBuilt(Type levelComponentBuiltType)
 		{
-			MapDungeonLevelBuilder.MapDungeon.Built -= OnMapDungeonBuilt;
+			mapDungeonLevelBuilder.MapDungeon.Built -= OnMapDungeonBuilt;
 
 			var mapDungeonActorSpawner = mapDungeonLevelBuilder.MapDungeonActorSpawner;
 			mapDungeonLevelParams.SetActors(ref mapDungeonActorSpawner);

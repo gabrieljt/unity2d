@@ -11,7 +11,7 @@ namespace Game.Actor
 	{
 		private CircleCollider2D circleCollider2D;
 
-		public Action Reached = delegate { };
+		public Action<Character> Reached = delegate { };
 
 		private void Awake()
 		{
@@ -21,10 +21,11 @@ namespace Game.Actor
 
 		private void OnTriggerEnter2D(Collider2D other)
 		{
-			if (other.GetComponent<Character>())
+			var character = other.GetComponent<Character>();
+			if (character)
 			{
 				Debug.LogWarning("Exit Reached");
-				Reached();
+				Reached(character);
 			}
 		}
 
