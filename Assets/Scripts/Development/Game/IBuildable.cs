@@ -6,6 +6,6 @@ namespace Game.Level
 	{
 		void Build();
 
-		Action Built { get; set; }
+		Action<Type> Built { get; set; }
 	}
 }

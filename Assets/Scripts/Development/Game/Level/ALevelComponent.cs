@@ -41,11 +41,11 @@ namespace Game.Level
 
 	public abstract class ALevelComponent : MonoBehaviour, IBuildable, IDestroyable, IDisposable
 	{
-		protected Action built = delegate { };
+		private Action<Type> built = delegate { };
 
-		public Action Built { get { return built; } set { built = value; } }
+		public Action<Type> Built { get { return built; } set { built = value; } }
 
-		protected Action<MonoBehaviour> destroyed = delegate { };
+		private Action<MonoBehaviour> destroyed = delegate { };
 
 		public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
 

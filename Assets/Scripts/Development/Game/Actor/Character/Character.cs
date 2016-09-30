@@ -60,6 +60,11 @@ namespace Game.Actor
 			rigidbody2D.freezeRotation = true;
 		}
 
+		private void Start()
+		{
+			previousDestination = destination = transform.position;
+		}
+
 		private void Update()
 		{
 			UpdateMovementState();

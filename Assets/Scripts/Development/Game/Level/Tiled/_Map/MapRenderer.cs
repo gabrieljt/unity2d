@@ -55,7 +55,7 @@ namespace Game.Level.Tiled
 			spriteRenderer.sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), Vector2.one * 0.5f, MapTilesetLoader.PixelsPerUnit);
 			spriteRenderer.material = spriteMaterial;
 
-			Built();
+			Built(GetType());
 		}
 
 		public override void Dispose()

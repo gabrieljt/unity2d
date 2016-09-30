@@ -36,7 +36,7 @@ namespace Game.Level.Tiled
 		{
 			BuildColliders();
 
-			Built();
+			Built(GetType());
 		}
 
 		public void DestroyColliders()
