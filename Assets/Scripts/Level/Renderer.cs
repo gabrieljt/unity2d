@@ -11,7 +11,6 @@ public class RendererInspector : ALevelComponentInspector
 
 #endif
 
-[ExecuteInEditMode]
 [RequireComponent(
 	typeof(SpriteRenderer),
 	typeof(Map)
@@ -29,8 +28,6 @@ public class Renderer : ALevelComponent
 
 	[SerializeField]
 	private Map map;
-
-	public Map Map { get { return map; } }
 
 	private void Awake()
 	{

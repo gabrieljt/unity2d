@@ -41,12 +41,12 @@ public class GameParams
 		++totalStepsTaken;
 	}
 
-	public void SetMaximumSteps(Dungeon dungeon, ActorSpawners spawners)
+	public void SetMaximumSteps(Map map, Dungeon dungeon, ActorSpawners spawners)
 	{
 		maximumSteps = stepsTaken = 0;
 		foreach (var room in dungeon.Rooms)
 		{
-			maximumSteps += (int)Vector2.Distance(room.Center, dungeon.Map.Center);
+			maximumSteps += (int)Vector2.Distance(room.Center, map.Center);
 		}
 
 		maximumSteps = maximumSteps / (level * dungeon.Rooms.Length) + spawners.actorsContainers[ActorType.Slime].Count * 3 + 10;

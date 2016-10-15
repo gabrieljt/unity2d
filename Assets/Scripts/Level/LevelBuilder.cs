@@ -29,7 +29,6 @@ public class LevelBuilderInspector : ALevelComponentInspector
 
 #endif
 
-[ExecuteInEditMode]
 [RequireComponent(
 	typeof(Map),
 	typeof(Dungeon),
@@ -51,27 +50,17 @@ public class LevelBuilder : ALevelComponent
 	[SerializeField]
 	private Map map;
 
-	public Map Map { get { return map; } }
-
 	[SerializeField]
 	private Dungeon dungeon;
-
-	public Dungeon Dungeon { get { return dungeon; } }
-
-	[SerializeField]
-	private ActorSpawners spawners;
-
-	public ActorSpawners Spawners { get { return spawners; } }
 
 	[SerializeField]
 	private Colliders colliders;
 
-	public Colliders Colliders { get { return colliders; } }
-
 	[SerializeField]
 	private Renderer renderer;
 
-	public Renderer Renderer { get { return renderer; } }
+	[SerializeField]
+	private ActorSpawners actorSpawners;
 
 	public override void Build()
 	{
@@ -79,26 +68,7 @@ public class LevelBuilder : ALevelComponent
 		if (componentsBuilt == 0)
 		{
 			SetComponents();
-#if UNITY_EDITOR
-			if (Application.isPlaying)
-			{
-				SetComponentsBuildQueue();
-			}
-			else
-			{
-				BuildImmediate();
-			}
-#else
-				SetComponentsBuildQueue();
-#endif
-		}
-	}
-
-	private void BuildImmediate()
-	{
-		foreach (var component in components)
-		{
-			component.Build();
+			SetComponentsBuildQueue();
 		}
 	}
 
@@ -109,7 +79,7 @@ public class LevelBuilder : ALevelComponent
 		components[1] = dungeon = GetComponent<Dungeon>();
 		components[2] = colliders = GetComponent<Colliders>();
 		components[3] = renderer = GetComponent<Renderer>();
-		components[4] = spawners = GetComponent<ActorSpawners>();
+		components[4] = actorSpawners = GetComponent<ActorSpawners>();
 
 		foreach (var component in components)
 		{

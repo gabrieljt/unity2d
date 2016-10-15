@@ -12,7 +12,6 @@ public class MapInspector : ALevelComponentInspector
 
 #endif
 
-[ExecuteInEditMode]
 public class Map : ALevelComponent
 {
 	[Range(4, 128)]

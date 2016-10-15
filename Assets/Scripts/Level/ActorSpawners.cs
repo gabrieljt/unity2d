@@ -15,7 +15,6 @@ public class ActorSpawnersInspector : ALevelComponentInspector
 
 #endif
 
-[ExecuteInEditMode]
 [RequireComponent(
 	typeof(Map)
 )]
@@ -43,8 +42,6 @@ public class ActorSpawners : ALevelComponent
 
 	[SerializeField]
 	private Map map;
-
-	public Map Map { get { return map; } }
 
 	private void Awake()
 	{
