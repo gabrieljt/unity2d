@@ -3,7 +3,7 @@ Unity3D - 2D Procedural roguelike top down experiments
 == Dungeon Escape v0.1.2 featuring ==
 * Procedural Component Based Dungeon Tile Map
 * Physics tile based movement
-* Scene rebuild on the fly, even in editor
+* Scene rebuild on the fly
 
 == Known Bugs ==
 * May generate dungeon with unreachable exit (press ESC to rebuild)
