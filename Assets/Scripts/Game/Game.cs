@@ -118,6 +118,7 @@ public class Game : MonoBehaviour, IDisposable
 		@params = new GameParams(@params.Level);
 		camera.enabled = false;
 
+		PlayerInputEnqueuer.Instance.Inputs.Clear();
 		PlayerInputEnqueuer.Instance.LockInputs();
 
 		level.GetComponent<ActorSpawners>().Built += OnActorSpawnersBuilt;
