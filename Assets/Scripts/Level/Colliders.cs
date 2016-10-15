@@ -11,7 +11,6 @@ public class CollidersInspector : ALevelComponentInspector
 
 #endif
 
-[ExecuteInEditMode]
 [RequireComponent(
 	typeof(Map)
 )]
@@ -19,8 +18,6 @@ public class Colliders : ALevelComponent
 {
 	[SerializeField]
 	private Map map;
-
-	public Map Map { get { return map; } }
 
 	private void Awake()
 	{
@@ -56,18 +53,7 @@ public class Colliders : ALevelComponent
 
 		for (int i = 0; i < colliders.Length; i++)
 		{
-#if UNITY_EDITOR
-			if (Application.isPlaying)
-			{
-				Destroy(colliders[i]);
-			}
-			else
-			{
-				DestroyImmediate(colliders[i]);
-			}
-#else
-				Destroy(colliders[i]);
-#endif
+			Destroy(colliders[i]);
 		}
 	}
 

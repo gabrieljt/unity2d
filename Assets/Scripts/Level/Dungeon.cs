@@ -13,7 +13,6 @@ public class DungeonInspector : ALevelComponentInspector
 
 #endif
 
-[ExecuteInEditMode]
 [RequireComponent(
 	typeof(Map)
 )]
@@ -73,8 +72,6 @@ public class Dungeon : ALevelComponent
 
 	[SerializeField]
 	private Map map;
-
-	public Map Map { get { return map; } }
 
 	private void Awake()
 	{

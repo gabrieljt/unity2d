@@ -29,7 +29,6 @@ public enum ActorType
 	Slime = 2,
 }
 
-[ExecuteInEditMode]
 public class ActorSpawner : MonoBehaviour
 {
 	public ActorType type;

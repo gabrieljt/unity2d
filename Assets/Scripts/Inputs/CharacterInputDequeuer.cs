@@ -8,8 +8,6 @@ public class CharacterInputDequeuer : AInputDequeuer
 	[SerializeField]
 	private Character character;
 
-	public Character Character { get { return character; } }
-
 	private void Awake()
 	{
 		character = GetComponent<Character>();

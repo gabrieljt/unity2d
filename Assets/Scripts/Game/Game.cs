@@ -59,7 +59,6 @@ public enum GameState
 	Ended,
 }
 
-[ExecuteInEditMode]
 public class Game : MonoBehaviour, IDisposable
 {
 	[SerializeField]
@@ -100,14 +99,7 @@ public class Game : MonoBehaviour, IDisposable
 
 	private void Start()
 	{
-#if UNITY_EDITOR
-		if (Application.isPlaying)
-		{
-#endif
-			LoadLevel();
-#if UNITY_EDITOR
-		}
-#endif
+		LoadLevel();
 	}
 
 	public void LoadLevel()
@@ -128,7 +120,7 @@ public class Game : MonoBehaviour, IDisposable
 
 		PlayerInputEnqueuer.Instance.LockInputs();
 
-		level.GetComponent<ActorSpawners>().Built += OnSpawnersBuilt;
+		level.GetComponent<ActorSpawners>().Built += OnActorSpawnersBuilt;
 		level.Built += OnLevelBuilt;
 
 		level.Load(@params.levelParams);
@@ -142,29 +134,29 @@ public class Game : MonoBehaviour, IDisposable
 		level.Build();
 	}
 
-	private void OnSpawnersBuilt(Type type)
+	private void OnActorSpawnersBuilt(Type type)
 	{
-		level.GetComponent<ActorSpawners>().Built -= OnSpawnersBuilt;
-		var spawners = level.GetComponents<ActorSpawner>();
+		level.GetComponent<ActorSpawners>().Built -= OnActorSpawnersBuilt;
+		var actorSpawners = level.GetComponents<ActorSpawner>();
 
-		foreach (var spawner in spawners)
+		foreach (var actorSpawner in actorSpawners)
 		{
-			spawner.Performed += OnSpawnerPerformed;
-			if (spawner.type == ActorType.Player)
+			actorSpawner.Performed += OnActorSpawnerPerformed;
+			if (actorSpawner.type == ActorType.Player)
 			{
-				spawner.Performed += OnPlayerSpawned;
+				actorSpawner.Performed += OnPlayerSpawned;
 			}
 
-			if (spawner.type == ActorType.Exit)
+			if (actorSpawner.type == ActorType.Exit)
 			{
-				spawner.Performed += OnExitSpawned;
+				actorSpawner.Performed += OnExitSpawned;
 			}
 		}
 	}
 
-	private void OnSpawnerPerformed(ActorSpawner spawner, AActor actor)
+	private void OnActorSpawnerPerformed(ActorSpawner spawner, AActor actor)
 	{
-		spawner.Performed -= OnSpawnerPerformed;
+		spawner.Performed -= OnActorSpawnerPerformed;
 		spawner.enabled = false;
 	}
 
@@ -242,7 +234,7 @@ public class Game : MonoBehaviour, IDisposable
 		SetCameraPosition(mapCenter);
 		camera.enabled = true;
 
-		@params.SetMaximumSteps(level.GetComponent<Dungeon>(), level.GetComponent<ActorSpawners>());
+		@params.SetMaximumSteps(level.GetComponent<Map>(), level.GetComponent<Dungeon>(), level.GetComponent<ActorSpawners>());
 
 		PlayerInputEnqueuer.Instance.UnlockInputs();
 	}
@@ -308,26 +300,10 @@ public class Game : MonoBehaviour, IDisposable
 
 	#endregion Update
 
-	#region LateUpdate
-
-	private void LateUpdate()
-	{
-		if (state == GameState.InGame)
-		{
-			/*
-			SetCameraPosition(player.transform.position);
-			camera.orthographicSize = Mathf.Min(Mathf.Clamp(Mathf.Abs(player.transform.position.x), 5, level.GetComponent<Map>().Center.x),
-				Mathf.Clamp(Mathf.Abs(player.transform.position.y), 5, level.GetComponent<Map>().Center.y));
-			*/
-		}
-	}
-
 	private void SetCameraPosition(Vector3 position)
 	{
 		camera.transform.position = Vector3.back * 10f + position;
 	}
-
-	#endregion LateUpdate
 
 	public void Dispose()
 	{

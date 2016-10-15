@@ -15,7 +15,6 @@ public class LevelInspector : ALevelComponentInspector
 		BuildButton();
 		DisposeAllButton();
 		DisposeButton();
-		DestroyButton();
 	}
 
 	private void LoadButton()
@@ -35,28 +34,10 @@ public class LevelInspector : ALevelComponentInspector
 			level.Dispose(true);
 		}
 	}
-
-	private void DestroyButton()
-	{
-		if (GUILayout.Button("Destroy"))
-		{
-			var level = (Level)target;
-
-			if (Application.isPlaying)
-			{
-				Destroy(level.gameObject);
-			}
-			else
-			{
-				DestroyImmediate(level.gameObject);
-			}
-		}
-	}
 }
 
 #endif
 
-[ExecuteInEditMode]
 [RequireComponent(
 	typeof(LevelBuilder)
 )]
@@ -68,11 +49,11 @@ public class Level : ALevel
 	public LevelParams Params { get { return @params; } }
 
 	[SerializeField]
-	private LevelBuilder builder;
+	private LevelBuilder levelBuilder;
 
 	private void Awake()
 	{
-		builder = GetComponent<LevelBuilder>();
+		levelBuilder = GetComponent<LevelBuilder>();
 	}
 
 	public override void Load(LevelParams @params)
@@ -91,27 +72,27 @@ public class Level : ALevel
 		if (state == LevelState.Unbuilt)
 		{
 			state = LevelState.Building;
-			builder.Dungeon.Built += OnDungeonBuilt;
-			builder.Built += OnBuilderBuilt;
+			levelBuilder.GetComponent<Dungeon>().Built += OnDungeonBuilt;
+			levelBuilder.Built += OnLevelBuilderBuilt;
 
-			var map = builder.Map;
+			var map = levelBuilder.GetComponent<Map>();
 			@params.SetSize(ref map);
-			builder.Build();
+			levelBuilder.Build();
 		}
 	}
 
 	private void OnDungeonBuilt(Type type)
 	{
-		builder.Dungeon.Built -= OnDungeonBuilt;
+		levelBuilder.GetComponent<Dungeon>().Built -= OnDungeonBuilt;
 
-		var spawnersMap = builder.Spawners;
-		@params.SetSpawnersData(ref spawnersMap, builder.Dungeon);
+		var actorSpawners = levelBuilder.GetComponent<ActorSpawners>();
+		@params.SetActorSpawnersData(ref actorSpawners, levelBuilder.GetComponent<Map>(), levelBuilder.GetComponent<Dungeon>());
 	}
 
-	private void OnBuilderBuilt(Type type)
+	private void OnLevelBuilderBuilt(Type type)
 	{
 		state = LevelState.Built;
-		builder.Built -= OnBuilderBuilt;
+		levelBuilder.Built -= OnLevelBuilderBuilt;
 
 		Built(GetType());
 	}
@@ -125,9 +106,9 @@ public class Level : ALevel
 	{
 		if (disposeDependencies)
 		{
-			builder.Dungeon.Built -= OnDungeonBuilt;
-			builder.Built -= OnBuilderBuilt;
-			builder.Dispose(true);
+			levelBuilder.GetComponent<Dungeon>().Built -= OnDungeonBuilt;
+			levelBuilder.Built -= OnLevelBuilderBuilt;
+			levelBuilder.Dispose(true);
 		}
 		Dispose();
 	}
