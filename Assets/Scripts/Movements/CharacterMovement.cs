@@ -152,37 +152,53 @@ public class CharacterMovement : MonoBehaviour, IDisposable, IDestroyable
 
 	private void Collided(Collision2D other)
 	{
+		var otherCharacterMovement = other.gameObject.GetComponent<CharacterMovement>();
 		if (state == CharacterMovementState.Idle)
 		{
+			if (otherCharacterMovement)
+			{
+				otherCharacterMovement.FallBack();
+			}
+
 			transform.position = destination;
 			return;
 		}
 
-		var otherCharacterMovement = other.gameObject.GetComponent<CharacterMovement>();
-		if (otherCharacterMovement)
+		if (state == CharacterMovementState.Moving)
 		{
-			if (otherCharacterMovement.state == CharacterMovementState.FallingBack)
+			if (otherCharacterMovement)
 			{
-				return;
-			}
+				if (otherCharacterMovement.state == CharacterMovementState.Moving)
+				{
+					if (otherCharacterMovement.destination == destination)
+					{
+						FallBack();
+						otherCharacterMovement.FallBack();
+						return;
+					}
 
-			if (otherCharacterMovement.state == CharacterMovementState.Idle)
+					if (otherCharacterMovement.previousDestination == destination)
+					{
+						FallBack();
+						return;
+					}
+				}
+
+				if (otherCharacterMovement.state == CharacterMovementState.FallingBack)
+				{
+					if (otherCharacterMovement.destination == destination)
+					{
+						FallBack();
+						return;
+					}
+				}
+			}
+			else
 			{
 				FallBack();
 				return;
 			}
-
-			if (otherCharacterMovement.state == CharacterMovementState.Moving)
-			{
-				otherCharacterMovement.FallBack();
-				return;
-			}
-
-			return;
 		}
-
-		FallBack();
-		return;
 	}
 
 	private void OnCharacterEnabled(AActor character)
