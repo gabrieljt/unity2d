@@ -5,7 +5,6 @@ public enum CharacterMovementState
 {
 	Idle,
 	Moving,
-	FallingBack,
 }
 
 [RequireComponent(
@@ -61,6 +60,8 @@ public class CharacterMovement : MonoBehaviour, IDisposable, IDestroyable
 
 	public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
+	public float DistanceToDestination { get { return Vector2.Distance(Position, destination); } }
+
 	private void Awake()
 	{
 		character = GetComponent<Character>();
@@ -80,7 +81,7 @@ public class CharacterMovement : MonoBehaviour, IDisposable, IDestroyable
 
 	private void Update()
 	{
-		if (state == CharacterMovementState.Moving || state == CharacterMovementState.FallingBack)
+		if (state == CharacterMovementState.Moving)
 		{
 			if (ReachedDestination)
 			{
@@ -118,7 +119,7 @@ public class CharacterMovement : MonoBehaviour, IDisposable, IDestroyable
 
 	private void FixedUpdate()
 	{
-		if (state == CharacterMovementState.Moving || state == CharacterMovementState.FallingBack)
+		if (state == CharacterMovementState.Moving)
 		{
 			MoveToDestination();
 		}
@@ -134,7 +135,6 @@ public class CharacterMovement : MonoBehaviour, IDisposable, IDestroyable
 
 	private void FallBack()
 	{
-		state = CharacterMovementState.FallingBack;
 		destination = previousDestination;
 		Debug.Log("Falling back to " + previousDestination);
 	}
@@ -151,62 +151,38 @@ public class CharacterMovement : MonoBehaviour, IDisposable, IDestroyable
 
 	private void Collided(Collision2D other)
 	{
-		var otherCharacterMovement = other.gameObject.GetComponent<CharacterMovement>();
-		if (state == CharacterMovementState.Idle)
-		{
-			if (otherCharacterMovement)
-			{
-				otherCharacterMovement.FallBack();
-			}
-
-			StopMoving();
-			return;
-		}
-
 		if (state == CharacterMovementState.Moving)
 		{
-			if (otherCharacterMovement)
-			{
-				if (otherCharacterMovement.state == CharacterMovementState.Moving)
-				{
-					if (destination != previousDestination)
-					{
-						var distanceToDestination = Vector2.Distance(Position, destination);
-						var distanceToPreviousDestination = Vector2.Distance(Position, previousDestination);
+			var otherCharacterMovement = other.gameObject.GetComponent<CharacterMovement>();
 
-						if (distanceToDestination >= distanceToPreviousDestination)
-						{
-							FallBack();
-						}
-					}
-
-					if (otherCharacterMovement.destination == destination)
-					{
-						otherCharacterMovement.FallBack();
-					}
-
-					return;
-				}
-			}
-			else
+			if (!otherCharacterMovement)
 			{
 				FallBack();
 				return;
 			}
-		}
 
-		if (state == CharacterMovementState.FallingBack)
-		{
-			if (otherCharacterMovement)
+			if (otherCharacterMovement.state == CharacterMovementState.Idle)
 			{
-				if (otherCharacterMovement.state == CharacterMovementState.Moving)
+				FallBack();
+				otherCharacterMovement.StopMoving();
+				return;
+			}
+
+			if (otherCharacterMovement.state == CharacterMovementState.Moving)
+			{
+				if (destination == otherCharacterMovement.destination)
 				{
-					if (otherCharacterMovement.destination == destination
-						|| otherCharacterMovement.destination != otherCharacterMovement.previousDestination)
+					if (DistanceToDestination >= otherCharacterMovement.DistanceToDestination)
 					{
-						otherCharacterMovement.FallBack();
+						FallBack();
 						return;
 					}
+				}
+
+				if (destination == otherCharacterMovement.previousDestination)
+				{
+					FallBack();
+					return;
 				}
 			}
 		}
@@ -214,12 +190,12 @@ public class CharacterMovement : MonoBehaviour, IDisposable, IDestroyable
 
 	private void OnCharacterEnabled(AActor character)
 	{
-		rigidbody2D.isKinematic = false;
+		rigidbody2D.isKinematic = true;
 	}
 
 	private void OnCharacterDisabled(AActor character)
 	{
-		rigidbody2D.isKinematic = true;
+		rigidbody2D.isKinematic = false;
 	}
 
 	public void Dispose()
