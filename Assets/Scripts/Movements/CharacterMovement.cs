@@ -84,7 +84,8 @@ public class CharacterMovement : MonoBehaviour, IDisposable, IDestroyable
 		{
 			if (ReachedDestination)
 			{
-				SetPosition();
+				StopMoving();
+				MovementStopped();
 				DestinationReached();
 				Debug.LogWarning("Destination Reached");
 			}
@@ -109,12 +110,10 @@ public class CharacterMovement : MonoBehaviour, IDisposable, IDestroyable
 		Debug.Log("Moving to " + destination);
 	}
 
-	private void SetPosition()
+	private void StopMoving()
 	{
-		transform.position = destination;
-		MovementStopped();
-
 		state = CharacterMovementState.Idle;
+		transform.position = destination;
 	}
 
 	private void FixedUpdate()
@@ -160,7 +159,7 @@ public class CharacterMovement : MonoBehaviour, IDisposable, IDestroyable
 				otherCharacterMovement.FallBack();
 			}
 
-			transform.position = destination;
+			StopMoving();
 			return;
 		}
 
@@ -170,33 +169,45 @@ public class CharacterMovement : MonoBehaviour, IDisposable, IDestroyable
 			{
 				if (otherCharacterMovement.state == CharacterMovementState.Moving)
 				{
+					if (destination != previousDestination)
+					{
+						var distanceToDestination = Vector2.Distance(Position, destination);
+						var distanceToPreviousDestination = Vector2.Distance(Position, previousDestination);
+
+						if (distanceToDestination >= distanceToPreviousDestination)
+						{
+							FallBack();
+						}
+					}
+
 					if (otherCharacterMovement.destination == destination)
 					{
-						FallBack();
 						otherCharacterMovement.FallBack();
-						return;
 					}
 
-					if (otherCharacterMovement.previousDestination == destination)
-					{
-						FallBack();
-						return;
-					}
-				}
-
-				if (otherCharacterMovement.state == CharacterMovementState.FallingBack)
-				{
-					if (otherCharacterMovement.destination == destination)
-					{
-						FallBack();
-						return;
-					}
+					return;
 				}
 			}
 			else
 			{
 				FallBack();
 				return;
+			}
+		}
+
+		if (state == CharacterMovementState.FallingBack)
+		{
+			if (otherCharacterMovement)
+			{
+				if (otherCharacterMovement.state == CharacterMovementState.Moving)
+				{
+					if (otherCharacterMovement.destination == destination
+						|| otherCharacterMovement.destination != otherCharacterMovement.previousDestination)
+					{
+						otherCharacterMovement.FallBack();
+						return;
+					}
+				}
 			}
 		}
 	}
