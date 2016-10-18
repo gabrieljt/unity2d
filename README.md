@@ -7,7 +7,6 @@ Unity3D - 2D Procedural roguelike top down experiments
 
 == Known Bugs ==
 * May generate dungeon with unreachable exit (press ESC to rebuild)
-* May stuck with slimes
 * May not have enough steps to finish
 
 == TODO ==
