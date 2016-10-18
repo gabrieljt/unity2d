@@ -6,8 +6,8 @@ using UnityEngine;
 
 using UnityEditor;
 
-[CustomEditor(typeof(Dungeon))]
-public class DungeonInspector : ALevelComponentInspector
+[CustomEditor(typeof(MapDungeon))]
+public class MapDungeonInspector : ALevelComponentInspector
 {
 }
 
@@ -16,7 +16,7 @@ public class DungeonInspector : ALevelComponentInspector
 [RequireComponent(
 	typeof(Map)
 )]
-public class Dungeon : ALevelComponent
+public class MapDungeon : ALevelComponent
 {
 	[Serializable]
 	public class Room

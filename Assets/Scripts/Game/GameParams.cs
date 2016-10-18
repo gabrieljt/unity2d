@@ -41,7 +41,7 @@ public class GameParams
 		++totalStepsTaken;
 	}
 
-	public void SetMaximumSteps(Map map, Dungeon dungeon, ActorSpawners spawners)
+	public void SetMaximumSteps(Map map, MapDungeon dungeon, MapActorSpawners spawners)
 	{
 		maximumSteps = stepsTaken = 0;
 		foreach (var room in dungeon.Rooms)

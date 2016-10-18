@@ -1,166 +1,45 @@
 ﻿using System;
 using UnityEngine;
 
-public enum CharacterState
-{
-	Idle,
-	Moving,
-	FallingBack,
-}
-
 [RequireComponent(
-	typeof(SpriteRenderer),
-	typeof(Rigidbody2D),
-	typeof(CircleCollider2D)
+	typeof(CharacterMovement),
+	typeof(SpriteRenderer)
 )]
 public class Character : AActor
 {
-	[SerializeField]
-	private CharacterState state = CharacterState.Idle;
-
-	public CharacterState State { get { return state; } }
-
 	[SerializeField]
 	private int steps = 0;
 
 	public int Steps { get { return steps; } }
 
 	[SerializeField]
-	[Range(0.5f, 3f)]
-	private float speed = 3f;
-
-	[SerializeField]
-	private Vector2 previousDestination, destination;
-
-	public bool ReachedDestination
-	{
-		get
-		{
-			return Vector2.Distance(destination, transform.position) <= 0.05f;
-		}
-	}
-
 	private SpriteRenderer spriteRenderer;
 
-	private Rigidbody2D rigidbody2D;
+	[SerializeField]
+	private CharacterMovement characterMovement;
 
 	public Action StepTaken = delegate { };
-
-	public Action MovementHalted = delegate { };
 
 	private void Awake()
 	{
 		spriteRenderer = GetComponent<SpriteRenderer>();
 
-		rigidbody2D = GetComponent<Rigidbody2D>();
-		rigidbody2D.gravityScale = 0f;
-		rigidbody2D.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
-		rigidbody2D.freezeRotation = true;
+		characterMovement = GetComponent<CharacterMovement>();
+		characterMovement.DestinationSet += OnDestinationSet;
+		characterMovement.DestinationReached += OnDestinationReached;
 	}
 
-	private void Start()
+	private void OnDestinationSet(Vector2 destination)
 	{
-		previousDestination = destination = transform.position;
+		spriteRenderer.flipX = (destination - characterMovement.Position).x > 0f;
 	}
 
-	private void Update()
+	private void OnDestinationReached()
 	{
-		UpdateMovementState();
-	}
-
-	private void FixedUpdate()
-	{
-		MoveToDestination();
-	}
-
-	public void SetDestination(Vector2 direction)
-	{
-		spriteRenderer.flipX = direction.x > 0f;
-
-		previousDestination = new Vector2(transform.position.x, transform.position.y);
-		destination = previousDestination + direction;
-
-		state = CharacterState.Moving;
-
-		Debug.Log("Moving to " + destination);
-	}
-
-	private void UpdateMovementState()
-	{
-		if (state == CharacterState.FallingBack)
+		if (characterMovement.PreviousDestination != characterMovement.Position)
 		{
-			if (ReachedDestination)
-			{
-				HaltMovement();
-
-				Debug.LogWarning("Destination Reached from fallback");
-				return;
-			}
-		}
-
-		if (state == CharacterState.Moving)
-		{
-			if (ReachedDestination)
-			{
-				steps++;
-				StepTaken();
-
-				HaltMovement();
-
-				Debug.LogWarning("Destination Reached");
-			}
-		}
-	}
-
-	private void MoveToDestination()
-	{
-		if (state != CharacterState.Idle)
-		{
-			Move();
-			return;
-		}
-	}
-
-	private void Move()
-	{
-		if (!ReachedDestination)
-		{
-			transform.position = Vector3.Lerp(transform.position, new Vector3(destination.x, destination.y, 0f), Mathf.Clamp(speed * 0.1f, 0.05f, 0.25f));
-		}
-	}
-
-	private void HaltMovement()
-	{
-		transform.position = destination;
-
-		MovementHalted();
-
-		state = CharacterState.Idle;
-	}
-
-	private void CollisionFallback()
-	{
-		destination = previousDestination;
-
-		MovementHalted();
-
-		state = CharacterState.FallingBack;
-
-		Debug.Log("Collided: falling back to " + destination);
-	}
-
-	private void OnCollisionEnter2D()
-	{
-		CollisionFallback();
-	}
-
-	private void OnCollisionStay2D()
-	{
-		if (state != CharacterState.FallingBack)
-		{
-			CollisionFallback();
-
-			Debug.LogWarning("CollisionStay Fallback");
+			steps++;
+			StepTaken();
 		}
 	}
 
@@ -168,26 +47,17 @@ public class Character : AActor
 	{
 		base.Enable();
 		gameObject.SetActive(true);
-		if (Application.isPlaying)
-
-		{
-			rigidbody2D.isKinematic = false;
-		}
 	}
 
 	public override void Disable()
 	{
 		base.Disable();
-
-		if (Application.isPlaying)
-		{
-			rigidbody2D.isKinematic = true;
-		}
-
 		gameObject.SetActive(false);
 	}
 
 	public override void Dispose()
 	{
+		characterMovement.DestinationSet -= OnDestinationSet;
+		characterMovement.DestinationReached -= OnDestinationReached;
 	}
 }

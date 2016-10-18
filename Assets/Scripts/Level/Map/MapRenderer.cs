@@ -4,8 +4,8 @@
 
 using UnityEditor;
 
-[CustomEditor(typeof(Renderer))]
-public class RendererInspector : ALevelComponentInspector
+[CustomEditor(typeof(MapRenderer))]
+public class MapRendererInspector : ALevelComponentInspector
 {
 }
 
@@ -15,7 +15,7 @@ public class RendererInspector : ALevelComponentInspector
 	typeof(SpriteRenderer),
 	typeof(Map)
 )]
-public class Renderer : ALevelComponent
+public class MapRenderer : ALevelComponent
 {
 	[SerializeField]
 	private SpriteRenderer spriteRenderer;
