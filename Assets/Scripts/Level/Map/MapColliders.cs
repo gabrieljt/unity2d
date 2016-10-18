@@ -4,8 +4,8 @@
 
 using UnityEditor;
 
-[CustomEditor(typeof(Colliders))]
-public class CollidersInspector : ALevelComponentInspector
+[CustomEditor(typeof(MapColliders))]
+public class MapCollidersInspector : ALevelComponentInspector
 {
 }
 
@@ -14,7 +14,7 @@ public class CollidersInspector : ALevelComponentInspector
 [RequireComponent(
 	typeof(Map)
 )]
-public class Colliders : ALevelComponent
+public class MapColliders : ALevelComponent
 {
 	[SerializeField]
 	private Map map;

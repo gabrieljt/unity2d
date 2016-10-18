@@ -19,7 +19,7 @@ public class LevelParams
 		map.width = map.height = level + 9;
 	}
 
-	public void SetActorSpawnersData(ref ActorSpawners spawners, Map map, Dungeon dungeon)
+	public void SetActorSpawnersData(ref MapActorSpawners spawners, Map map, MapDungeon dungeon)
 	{
 		spawners.spawnersData = new ActorSpawnerData[3];
 		spawners.spawnersData[0] = new ActorSpawnerData(ActorType.Player, 1);

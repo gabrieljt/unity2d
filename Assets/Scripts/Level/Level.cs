@@ -72,7 +72,7 @@ public class Level : ALevel
 		if (state == LevelState.Unbuilt)
 		{
 			state = LevelState.Building;
-			levelBuilder.GetComponent<Dungeon>().Built += OnDungeonBuilt;
+			levelBuilder.GetComponent<MapDungeon>().Built += OnDungeonBuilt;
 			levelBuilder.Built += OnLevelBuilderBuilt;
 
 			var map = levelBuilder.GetComponent<Map>();
@@ -83,10 +83,10 @@ public class Level : ALevel
 
 	private void OnDungeonBuilt(Type type)
 	{
-		levelBuilder.GetComponent<Dungeon>().Built -= OnDungeonBuilt;
+		levelBuilder.GetComponent<MapDungeon>().Built -= OnDungeonBuilt;
 
-		var actorSpawners = levelBuilder.GetComponent<ActorSpawners>();
-		@params.SetActorSpawnersData(ref actorSpawners, levelBuilder.GetComponent<Map>(), levelBuilder.GetComponent<Dungeon>());
+		var actorSpawners = levelBuilder.GetComponent<MapActorSpawners>();
+		@params.SetActorSpawnersData(ref actorSpawners, levelBuilder.GetComponent<Map>(), levelBuilder.GetComponent<MapDungeon>());
 	}
 
 	private void OnLevelBuilderBuilt(Type type)
@@ -106,7 +106,7 @@ public class Level : ALevel
 	{
 		if (disposeDependencies)
 		{
-			levelBuilder.GetComponent<Dungeon>().Built -= OnDungeonBuilt;
+			levelBuilder.GetComponent<MapDungeon>().Built -= OnDungeonBuilt;
 			levelBuilder.Built -= OnLevelBuilderBuilt;
 			levelBuilder.Dispose(true);
 		}

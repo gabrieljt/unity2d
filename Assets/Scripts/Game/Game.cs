@@ -121,7 +121,7 @@ public class Game : MonoBehaviour, IDisposable
 		PlayerInputEnqueuer.Instance.Inputs.Clear();
 		PlayerInputEnqueuer.Instance.LockInputs();
 
-		level.GetComponent<ActorSpawners>().Built += OnActorSpawnersBuilt;
+		level.GetComponent<MapActorSpawners>().Built += OnActorSpawnersBuilt;
 		level.Built += OnLevelBuilt;
 
 		level.Load(@params.levelParams);
@@ -137,7 +137,7 @@ public class Game : MonoBehaviour, IDisposable
 
 	private void OnActorSpawnersBuilt(Type type)
 	{
-		level.GetComponent<ActorSpawners>().Built -= OnActorSpawnersBuilt;
+		level.GetComponent<MapActorSpawners>().Built -= OnActorSpawnersBuilt;
 		var actorSpawners = level.GetComponents<ActorSpawner>();
 
 		foreach (var actorSpawner in actorSpawners)
@@ -235,7 +235,7 @@ public class Game : MonoBehaviour, IDisposable
 		SetCameraPosition(mapCenter);
 		camera.enabled = true;
 
-		@params.SetMaximumSteps(level.GetComponent<Map>(), level.GetComponent<Dungeon>(), level.GetComponent<ActorSpawners>());
+		@params.SetMaximumSteps(level.GetComponent<Map>(), level.GetComponent<MapDungeon>(), level.GetComponent<MapActorSpawners>());
 
 		PlayerInputEnqueuer.Instance.UnlockInputs();
 	}

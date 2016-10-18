@@ -31,12 +31,12 @@ public class LevelBuilderInspector : ALevelComponentInspector
 
 [RequireComponent(
 	typeof(Map),
-	typeof(Dungeon),
-	typeof(ActorSpawners)
+	typeof(MapDungeon),
+	typeof(MapActorSpawners)
 )]
 [RequireComponent(
-	typeof(Colliders),
-	typeof(Renderer)
+	typeof(MapColliders),
+	typeof(MapRenderer)
 )]
 public class LevelBuilder : ALevelComponent
 {
@@ -51,16 +51,16 @@ public class LevelBuilder : ALevelComponent
 	private Map map;
 
 	[SerializeField]
-	private Dungeon dungeon;
+	private MapDungeon dungeon;
 
 	[SerializeField]
-	private Colliders colliders;
+	private MapColliders colliders;
 
 	[SerializeField]
-	private Renderer renderer;
+	private MapRenderer renderer;
 
 	[SerializeField]
-	private ActorSpawners actorSpawners;
+	private MapActorSpawners actorSpawners;
 
 	public override void Build()
 	{
@@ -76,10 +76,10 @@ public class LevelBuilder : ALevelComponent
 	{
 		components = new ALevelComponent[5];
 		components[0] = map = GetComponent<Map>();
-		components[1] = dungeon = GetComponent<Dungeon>();
-		components[2] = colliders = GetComponent<Colliders>();
-		components[3] = renderer = GetComponent<Renderer>();
-		components[4] = actorSpawners = GetComponent<ActorSpawners>();
+		components[1] = dungeon = GetComponent<MapDungeon>();
+		components[2] = colliders = GetComponent<MapColliders>();
+		components[3] = renderer = GetComponent<MapRenderer>();
+		components[4] = actorSpawners = GetComponent<MapActorSpawners>();
 
 		foreach (var component in components)
 		{

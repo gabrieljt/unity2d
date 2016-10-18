@@ -9,9 +9,10 @@ public enum CharacterState
 }
 
 [RequireComponent(
+	typeof(CharacterMovement),
 	typeof(SpriteRenderer),
-	typeof(Rigidbody2D),
-	typeof(CircleCollider2D)
+	typeof(Rigidbody2D)
+//typeof(CircleCollider2D)
 )]
 public class Character : AActor
 {
@@ -29,24 +30,14 @@ public class Character : AActor
 	[Range(0.5f, 3f)]
 	private float speed = 3f;
 
-	[SerializeField]
-	private Vector2 previousDestination, destination;
-
-	public bool ReachedDestination
-	{
-		get
-		{
-			return Vector2.Distance(destination, transform.position) <= 0.05f;
-		}
-	}
-
 	private SpriteRenderer spriteRenderer;
 
 	private Rigidbody2D rigidbody2D;
 
 	public Action StepTaken = delegate { };
 
-	public Action MovementHalted = delegate { };
+	[SerializeField]
+	private CharacterMovement characterMovement;
 
 	private void Awake()
 	{
@@ -56,109 +47,63 @@ public class Character : AActor
 		rigidbody2D.gravityScale = 0f;
 		rigidbody2D.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
 		rigidbody2D.freezeRotation = true;
+
+		characterMovement = GetComponent<CharacterMovement>();
+		characterMovement.DestinationSet += OnDestinationSet;
+		characterMovement.DestinationReached += OnDestinationReached;
+	}
+
+	private void OnDestinationSet(Vector2 destination)
+	{
+		spriteRenderer.flipX = (destination - characterMovement.Position).x > 0f;
+	}
+
+	private void OnDestinationReached()
+	{
+		if (characterMovement.PreviousDestination != characterMovement.Position)
+		{
+			steps++;
+			StepTaken();
+		}
 	}
 
 	private void Start()
 	{
-		previousDestination = destination = transform.position;
-	}
-
-	private void Update()
-	{
-		UpdateMovementState();
-	}
-
-	private void FixedUpdate()
-	{
-		MoveToDestination();
-	}
-
-	public void SetDestination(Vector2 direction)
-	{
-		spriteRenderer.flipX = direction.x > 0f;
-
-		previousDestination = new Vector2(transform.position.x, transform.position.y);
-		destination = previousDestination + direction;
-
-		state = CharacterState.Moving;
-
-		Debug.Log("Moving to " + destination);
 	}
 
 	private void UpdateMovementState()
 	{
-		if (state == CharacterState.FallingBack)
+		/*if (state == CharacterState.FallingBack)
 		{
 			if (ReachedDestination)
 			{
-				HaltMovement();
-
 				Debug.LogWarning("Destination Reached from fallback");
 				return;
 			}
-		}
-
-		if (state == CharacterState.Moving)
-		{
-			if (ReachedDestination)
-			{
-				steps++;
-				StepTaken();
-
-				HaltMovement();
-
-				Debug.LogWarning("Destination Reached");
-			}
-		}
+		}*/
 	}
 
-	private void MoveToDestination()
+	/*private void CollisionFallback()
 	{
-		if (state != CharacterState.Idle)
-		{
-			Move();
-			return;
-		}
-	}
-
-	private void Move()
-	{
-		if (!ReachedDestination)
-		{
-			transform.position = Vector3.Lerp(transform.position, new Vector3(destination.x, destination.y, 0f), Mathf.Clamp(speed * 0.1f, 0.05f, 0.25f));
-		}
-	}
-
-	private void HaltMovement()
-	{
-		transform.position = destination;
-
-		MovementHalted();
-
-		state = CharacterState.Idle;
-	}
-
-	private void CollisionFallback()
-	{
-		destination = previousDestination;
+		destination = characterMovement.PreviousDestination;
 
 		MovementHalted();
 
 		state = CharacterState.FallingBack;
 
 		Debug.Log("Collided: falling back to " + destination);
-	}
+	}*/
 
 	private void OnCollisionEnter2D()
 	{
-		CollisionFallback();
+		//CollisionFallback();
 	}
 
 	private void OnCollisionStay2D()
 	{
 		if (state != CharacterState.FallingBack)
 		{
-			CollisionFallback();
+			//CollisionFallback();
 
 			Debug.LogWarning("CollisionStay Fallback");
 		}

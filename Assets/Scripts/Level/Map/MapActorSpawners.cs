@@ -8,8 +8,8 @@ using UnityEngine;
 
 using UnityEditor;
 
-[CustomEditor(typeof(ActorSpawners))]
-public class ActorSpawnersInspector : ALevelComponentInspector
+[CustomEditor(typeof(MapActorSpawners))]
+public class MapActorSpawnersInspector : ALevelComponentInspector
 {
 }
 
@@ -18,7 +18,7 @@ public class ActorSpawnersInspector : ALevelComponentInspector
 [RequireComponent(
 	typeof(Map)
 )]
-public class ActorSpawners : ALevelComponent
+public class MapActorSpawners : ALevelComponent
 {
 	public ActorSpawnerData[] spawnersData = new ActorSpawnerData[0];
 
