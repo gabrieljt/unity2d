@@ -22,7 +22,6 @@ public class Exit : AActor
 		var character = other.GetComponent<Character>();
 		if (character)
 		{
-			Debug.LogWarning("Exit Reached");
 			Reached(character);
 		}
 	}

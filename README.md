@@ -1,7 +1,7 @@
 Unity3D - 2D Procedural roguelike top down experiments
 
-== Dungeon Escape v0.1.2 featuring ==
-* Procedural Component Based Dungeon Tile Map
+== Dungeon Escape v0.1.3 featuring ==
+* Procedural Tile Map
 * Physics tile based movement
 * Scene rebuild on the fly
 
@@ -11,9 +11,9 @@ Unity3D - 2D Procedural roguelike top down experiments
 
 == TODO ==
 * Win / Lose conditions
-* Character collision rules
 * Progression rules
 * UI
+* Camera
 
 Using assets from http://opengameart.org/content/dawnlike-16x16-universal-rogue-like-tileset-v181
 

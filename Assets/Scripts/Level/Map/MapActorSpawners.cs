@@ -94,12 +94,20 @@ public class MapActorSpawners : ALevelComponent
 
 	private void OnSpawnerPerformed(ActorSpawner spawner, AActor actor)
 	{
-		Debug.LogWarning(actor.GetType() + " spawned");
-
 		spawner.Performed -= OnSpawnerPerformed;
 
+		actor.Destroyed += OnActorDestroyed;
 		actor.transform.SetParent(transform);
 		actorsContainers[spawner.type].Add(actor);
+	}
+
+	private void OnActorDestroyed(MonoBehaviour destroyedActor)
+	{
+		var actorType = destroyedActor.tag.ToEnum<ActorType>();
+		var actor = actorsContainers[actorType].Find(containedActor => containedActor == (destroyedActor as AActor));
+		Debug.Assert(actor);
+		actor.Destroyed -= OnActorDestroyed;
+		actorsContainers[actorType].Remove(destroyedActor as AActor);
 	}
 
 	private IEnumerator SetSpawnersPositionsCoroutine()
@@ -164,18 +172,7 @@ public class MapActorSpawners : ALevelComponent
 		var spawners = GetComponents<ActorSpawner>();
 		for (int i = 0; i < spawners.Length; i++)
 		{
-#if UNITY_EDITOR
-			if (Application.isPlaying)
-			{
-				Destroy(spawners[i]);
-			}
-			else
-			{
-				DestroyImmediate(spawners[i]);
-			}
-#else
-				Destroy(spawners[i]);
-#endif
+			Destroy(spawners[i]);
 		}
 	}
 
@@ -185,18 +182,8 @@ public class MapActorSpawners : ALevelComponent
 		{
 			foreach (var actor in actorsContainer)
 			{
-#if UNITY_EDITOR
-				if (Application.isPlaying)
-				{
-					Destroy(actor.gameObject);
-				}
-				else
-				{
-					DestroyImmediate(actor.gameObject);
-				}
-#else
-					Destroy(actor.gameObject);
-#endif
+				actor.Destroyed -= OnActorDestroyed;
+				Destroy(actor.gameObject);
 			}
 			actorsContainer.Clear();
 		}

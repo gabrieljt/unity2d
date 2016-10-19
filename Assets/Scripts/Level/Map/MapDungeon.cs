@@ -126,8 +126,6 @@ public class MapDungeon : ALevelComponent
 			BuildRoom(ref map, room);
 		}
 
-		Debug.Log(roomsList.Count + " rooms(s) built");
-
 		rooms = roomsList.ToArray();
 	}
 

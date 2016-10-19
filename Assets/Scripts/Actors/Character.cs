@@ -29,9 +29,19 @@ public class Character : AActor
 		characterMovement.DestinationReached += OnDestinationReached;
 	}
 
-	private void OnDestinationSet(Vector2 destination)
+	private void OnDestinationSet(Vector2 destination, Vector2 direction)
 	{
-		spriteRenderer.flipX = (destination - characterMovement.Position).x > 0f;
+		if (characterMovement.FallingBack && direction.y == 0)
+		{
+			spriteRenderer.flipX = !spriteRenderer.flipX;
+			return;
+		}
+
+		if (direction.y == 0)
+		{
+			spriteRenderer.flipX = direction.x > 0f;
+			return;
+		}
 	}
 
 	private void OnDestinationReached()
