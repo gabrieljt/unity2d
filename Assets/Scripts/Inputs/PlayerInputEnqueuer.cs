@@ -88,8 +88,6 @@ public class PlayerInputEnqueuer : AInputEnqueuer
 		var instance = Instance as AInputEnqueuer;
 
 		instance.Add(ref instance, ref dequeuer);
-
-		Debug.LogWarning(instance.GetType() + " set to " + dequeuer.name + " | Total Dequeuers: " + instance.Dequeuers.Count);
 	}
 
 	public static void Remove(ref AInputDequeuer dequeuer)
@@ -97,8 +95,6 @@ public class PlayerInputEnqueuer : AInputEnqueuer
 		var instance = Instance as AInputEnqueuer;
 
 		instance.Remove(ref instance, ref dequeuer);
-
-		Debug.LogWarning(instance.GetType() + " releasing from " + dequeuer.name + " | Total Dequeuers: " + instance.Dequeuers.Count);
 	}
 
 	protected override void OnDequeuerDestroyed(MonoBehaviour dequeuerBehaviour)

@@ -28,7 +28,7 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 	{
 		if (inputs.Count < 1)
 		{
-			int generatedInput = Random.Range(0, 4);
+			var generatedInput = Random.Range(0, 4);
 
 			if (generatedInput == 0)
 			{
