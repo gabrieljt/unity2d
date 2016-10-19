@@ -65,7 +65,7 @@ public class CharacterMovement : MonoBehaviour
 	{
 		rigidbody2D = GetComponent<Rigidbody2D>();
 		rigidbody2D.gravityScale = 0f;
-		rigidbody2D.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
+		rigidbody2D.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 		rigidbody2D.freezeRotation = true;
 	}
 
@@ -139,11 +139,6 @@ public class CharacterMovement : MonoBehaviour
 	}
 
 	private void OnCollisionEnter2D(Collision2D other)
-	{
-		Collided(other);
-	}
-
-	private void OnCollisionStay2D(Collision2D other)
 	{
 		Collided(other);
 	}
