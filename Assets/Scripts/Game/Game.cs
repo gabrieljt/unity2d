@@ -165,7 +165,7 @@ public class Game : MonoBehaviour, IDisposable
 	{
 		spawner.Performed -= OnPlayerSpawned;
 		player = actor as Character;
-		player.StepTaken += OnStepTaken;
+		player.GetComponent<StepCounter>().StepTaken += OnStepTaken;
 		player.Destroyed += OnPlayerDestroyed;
 
 		var inputDequeuer = player.GetComponent<CharacterInputDequeuer>() as AInputDequeuer;
@@ -176,7 +176,7 @@ public class Game : MonoBehaviour, IDisposable
 	{
 		if (this.player == player)
 		{
-			this.player.StepTaken -= OnStepTaken;
+			this.player.GetComponent<StepCounter>().StepTaken -= OnStepTaken;
 			this.player.Destroyed -= OnPlayerDestroyed;
 			this.player = null;
 		}

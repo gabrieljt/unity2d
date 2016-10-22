@@ -1,18 +1,16 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent(
 	typeof(SpriteRenderer),
 	typeof(CharacterInputDequeuer),
 	typeof(CharacterMovement)
+
+)]
+[RequireComponent(
+	typeof(StepCounter)
 )]
 public class Character : AActor
 {
-	[SerializeField]
-	private int steps = 0;
-
-	public int Steps { get { return steps; } }
-
 	[SerializeField]
 	private SpriteRenderer renderer;
 
@@ -22,7 +20,8 @@ public class Character : AActor
 	[SerializeField]
 	private CharacterMovement movement;
 
-	public Action StepTaken = delegate { };
+	[SerializeField]
+	private StepCounter stepCounter;
 
 	private void Awake()
 	{
@@ -33,6 +32,8 @@ public class Character : AActor
 
 		movement = GetComponent<CharacterMovement>();
 		movement.Moving += OnMoving;
+
+		stepCounter = GetComponent<StepCounter>();
 	}
 
 	private void OnInputsDequeued(Vector2 direction)

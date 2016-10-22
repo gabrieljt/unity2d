@@ -138,7 +138,8 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 	public virtual void Dispose()
 	{
 		var instance = this as AInputEnqueuer;
-		foreach (var dequeuer in dequeuers)
+		var dequeuersList = new List<AInputDequeuer>(dequeuers);
+		foreach (var dequeuer in dequeuersList)
 		{
 			var dequeuerInstance = dequeuer;
 			instance.Remove(ref instance, ref dequeuerInstance);

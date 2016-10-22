@@ -1,17 +1,11 @@
 ﻿using System;
 using UnityEngine;
 
-public enum CharacterMovementState
-{
-	Idle,
-	Moving,
-}
-
 [RequireComponent(
 	typeof(Rigidbody2D),
 	typeof(CircleCollider2D)
 )]
-public class CharacterMovement : MonoBehaviour
+public class CharacterMovement : MonoBehaviour, IMoveable
 {
 	[SerializeField]
 	[Range(1f, 10f)]
@@ -32,10 +26,9 @@ public class CharacterMovement : MonoBehaviour
 
 	public Vector2 Velocity { get { return direction * speed; } }
 
-	public Action<Vector2> Moving = delegate { };
+	private Action<Vector2> moving = delegate { };
 
-	public Action Stopped = delegate { };
-	public Action Collided = delegate { };
+	public Action<Vector2> Moving { get { return moving; } set { moving = value; } }
 
 	private Action<MonoBehaviour> destroyed = delegate { };
 
@@ -67,11 +60,6 @@ public class CharacterMovement : MonoBehaviour
 	}
 
 	private void FixedUpdate()
-	{
-		MoveToDestination();
-	}
-
-	private void MoveToDestination()
 	{
 		rigidbody.MovePosition(Position + Velocity * Time.fixedDeltaTime);
 	}
