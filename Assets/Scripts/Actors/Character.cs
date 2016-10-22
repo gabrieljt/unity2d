@@ -2,8 +2,9 @@
 using UnityEngine;
 
 [RequireComponent(
-	typeof(CharacterMovement),
-	typeof(SpriteRenderer)
+	typeof(SpriteRenderer),
+	typeof(CharacterInputDequeuer),
+	typeof(CharacterMovement)
 )]
 public class Character : AActor
 {
@@ -13,43 +14,44 @@ public class Character : AActor
 	public int Steps { get { return steps; } }
 
 	[SerializeField]
-	private SpriteRenderer spriteRenderer;
+	private SpriteRenderer renderer;
 
 	[SerializeField]
-	private CharacterMovement characterMovement;
+	private CharacterInputDequeuer inputDequeuer;
+
+	[SerializeField]
+	private CharacterMovement movement;
 
 	public Action StepTaken = delegate { };
 
 	private void Awake()
 	{
-		spriteRenderer = GetComponent<SpriteRenderer>();
+		renderer = GetComponent<SpriteRenderer>();
 
-		characterMovement = GetComponent<CharacterMovement>();
-		characterMovement.DestinationSet += OnDestinationSet;
-		characterMovement.DestinationReached += OnDestinationReached;
+		inputDequeuer = GetComponent<CharacterInputDequeuer>();
+		inputDequeuer.InputsDequeued += OnInputsDequeued;
+
+		movement = GetComponent<CharacterMovement>();
+		movement.Moving += OnMoving;
 	}
 
-	private void OnDestinationSet(Vector2 destination, Vector2 direction)
+	private void OnInputsDequeued(Vector2 direction)
 	{
-		if (characterMovement.FallingBack && direction.y == 0)
-		{
-			spriteRenderer.flipX = !spriteRenderer.flipX;
-			return;
-		}
-
-		if (direction.y == 0)
-		{
-			spriteRenderer.flipX = direction.x > 0f;
-			return;
-		}
+		movement.Move(direction.normalized);
 	}
 
-	private void OnDestinationReached()
+	private void OnMoving(Vector2 direction)
 	{
-		if (characterMovement.PreviousDestination != characterMovement.Position)
+		renderer.flipX = direction.normalized.x > 0f;
+	}
+
+	private void OnCollisionEnter2D(Collision2D other)
+	{
+		var otherMovement = other.gameObject.GetComponent<CharacterMovement>();
+
+		if (otherMovement)
 		{
-			steps++;
-			StepTaken();
+			renderer.flipX = (otherMovement.Position - movement.Position).normalized.x > 0f;
 		}
 	}
 
@@ -67,7 +69,7 @@ public class Character : AActor
 
 	public override void Dispose()
 	{
-		characterMovement.DestinationSet -= OnDestinationSet;
-		characterMovement.DestinationReached -= OnDestinationReached;
+		inputDequeuer.InputsDequeued -= OnInputsDequeued;
+		movement.Moving -= OnMoving;
 	}
 }

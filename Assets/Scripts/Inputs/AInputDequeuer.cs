@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class AInputDequeuer : MonoBehaviour, IDestroyable, IDisposable
+public abstract class AInputDequeuer : MonoBehaviour, IDestroyable
 {
 	protected HashSet<AInputEnqueuer> enqueuers = new HashSet<AInputEnqueuer>();
 
@@ -12,13 +12,10 @@ public abstract class AInputDequeuer : MonoBehaviour, IDestroyable, IDisposable
 
 	public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
-	public abstract void Dispose();
+	public abstract void OnInputsEnqueued(AInputEnqueuer inputQueue);
 
 	public void OnDestroy()
 	{
 		Destroyed(this);
-		Dispose();
 	}
-
-	public abstract void OnInputsEnqueued(AInputEnqueuer inputQueue);
 }

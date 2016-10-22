@@ -26,44 +26,33 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 	// TODO: character input logic (AI)
 	protected override void EnqueueInputs()
 	{
-		if (inputs.Count < 1)
+		var inputsToGenerate = Random.Range(0, maximumInputsPerUpdate - inputs.Count);
+
+		for (int i = 0; i < inputsToGenerate; i++)
 		{
 			var generatedInput = Random.Range(0, 4);
-
+			var input = KeyCode.None;
 			if (generatedInput == 0)
 			{
-				inputs.Enqueue(KeyCode.UpArrow);
-				return;
+				input = KeyCode.UpArrow;
 			}
 
 			if (generatedInput == 1)
 			{
-				inputs.Enqueue(KeyCode.DownArrow);
-				return;
+				input = KeyCode.DownArrow;
 			}
 
 			if (generatedInput == 2)
 			{
-				inputs.Enqueue(KeyCode.LeftArrow);
-				return;
+				input = KeyCode.LeftArrow;
 			}
 
 			if (generatedInput == 3)
 			{
-				inputs.Enqueue(KeyCode.RightArrow);
-				return;
+				input = KeyCode.RightArrow;
 			}
+
+			Enqueue(input);
 		}
-	}
-
-	public override void Dispose()
-	{
-		var instance = this as AInputEnqueuer;
-		var dequeuerInstance = dequeuer as AInputDequeuer;
-		Remove(ref instance, ref dequeuerInstance);
-	}
-
-	protected override void OnDequeuerDestroyed(MonoBehaviour obj)
-	{
 	}
 }
