@@ -3,6 +3,7 @@ Unity3D - 2D Procedural roguelike top down experiments
 == Dungeon Escape v0.1.3 featuring ==
 * Procedural Tile Map
 * Physics top down movement
+* Simple Character AI
 * Step counter
 * Scene rebuild on the fly
 
