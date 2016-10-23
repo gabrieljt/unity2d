@@ -82,6 +82,10 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 
 	private void OnInputsDequeued(Vector2 direction)
 	{
+		var movement = character.GetComponent<CharacterMovement>();
+		var collider = character.GetComponent<CircleCollider2D>();
+		var stepCounter = character.GetComponent<StepCounter>();
+
 		if (direction == Vector2.zero)
 		{
 			state = CharacterAIState.Idle;
@@ -90,27 +94,50 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 
 		if (state == CharacterAIState.Idle)
 		{
-			if (direction != Vector2.zero)
+			Vector2 endPoint;
+			Collider2D something;
+
+			if (SomethingAhead(direction, movement, collider, stepCounter, out endPoint, out something))
 			{
-				state = CharacterAIState.Moving;
+				movement.Move(Vector2.zero);
 				return;
 			}
+			state = CharacterAIState.Moving;
 		}
 
 		if (state == CharacterAIState.Moving)
 		{
-			var movement = character.GetComponent<CharacterMovement>();
-			var point = movement.Position + direction * (character.GetComponent<CircleCollider2D>().radius + character.GetComponent<StepCounter>().StepSize);
-			var something = Physics2D.OverlapPoint(point);
+			Vector2 endPoint;
+			Collider2D something;
 
-			if (something)
+			if (SomethingAhead(direction, movement, collider, stepCounter, out endPoint, out something))
 			{
-			Debug.DrawLine(movement.Position, point, Color.cyan, 1f);
-				lastInputsReceived.Clear();
-				movement.Move(-direction);
+				state = CharacterAIState.Idle;
 				return;
 			}
 		}
+	}
+
+	private void OnCollisionEnter2D()
+	{
+		state = CharacterAIState.Idle;
+	}
+
+	private static bool SomethingAhead(Vector2 direction, CharacterMovement movement, CircleCollider2D collider, StepCounter stepCounter, out Vector2 endPoint, out Collider2D somethingAhead)
+	{
+		endPoint = movement.Position + direction * (stepCounter.StepSize * 0.75f);
+		somethingAhead = Physics2D.OverlapCircle(endPoint, stepCounter.StepSize * 0.25f);
+
+		if (somethingAhead)
+		{
+			Debug.Log(somethingAhead.transform.name);
+			Debug.DrawLine(movement.Position, endPoint, Color.cyan, 1f);
+		}
+		else
+		{
+			Debug.DrawLine(movement.Position, endPoint, Color.magenta);
+		}
+		return somethingAhead;
 	}
 
 	public override void Dispose()
