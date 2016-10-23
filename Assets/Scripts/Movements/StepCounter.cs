@@ -16,6 +16,8 @@ public class StepCounter : MonoBehaviour
 	[SerializeField]
 	private float stepSize = 1f;
 
+	public float StepSize { get { return stepSize; } }
+
 	[SerializeField]
 	private int steps = 0;
 

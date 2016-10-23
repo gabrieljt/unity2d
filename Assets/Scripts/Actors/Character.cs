@@ -38,7 +38,7 @@ public class Character : AActor
 
 	private void OnInputsDequeued(Vector2 direction)
 	{
-		movement.Move(direction.normalized);
+		movement.Move(direction);
 	}
 
 	private void OnMoving(Vector2 direction)

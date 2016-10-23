@@ -31,6 +31,6 @@ public class CharacterInputDequeuer : AInputDequeuer
 			}
 		}
 
-		InputsDequeued(direction);
+		InputsDequeued(direction.normalized);
 	}
 }

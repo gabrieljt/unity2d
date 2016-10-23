@@ -49,6 +49,6 @@ public class GameParams
 			maximumSteps += (int)Vector2.Distance(room.Center, map.Center);
 		}
 
-		maximumSteps = maximumSteps / (level * dungeon.Rooms.Length) + spawners.actorsContainers[ActorType.Slime].Count * 3 + 10;
+		maximumSteps = (maximumSteps / (level * dungeon.Rooms.Length) + spawners.actorsContainers[ActorType.Slime].Count * 3 + 10) * 2;
 	}
 }
