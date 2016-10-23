@@ -11,17 +11,17 @@ public class PlayerInputEnqueuerInspector : Editor
 	{
 		DrawDefaultInspector();
 
-		if (GUILayout.Button("Control selected actor"))
+		if (GUILayout.Button("Control actor"))
 		{
 			var enqueuer = (PlayerInputEnqueuer)target;
-			var dequeuer = enqueuer.SelectedActor.GetComponent<AInputDequeuer>();
+			var dequeuer = enqueuer.Actor.GetComponent<AInputDequeuer>();
 			PlayerInputEnqueuer.Add(ref dequeuer);
 		}
 
-		if (GUILayout.Button("Release selected actor"))
+		if (GUILayout.Button("Release actor"))
 		{
 			var enqueuer = (PlayerInputEnqueuer)target;
-			var dequeuer = enqueuer.SelectedActor.GetComponent<AInputDequeuer>();
+			var dequeuer = enqueuer.Actor.GetComponent<AInputDequeuer>();
 			PlayerInputEnqueuer.Remove(ref dequeuer);
 		}
 	}
@@ -34,9 +34,9 @@ public class PlayerInputEnqueuer : AInputEnqueuer
 #if UNITY_EDITOR
 
 	[SerializeField]
-	private AActor selectedActor;
+	private AActor actor;
 
-	public AActor SelectedActor { get { return selectedActor; } }
+	public AActor Actor { get { return actor; } }
 #endif
 
 	public static PlayerInputEnqueuer Instance
@@ -55,31 +55,28 @@ public class PlayerInputEnqueuer : AInputEnqueuer
 
 	protected override void EnqueueInputs()
 	{
-		if (Input.anyKey && inputs.Count < maximumInputsPerFrame)
+		if (Input.anyKey)
 		{
 			if (Input.GetKey(KeyCode.UpArrow))
 			{
-				inputs.Enqueue(KeyCode.UpArrow);
-				return;
+				Enqueue(KeyCode.UpArrow);
 			}
 
 			if (Input.GetKey(KeyCode.DownArrow))
 			{
-				inputs.Enqueue(KeyCode.DownArrow);
-				return;
+				Enqueue(KeyCode.DownArrow);
 			}
 
 			if (Input.GetKey(KeyCode.LeftArrow))
 			{
-				inputs.Enqueue(KeyCode.LeftArrow);
-				return;
+				Enqueue(KeyCode.LeftArrow);
 			}
 
 			if (Input.GetKey(KeyCode.RightArrow))
 			{
-				inputs.Enqueue(KeyCode.RightArrow);
-				return;
+				Enqueue(KeyCode.RightArrow);
 			}
+			return;
 		}
 	}
 
@@ -99,26 +96,23 @@ public class PlayerInputEnqueuer : AInputEnqueuer
 
 	protected override void OnDequeuerDestroyed(MonoBehaviour dequeuerBehaviour)
 	{
-		if (Instance)
+		if (!Instance)
 		{
-			var instance = Instance as AInputEnqueuer;
-			var dequeuer = dequeuerBehaviour.GetComponent<AInputDequeuer>();
-			instance.Remove(ref instance, ref dequeuer);
+			return;
 		}
+
+		var instance = Instance as AInputEnqueuer;
+		var dequeuer = dequeuerBehaviour.GetComponent<AInputDequeuer>();
+		instance.Remove(ref instance, ref dequeuer);
 	}
 
 	public override void Dispose()
 	{
-		if (Instance)
+		if (!Instance)
 		{
-			var instance = Instance as AInputEnqueuer;
-			foreach (var dequeuer in dequeuers)
-			{
-				var dequeuerInstance = dequeuer;
-				instance.Remove(ref instance, ref dequeuerInstance);
-			}
+			return;
 		}
 
-		dequeuers.Clear();
+		base.Dispose();
 	}
 }

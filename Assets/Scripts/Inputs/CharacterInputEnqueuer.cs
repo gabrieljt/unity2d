@@ -1,69 +1,149 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
+
+public enum CharacterAIState
+{
+	Idle,
+	Moving,
+}
 
 [RequireComponent(
-	typeof(Character),
-	typeof(CharacterInputDequeuer)
+	typeof(Character)
 )]
 public class CharacterInputEnqueuer : AInputEnqueuer
 {
 	[SerializeField]
-	private Character character;
+	private CharacterAIState state;
+
+	private List<KeyCode> lastInputsReceived = new List<KeyCode>();
+
+	private List<Collision2D> collisions = new List<Collision2D>();
 
 	[SerializeField]
-	private CharacterInputDequeuer dequeuer;
+	private Character character;
 
 	protected override void Awake()
 	{
 		base.Awake();
 		character = GetComponent<Character>();
-		dequeuer = GetComponent<CharacterInputDequeuer>();
 
 		var instance = this as AInputEnqueuer;
-		var dequeuerInstance = dequeuer as AInputDequeuer;
+		var dequeuerInstance = character.GetComponent<AInputDequeuer>();
+		(dequeuerInstance as CharacterInputDequeuer).InputsDequeued += OnInputsDequeued;
 		Add(ref instance, ref dequeuerInstance);
 	}
 
 	// TODO: character input logic (AI)
 	protected override void EnqueueInputs()
 	{
-		if (inputs.Count < 1)
+		if (state == CharacterAIState.Idle)
 		{
-			var generatedInput = Random.Range(0, 4);
-
-			if (generatedInput == 0)
+			lastInputsReceived.Clear();
+			var inputsGenerated = Random.Range(1, 3);
+			for (int i = 0; i < inputsGenerated; i++)
 			{
-				inputs.Enqueue(KeyCode.UpArrow);
+				var generatedInput = Random.Range(0, 4);
+				var input = KeyCode.None;
+				if (generatedInput == 0)
+				{
+					input = KeyCode.UpArrow;
+				}
+
+				if (generatedInput == 1)
+				{
+					input = KeyCode.DownArrow;
+				}
+
+				if (generatedInput == 2)
+				{
+					input = KeyCode.LeftArrow;
+				}
+
+				if (generatedInput == 3)
+				{
+					input = KeyCode.RightArrow;
+				}
+				lastInputsReceived.Add(input);
+				Enqueue(input);
+			}
+			return;
+		}
+
+		if (state == CharacterAIState.Moving)
+		{
+			foreach (var input in lastInputsReceived)
+			{
+				Enqueue(input);
+			}
+			return;
+		}
+	}
+
+	private void OnInputsDequeued(Vector2 direction)
+	{
+		var movement = character.GetComponent<CharacterMovement>();
+		var collider = character.GetComponent<CircleCollider2D>();
+		var stepCounter = character.GetComponent<StepCounter>();
+
+		if (direction == Vector2.zero)
+		{
+			state = CharacterAIState.Idle;
+			return;
+		}
+
+		if (state == CharacterAIState.Idle)
+		{
+			Vector2 endPoint;
+			Collider2D something;
+
+			if (SomethingAhead(direction, movement, collider, stepCounter, out endPoint, out something))
+			{
+				movement.Move(Vector2.zero);
 				return;
 			}
+			state = CharacterAIState.Moving;
+		}
 
-			if (generatedInput == 1)
-			{
-				inputs.Enqueue(KeyCode.DownArrow);
-				return;
-			}
+		if (state == CharacterAIState.Moving)
+		{
+			Vector2 endPoint;
+			Collider2D something;
 
-			if (generatedInput == 2)
+			if (SomethingAhead(direction, movement, collider, stepCounter, out endPoint, out something))
 			{
-				inputs.Enqueue(KeyCode.LeftArrow);
-				return;
-			}
-
-			if (generatedInput == 3)
-			{
-				inputs.Enqueue(KeyCode.RightArrow);
+				state = CharacterAIState.Idle;
 				return;
 			}
 		}
 	}
 
-	public override void Dispose()
+	private void OnCollisionEnter2D()
 	{
-		var instance = this as AInputEnqueuer;
-		var dequeuerInstance = dequeuer as AInputDequeuer;
-		Remove(ref instance, ref dequeuerInstance);
+		state = CharacterAIState.Idle;
 	}
 
-	protected override void OnDequeuerDestroyed(MonoBehaviour obj)
+	private static bool SomethingAhead(Vector2 direction, CharacterMovement movement, CircleCollider2D collider, StepCounter stepCounter, out Vector2 endPoint, out Collider2D somethingAhead)
 	{
+		endPoint = movement.Position + direction * (stepCounter.StepSize * 0.75f);
+		somethingAhead = Physics2D.OverlapCircle(endPoint, stepCounter.StepSize * 0.25f);
+
+		if (somethingAhead)
+		{
+			Debug.Log(somethingAhead.transform.name);
+			Debug.DrawLine(movement.Position, endPoint, Color.cyan, 1f);
+		}
+		else
+		{
+			Debug.DrawLine(movement.Position, endPoint, Color.magenta);
+		}
+
+		return somethingAhead;
+	}
+
+	public override void Dispose()
+	{
+		var dequeuerInstance = character.GetComponent<AInputDequeuer>();
+		(dequeuerInstance as CharacterInputDequeuer).InputsDequeued -= OnInputsDequeued;
+		base.Dispose();
 	}
 }

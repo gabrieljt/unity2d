@@ -19,6 +19,9 @@ public class MapColliders : ALevelComponent
 	[SerializeField]
 	private Map map;
 
+	[SerializeField]
+	private PhysicsMaterial2D physicsMaterial;
+
 	private void Awake()
 	{
 		map = GetComponent<Map>();
@@ -42,6 +45,11 @@ public class MapColliders : ALevelComponent
 					var collider = gameObject.AddComponent<BoxCollider2D>();
 					collider.offset = new Vector2(x, y) + Vector2.one * 0.5f - map.Center;
 					collider.size = Vector2.one;
+					collider.sharedMaterial = physicsMaterial;
+					if (!collider.sharedMaterial)
+					{
+						Debug.LogWarning(name + " physics material not set.");
+					}
 				}
 			}
 		}

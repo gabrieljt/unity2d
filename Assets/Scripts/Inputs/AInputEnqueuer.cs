@@ -17,9 +17,9 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 
 	[SerializeField]
 	[Range(0, 10)]
-	protected int maximumInputsPerFrame = 1;
+	protected int maximumInputsPerUpdate = 1;
 
-	private int MaximumInputsPerFrame { get; set; }
+	private int MaximumInputsPerUpdate { get; set; }
 
 	[SerializeField]
 	[Range(0.1f, 5f)]
@@ -33,7 +33,7 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 
 	protected virtual void Awake()
 	{
-		MaximumInputsPerFrame = maximumInputsPerFrame;
+		MaximumInputsPerUpdate = maximumInputsPerUpdate;
 	}
 
 	public void Add(ref AInputEnqueuer instance, ref AInputDequeuer dequeuer)
@@ -96,22 +96,32 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 		}
 	}
 
-	protected abstract void OnDequeuerDestroyed(MonoBehaviour dequeuerBehaviour);
+	protected virtual void OnDequeuerDestroyed(MonoBehaviour dequeuerBehaviour)
+	{
+		var instance = this as AInputEnqueuer;
+		var dequeuer = dequeuerBehaviour.GetComponent<AInputDequeuer>();
+		instance.Remove(ref instance, ref dequeuer);
+	}
 
 	protected abstract void EnqueueInputs();
 
-	private void Update()
+	protected void Enqueue(KeyCode input)
+	{
+		if (inputs.Count < maximumInputsPerUpdate)
+		{
+			inputs.Enqueue(input);
+		}
+	}
+
+	private void FixedUpdate()
 	{
 		EnqueueInputs();
-		if (HasInputs)
-		{
-			InputsEnqueued(this);
-		}
+		InputsEnqueued(this);
 	}
 
 	public void LockInputs()
 	{
-		maximumInputsPerFrame = 0;
+		maximumInputsPerUpdate = 0;
 	}
 
 	public void UnlockInputs()
@@ -122,10 +132,21 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 	private IEnumerator UnlockInputsCoroutine(float waitTime)
 	{
 		yield return new WaitForSeconds(waitTime);
-		maximumInputsPerFrame = MaximumInputsPerFrame;
+		maximumInputsPerUpdate = MaximumInputsPerUpdate;
 	}
 
-	public abstract void Dispose();
+	public virtual void Dispose()
+	{
+		var instance = this as AInputEnqueuer;
+		var dequeuersList = new List<AInputDequeuer>(dequeuers);
+		foreach (var dequeuer in dequeuersList)
+		{
+			var dequeuerInstance = dequeuer;
+			instance.Remove(ref instance, ref dequeuerInstance);
+		}
+
+		dequeuers.Clear();
+	}
 
 	public void OnDestroy()
 	{
