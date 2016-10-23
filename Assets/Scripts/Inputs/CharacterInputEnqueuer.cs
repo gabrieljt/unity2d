@@ -75,7 +75,6 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 			{
 				Enqueue(input);
 			}
-			Enqueue(KeyCode.None);
 			return;
 		}
 	}
@@ -137,6 +136,7 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 		{
 			Debug.DrawLine(movement.Position, endPoint, Color.magenta);
 		}
+
 		return somethingAhead;
 	}
 
