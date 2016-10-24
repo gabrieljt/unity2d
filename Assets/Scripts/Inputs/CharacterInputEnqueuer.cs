@@ -19,12 +19,28 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 
 	private HashSet<Collider2D> otherColliders = new HashSet<Collider2D>();
 
+	private Vector2 inputDirection;
+
 	[SerializeField]
 	private Character character;
 
 	private CharacterMovement movement;
 
 	private CircleCollider2D collider;
+
+	private Vector2 EscapeDirection
+	{
+		get
+		{
+			var newDirection = Vector2.zero;
+			foreach (var otherCollider in otherColliders)
+			{
+				newDirection += movement.Position - (new Vector2(otherCollider.transform.position.x, otherCollider.transform.position.y) + otherCollider.offset);
+			}
+
+			return newDirection;
+		}
+	}
 
 	protected override void Awake()
 	{
@@ -43,7 +59,7 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 		if (state == CharacterAIState.Idle)
 		{
 			lastInputsReceived.Clear();
-			var inputsGenerated = Random.Range(0, 2);
+			var inputsGenerated = Random.Range(0, maximumInputsPerUpdate);
 			if (inputsGenerated > 0)
 			{
 				for (int i = 0; i < inputsGenerated; i++)
@@ -88,7 +104,6 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 			{
 				Enqueue(KeyCode.None);
 			}
-
 			return;
 		}
 	}
@@ -97,49 +112,54 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 	{
 		if (state == CharacterAIState.Idle)
 		{
-			if (direction == Vector2.zero || lastInputsReceived.Count == 0)
+			if (direction != Vector2.zero)
 			{
-				state = CharacterAIState.Idle;
+				inputDirection = direction;
+				state = CharacterAIState.Moving;
 				return;
 			}
-			state = CharacterAIState.Moving;
-			return;
 		}
 
 		if (state == CharacterAIState.Moving)
 		{
-			if (otherColliders.Count > 0)
-			{
-				lastInputsReceived.Clear();
-
-				var newDirection = Vector2.zero;
-				foreach (var other in otherColliders)
-				{
-					newDirection += (new Vector2(other.transform.position.x, other.transform.position.y) + other.offset) - movement.Position;
-				}
-
-				Debug.DrawRay(movement.Position, -newDirection.normalized * collider.radius, Color.cyan, 1f);
-				movement.Move(-newDirection.normalized);
-				return;
-			}
-
-			if (direction == Vector2.zero || lastInputsReceived.Count == 0)
+			if (inputDirection == Vector2.zero)
 			{
 				state = CharacterAIState.Idle;
 				return;
 			}
-
-			Debug.DrawRay(movement.Position, direction * collider.radius, Color.magenta);
 		}
+
+		movement.Move(inputDirection);
+		DrawDebugRays(direction, ref inputDirection);
+		return;
 	}
 
 	private void OnCollisionEnter2D(Collision2D other)
 	{
+		lastInputsReceived.Clear();
 		otherColliders.Add(other.collider);
+		inputDirection = EscapeDirection;
+	}
+
+	private void OnCollisionStay2D()
+	{
+		inputDirection = EscapeDirection;
 	}
 
 	private void OnCollisionExit2D(Collision2D other)
 	{
 		otherColliders.Remove(other.collider);
+		inputDirection = EscapeDirection;
+	}
+
+	private void DrawDebugRays(Vector2 direction, ref Vector2 inputDirection)
+	{
+		if (inputDirection != direction)
+		{
+			Debug.DrawRay(movement.Position, inputDirection.normalized * collider.radius, Color.cyan, 1f);
+			return;
+		}
+		Debug.DrawRay(movement.Position, direction.normalized * collider.radius, Color.magenta);
+		return;
 	}
 }
