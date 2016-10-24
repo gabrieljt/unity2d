@@ -17,15 +17,23 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 
 	private List<KeyCode> lastInputsReceived = new List<KeyCode>();
 
-	private List<Collision2D> collisions = new List<Collision2D>();
+	private HashSet<Collider2D> otherColliders = new HashSet<Collider2D>();
 
 	[SerializeField]
 	private Character character;
+
+	private StepCounter stepCounter;
+	private CharacterMovement movement;
+	private CircleCollider2D collider;
 
 	protected override void Awake()
 	{
 		base.Awake();
 		character = GetComponent<Character>();
+
+		movement = character.GetComponent<CharacterMovement>();
+		collider = character.GetComponent<CircleCollider2D>();
+		stepCounter = character.GetComponent<StepCounter>();
 
 		var instance = this as AInputEnqueuer;
 		var dequeuerInstance = character.GetComponent<AInputDequeuer>();
@@ -39,33 +47,38 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 		if (state == CharacterAIState.Idle)
 		{
 			lastInputsReceived.Clear();
-			var inputsGenerated = Random.Range(1, 3);
-			for (int i = 0; i < inputsGenerated; i++)
+			var inputsGenerated = Random.Range(0, 2);
+			if (inputsGenerated > 0)
 			{
-				var generatedInput = Random.Range(0, 4);
-				var input = KeyCode.None;
-				if (generatedInput == 0)
+				for (int i = 0; i < inputsGenerated; i++)
 				{
-					input = KeyCode.UpArrow;
-				}
+					var generatedInput = Random.Range(0, 4);
+					var input = KeyCode.None;
+					if (generatedInput == 0)
+					{
+						input = KeyCode.UpArrow;
+					}
 
-				if (generatedInput == 1)
-				{
-					input = KeyCode.DownArrow;
-				}
+					if (generatedInput == 1)
+					{
+						input = KeyCode.DownArrow;
+					}
 
-				if (generatedInput == 2)
-				{
-					input = KeyCode.LeftArrow;
-				}
+					if (generatedInput == 2)
+					{
+						input = KeyCode.LeftArrow;
+					}
 
-				if (generatedInput == 3)
-				{
-					input = KeyCode.RightArrow;
+					if (generatedInput == 3)
+					{
+						input = KeyCode.RightArrow;
+					}
+					lastInputsReceived.Add(input);
+					Enqueue(input);
 				}
-				lastInputsReceived.Add(input);
-				Enqueue(input);
+				return;
 			}
+			Enqueue(KeyCode.None);
 			return;
 		}
 
@@ -75,69 +88,62 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 			{
 				Enqueue(input);
 			}
+			if (lastInputsReceived.Count == 0)
+			{
+				Enqueue(KeyCode.None);
+			}
 			return;
 		}
 	}
 
 	private void OnInputsDequeued(Vector2 direction)
 	{
-		var movement = character.GetComponent<CharacterMovement>();
-		var collider = character.GetComponent<CircleCollider2D>();
-		var stepCounter = character.GetComponent<StepCounter>();
-
-		if (direction == Vector2.zero)
-		{
-			state = CharacterAIState.Idle;
-			return;
-		}
-
 		if (state == CharacterAIState.Idle)
 		{
-			Vector2 endPoint;
-			Collider2D something;
-
-			if (SomethingAhead(direction, movement, collider, stepCounter, out endPoint, out something))
-			{
-				movement.Move(Vector2.zero);
-				return;
-			}
-			state = CharacterAIState.Moving;
-		}
-
-		if (state == CharacterAIState.Moving)
-		{
-			Vector2 endPoint;
-			Collider2D something;
-
-			if (SomethingAhead(direction, movement, collider, stepCounter, out endPoint, out something))
+			if (direction == Vector2.zero || lastInputsReceived.Count == 0)
 			{
 				state = CharacterAIState.Idle;
 				return;
 			}
+			state = CharacterAIState.Moving;
+			return;
+		}
+
+		if (state == CharacterAIState.Moving)
+		{
+			if (otherColliders.Count > 0)
+			{
+				lastInputsReceived.Clear();
+
+				var newDirection = Vector2.zero;
+				foreach (var other in otherColliders)
+				{
+					newDirection += (new Vector2(other.transform.position.x, other.transform.position.y) + other.offset) - movement.Position;
+				}
+
+				Debug.DrawRay(movement.Position, -newDirection.normalized * collider.radius, Color.cyan, 1f);
+				movement.Move(-newDirection.normalized);
+				return;
+			}
+
+			if (direction == Vector2.zero || lastInputsReceived.Count == 0)
+			{
+				state = CharacterAIState.Idle;
+				return;
+			}
+
+			Debug.DrawRay(movement.Position, direction * collider.radius, Color.magenta);
 		}
 	}
 
-	private void OnCollisionEnter2D()
+	private void OnCollisionEnter2D(Collision2D other)
 	{
-		state = CharacterAIState.Idle;
+		otherColliders.Add(other.collider);
 	}
 
-	private static bool SomethingAhead(Vector2 direction, CharacterMovement movement, CircleCollider2D collider, StepCounter stepCounter, out Vector2 endPoint, out Collider2D somethingAhead)
+	private void OnCollisionExit2D(Collision2D other)
 	{
-		endPoint = movement.Position + direction * (stepCounter.StepSize * 0.75f);
-		somethingAhead = Physics2D.OverlapCircle(endPoint, stepCounter.StepSize * 0.25f);
-
-		if (somethingAhead)
-		{
-			Debug.Log(somethingAhead.transform.name);
-			Debug.DrawLine(movement.Position, endPoint, Color.cyan, 1f);
-		}
-		else
-		{
-			Debug.DrawLine(movement.Position, endPoint, Color.magenta);
-		}
-
-		return somethingAhead;
+		otherColliders.Remove(other.collider);
 	}
 
 	public override void Dispose()
