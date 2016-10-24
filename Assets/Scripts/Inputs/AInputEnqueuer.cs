@@ -58,6 +58,7 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 	{
 		instance.InputsEnqueued += dequeuer.OnInputsEnqueued;
 		(dequeuer as IDestroyable).Destroyed += OnDequeuerDestroyed;
+		dequeuer.InputsDequeued += OnInputsDequeued;
 
 		var otherEnqueuer = dequeuer.GetComponent<AInputEnqueuer>();
 		if (otherEnqueuer && otherEnqueuer != instance)
@@ -65,6 +66,8 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 			otherEnqueuer.enabled = false;
 		}
 	}
+
+	protected abstract void OnInputsDequeued(Vector2 obj);
 
 	public void Remove(ref AInputEnqueuer instance, ref AInputDequeuer dequeuer)
 	{
@@ -88,6 +91,7 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 	{
 		instance.InputsEnqueued -= dequeuer.OnInputsEnqueued;
 		(dequeuer as IDestroyable).Destroyed -= OnDequeuerDestroyed;
+		dequeuer.InputsDequeued -= OnInputsDequeued;
 
 		var otherEnqueuer = dequeuer.GetComponent<AInputEnqueuer>();
 		if (otherEnqueuer && otherEnqueuer != instance)
@@ -116,7 +120,10 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 	private void FixedUpdate()
 	{
 		EnqueueInputs();
-		InputsEnqueued(this);
+		if (HasInputs)
+		{
+			InputsEnqueued(this);
+		}
 	}
 
 	public void LockInputs()

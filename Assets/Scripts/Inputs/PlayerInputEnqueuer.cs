@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 
 #if UNITY_EDITOR
 
@@ -78,6 +79,8 @@ public class PlayerInputEnqueuer : AInputEnqueuer
 			}
 			return;
 		}
+		Enqueue(KeyCode.None);
+		return;
 	}
 
 	public static void Add(ref AInputDequeuer dequeuer)
@@ -114,5 +117,10 @@ public class PlayerInputEnqueuer : AInputEnqueuer
 		}
 
 		base.Dispose();
+	}
+
+	protected override void OnInputsDequeued(Vector2 direction)
+	{
+		
 	}
 }

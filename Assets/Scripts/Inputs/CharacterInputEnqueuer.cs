@@ -22,26 +22,22 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 	[SerializeField]
 	private Character character;
 
-	private StepCounter stepCounter;
 	private CharacterMovement movement;
+
 	private CircleCollider2D collider;
 
 	protected override void Awake()
 	{
 		base.Awake();
 		character = GetComponent<Character>();
-
 		movement = character.GetComponent<CharacterMovement>();
 		collider = character.GetComponent<CircleCollider2D>();
-		stepCounter = character.GetComponent<StepCounter>();
 
 		var instance = this as AInputEnqueuer;
 		var dequeuerInstance = character.GetComponent<AInputDequeuer>();
-		(dequeuerInstance as CharacterInputDequeuer).InputsDequeued += OnInputsDequeued;
 		Add(ref instance, ref dequeuerInstance);
 	}
 
-	// TODO: character input logic (AI)
 	protected override void EnqueueInputs()
 	{
 		if (state == CharacterAIState.Idle)
@@ -92,11 +88,12 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 			{
 				Enqueue(KeyCode.None);
 			}
+
 			return;
 		}
 	}
 
-	private void OnInputsDequeued(Vector2 direction)
+	protected override void OnInputsDequeued(Vector2 direction)
 	{
 		if (state == CharacterAIState.Idle)
 		{
@@ -144,12 +141,5 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 	private void OnCollisionExit2D(Collision2D other)
 	{
 		otherColliders.Remove(other.collider);
-	}
-
-	public override void Dispose()
-	{
-		var dequeuerInstance = character.GetComponent<AInputDequeuer>();
-		(dequeuerInstance as CharacterInputDequeuer).InputsDequeued -= OnInputsDequeued;
-		base.Dispose();
 	}
 }
