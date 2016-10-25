@@ -35,7 +35,8 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 			var newDirection = Vector2.zero;
 			foreach (var otherCollider in otherColliders)
 			{
-				newDirection += movement.Position - GetColliderPosition(otherCollider);
+				var closestPoint = otherCollider.bounds.ClosestPoint(movement.Position);
+				newDirection += movement.Position - new Vector2(closestPoint.x, closestPoint.y);
 			}
 
 			return newDirection.normalized;
@@ -164,14 +165,15 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 
 		if (inputDirection == Vector2.zero)
 		{
-			TryToEscape(other);
+			TryToEscape(other, ref inputDirection);
 			return;
 		}
 	}
 
-	private void TryToEscape(Collision2D other)
+	private void TryToEscape(Collision2D other, ref Vector2 inputDirection)
 	{
-		var direction = (movement.Position - GetColliderPosition(other.collider)).normalized * collider.radius * 2f;
+		var closestPoint = other.collider.bounds.ClosestPoint(movement.Position);
+		var direction = (movement.Position - new Vector2(closestPoint.x, closestPoint.y)).normalized * collider.radius * 2f;
 		var something = Physics2D.Linecast(movement.Position, movement.Position + direction);
 		if (!something)
 		{
@@ -180,17 +182,7 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 			return;
 		}
 
-		if(something.collider == collider)
-		{
-			Debug.LogWarning("self");
-		}
-		
-		Debug.DrawRay(GetColliderPosition(other.collider), direction * Vector2.Distance(movement.Position, GetColliderPosition(other.collider)), Color.blue, 1f);
+		Debug.DrawRay(closestPoint, direction * Vector2.Distance(movement.Position, closestPoint), Color.blue, 1f);
 		return;
-	}
-
-	private static Vector2 GetColliderPosition(Collider2D collider)
-	{
-		return new Vector2(collider.transform.position.x, collider.transform.position.y) + collider.offset;
 	}
 }
