@@ -17,55 +17,84 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 
 	private List<KeyCode> lastInputsReceived = new List<KeyCode>();
 
-	private List<Collision2D> collisions = new List<Collision2D>();
+	private HashSet<Collider2D> otherColliders = new HashSet<Collider2D>();
 
 	[SerializeField]
 	private Character character;
+
+	private CharacterMovement movement;
+
+	private CircleCollider2D collider;
+
+	private int escapeCounter = 0;
+
+	private Vector2 inputDirection = Vector2.zero;
+
+	private Vector2 EscapeDirection
+	{
+		get
+		{
+			var newDirection = Vector2.zero;
+			foreach (var otherCollider in otherColliders)
+			{
+				newDirection += movement.Position - GetColliderPosition(otherCollider);
+			}
+
+			return newDirection.normalized;
+		}
+	}
+
+	public bool CanEscape { get { return EscapeDirection == Vector2.zero && escapeCounter < 2; } }
 
 	protected override void Awake()
 	{
 		base.Awake();
 		character = GetComponent<Character>();
+		movement = character.GetComponent<CharacterMovement>();
+		collider = character.GetComponent<CircleCollider2D>();
 
 		var instance = this as AInputEnqueuer;
 		var dequeuerInstance = character.GetComponent<AInputDequeuer>();
-		(dequeuerInstance as CharacterInputDequeuer).InputsDequeued += OnInputsDequeued;
 		Add(ref instance, ref dequeuerInstance);
 	}
 
-	// TODO: character input logic (AI)
 	protected override void EnqueueInputs()
 	{
 		if (state == CharacterAIState.Idle)
 		{
 			lastInputsReceived.Clear();
-			var inputsGenerated = Random.Range(1, 3);
-			for (int i = 0; i < inputsGenerated; i++)
+			var inputsGenerated = Random.Range(0, maximumInputsPerUpdate);
+			if (inputsGenerated > 0)
 			{
-				var generatedInput = Random.Range(0, 4);
-				var input = KeyCode.None;
-				if (generatedInput == 0)
+				for (int i = 0; i < inputsGenerated; i++)
 				{
-					input = KeyCode.UpArrow;
-				}
+					var generatedInput = Random.Range(0, 4);
+					var input = KeyCode.None;
+					if (generatedInput == 0)
+					{
+						input = KeyCode.UpArrow;
+					}
 
-				if (generatedInput == 1)
-				{
-					input = KeyCode.DownArrow;
-				}
+					if (generatedInput == 1)
+					{
+						input = KeyCode.DownArrow;
+					}
 
-				if (generatedInput == 2)
-				{
-					input = KeyCode.LeftArrow;
-				}
+					if (generatedInput == 2)
+					{
+						input = KeyCode.LeftArrow;
+					}
 
-				if (generatedInput == 3)
-				{
-					input = KeyCode.RightArrow;
+					if (generatedInput == 3)
+					{
+						input = KeyCode.RightArrow;
+					}
+					lastInputsReceived.Add(input);
+					Enqueue(input);
 				}
-				lastInputsReceived.Add(input);
-				Enqueue(input);
+				return;
 			}
+			Enqueue(KeyCode.None);
 			return;
 		}
 
@@ -75,75 +104,104 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 			{
 				Enqueue(input);
 			}
+			if (lastInputsReceived.Count == 0)
+			{
+				Enqueue(KeyCode.None);
+			}
 			return;
 		}
 	}
 
-	private void OnInputsDequeued(Vector2 direction)
+	protected override void OnInputsDequeued(Vector2 direction)
 	{
-		var movement = character.GetComponent<CharacterMovement>();
-		var collider = character.GetComponent<CircleCollider2D>();
-		var stepCounter = character.GetComponent<StepCounter>();
-
-		if (direction == Vector2.zero)
-		{
-			state = CharacterAIState.Idle;
-			return;
-		}
-
 		if (state == CharacterAIState.Idle)
 		{
-			Vector2 endPoint;
-			Collider2D something;
-
-			if (SomethingAhead(direction, movement, collider, stepCounter, out endPoint, out something))
+			if (direction != Vector2.zero)
 			{
-				movement.Move(Vector2.zero);
+				inputDirection = direction;
+				state = CharacterAIState.Moving;
 				return;
 			}
-			state = CharacterAIState.Moving;
 		}
 
 		if (state == CharacterAIState.Moving)
 		{
-			Vector2 endPoint;
-			Collider2D something;
-
-			if (SomethingAhead(direction, movement, collider, stepCounter, out endPoint, out something))
+			if (inputDirection == Vector2.zero)
 			{
 				state = CharacterAIState.Idle;
 				return;
 			}
 		}
+
+		movement.Move(inputDirection);
+		DrawDebugRays(direction, ref inputDirection);
+		return;
 	}
 
-	private void OnCollisionEnter2D()
+	private void DrawDebugRays(Vector2 direction, ref Vector2 inputDirection)
 	{
-		state = CharacterAIState.Idle;
-	}
-
-	private static bool SomethingAhead(Vector2 direction, CharacterMovement movement, CircleCollider2D collider, StepCounter stepCounter, out Vector2 endPoint, out Collider2D somethingAhead)
-	{
-		endPoint = movement.Position + direction * (stepCounter.StepSize * 0.75f);
-		somethingAhead = Physics2D.OverlapCircle(endPoint, stepCounter.StepSize * 0.25f);
-
-		if (somethingAhead)
+		if (inputDirection != direction)
 		{
-			Debug.Log(somethingAhead.transform.name);
-			Debug.DrawLine(movement.Position, endPoint, Color.cyan, 1f);
+			Debug.DrawRay(movement.Position, inputDirection.normalized * collider.radius, Color.cyan);
+			return;
 		}
-		else
-		{
-			Debug.DrawLine(movement.Position, endPoint, Color.magenta);
-		}
-
-		return somethingAhead;
+		Debug.DrawRay(movement.Position, direction.normalized * collider.radius, Color.magenta);
+		return;
 	}
 
-	public override void Dispose()
+	private void OnCollisionEnter2D(Collision2D other)
 	{
-		var dequeuerInstance = character.GetComponent<AInputDequeuer>();
-		(dequeuerInstance as CharacterInputDequeuer).InputsDequeued -= OnInputsDequeued;
-		base.Dispose();
+		lastInputsReceived.Clear();
+		otherColliders.Add(other.collider);
+		inputDirection = EscapeDirection;
+	}
+
+	private void OnCollisionStay2D()
+	{
+		inputDirection = EscapeDirection;
+	}
+
+	private void OnCollisionExit2D(Collision2D other)
+	{
+		otherColliders.Remove(other.collider);
+
+		if (CanEscape)
+		{
+			if (TryToEscape(other, ref inputDirection, ref escapeCounter))
+			{
+				return;
+			}
+		}
+
+		StopEscaping(out inputDirection, out escapeCounter);
+		return;
+	}
+
+	private bool TryToEscape(Collision2D other, ref Vector2 inputDirection, ref int escapeCounter)
+	{
+		var direction = (movement.Position - GetColliderPosition(other.collider)).normalized * collider.radius;
+		var something = Physics2D.Raycast(movement.Position, direction, collider.radius * 2f);
+		if (!something.collider)
+		{
+			++escapeCounter;
+			inputDirection = direction.normalized;
+
+			Debug.DrawRay(movement.Position, direction, Color.white, 1f);
+			return true;
+		}
+
+		Debug.DrawRay(GetColliderPosition(other.collider), direction * Vector2.Distance(movement.Position, GetColliderPosition(other.collider)), Color.blue, 1f);
+		return false;
+	}
+
+	private static void StopEscaping(out Vector2 inputDirection, out int escapeCounter)
+	{
+		escapeCounter = 0;
+		inputDirection = Vector2.zero;
+	}
+
+	private static Vector2 GetColliderPosition(Collider2D collider)
+	{
+		return new Vector2(collider.transform.position.x, collider.transform.position.y) + collider.offset;
 	}
 }
