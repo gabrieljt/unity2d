@@ -38,7 +38,7 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 				newDirection += movement.Position - (new Vector2(otherCollider.transform.position.x, otherCollider.transform.position.y) + otherCollider.offset);
 			}
 
-			return newDirection;
+			return newDirection.normalized;
 		}
 	}
 
@@ -150,13 +150,34 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 	{
 		otherColliders.Remove(other.collider);
 		inputDirection = EscapeDirection;
+
+		if (inputDirection == Vector2.zero)
+		{
+			TryToEscape(other);
+			return;
+		}
+	}
+
+	private void TryToEscape(Collision2D other)
+	{
+		var direction = (movement.Position - (new Vector2(other.transform.position.x, other.transform.position.y) + other.collider.offset)).normalized;
+		var point = movement.Position + direction;
+		var something = Physics2D.OverlapPoint(point);
+		if (!something)
+		{
+			Debug.DrawRay(movement.Position, direction, Color.white, 1f);
+			inputDirection = direction;
+			return;
+		}
+		Debug.DrawRay(movement.Position, direction, Color.blue, 1f);
+		return;
 	}
 
 	private void DrawDebugRays(Vector2 direction, ref Vector2 inputDirection)
 	{
 		if (inputDirection != direction)
 		{
-			Debug.DrawRay(movement.Position, inputDirection.normalized * collider.radius, Color.cyan, 1f);
+			Debug.DrawRay(movement.Position, inputDirection.normalized * collider.radius, Color.cyan);
 			return;
 		}
 		Debug.DrawRay(movement.Position, direction.normalized * collider.radius, Color.magenta);
