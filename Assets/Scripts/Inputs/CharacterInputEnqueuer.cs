@@ -19,14 +19,16 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 
 	private HashSet<Collider2D> otherColliders = new HashSet<Collider2D>();
 
-	private Vector2 inputDirection;
-
 	[SerializeField]
 	private Character character;
 
 	private CharacterMovement movement;
 
 	private CircleCollider2D collider;
+
+	private int escapeCounter = 0;
+
+	private Vector2 inputDirection = Vector2.zero;
 
 	private Vector2 EscapeDirection
 	{
@@ -41,6 +43,8 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 			return newDirection.normalized;
 		}
 	}
+
+	public bool CanEscape { get { return EscapeDirection == Vector2.zero && escapeCounter < 2; } }
 
 	protected override void Awake()
 	{
@@ -160,28 +164,40 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 	private void OnCollisionExit2D(Collision2D other)
 	{
 		otherColliders.Remove(other.collider);
-		inputDirection = EscapeDirection;
 
-		if (inputDirection == Vector2.zero)
+		if (CanEscape)
 		{
-			TryToEscape(other);
-			return;
+			if (TryToEscape(other, ref inputDirection, ref escapeCounter))
+			{
+				return;
+			}
 		}
+
+		StopEscaping(out inputDirection, out escapeCounter);
+		return;
 	}
 
-	private void TryToEscape(Collision2D other)
+	private bool TryToEscape(Collision2D other, ref Vector2 inputDirection, ref int escapeCounter)
 	{
-		var direction = (movement.Position - GetColliderPosition(other.collider)).normalized * collider.radius * 2f;
-		var something = Physics2D.Linecast(movement.Position, movement.Position + direction);
-		if (!something)
+		var direction = (movement.Position - GetColliderPosition(other.collider)).normalized * collider.radius;
+		var something = Physics2D.Raycast(movement.Position, direction, collider.radius * 2f);
+		if (!something.collider)
 		{
-			Debug.DrawRay(movement.Position, direction, Color.white, 1f);
+			++escapeCounter;
 			inputDirection = direction.normalized;
-			return;
+
+			Debug.DrawRay(movement.Position, direction, Color.white, 1f);
+			return true;
 		}
 
 		Debug.DrawRay(GetColliderPosition(other.collider), direction * Vector2.Distance(movement.Position, GetColliderPosition(other.collider)), Color.blue, 1f);
-		return;
+		return false;
+	}
+
+	private static void StopEscaping(out Vector2 inputDirection, out int escapeCounter)
+	{
+		escapeCounter = 0;
+		inputDirection = Vector2.zero;
 	}
 
 	private static Vector2 GetColliderPosition(Collider2D collider)
