@@ -35,7 +35,7 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 			var newDirection = Vector2.zero;
 			foreach (var otherCollider in otherColliders)
 			{
-				newDirection += movement.Position - (new Vector2(otherCollider.transform.position.x, otherCollider.transform.position.y) + otherCollider.offset);
+				newDirection += movement.Position - GetColliderPosition(otherCollider);
 			}
 
 			return newDirection.normalized;
@@ -134,6 +134,17 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 		return;
 	}
 
+	private void DrawDebugRays(Vector2 direction, ref Vector2 inputDirection)
+	{
+		if (inputDirection != direction)
+		{
+			Debug.DrawRay(movement.Position, inputDirection.normalized * collider.radius, Color.cyan);
+			return;
+		}
+		Debug.DrawRay(movement.Position, direction.normalized * collider.radius, Color.magenta);
+		return;
+	}
+
 	private void OnCollisionEnter2D(Collision2D other)
 	{
 		lastInputsReceived.Clear();
@@ -160,27 +171,26 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 
 	private void TryToEscape(Collision2D other)
 	{
-		var direction = (movement.Position - (new Vector2(other.transform.position.x, other.transform.position.y) + other.collider.offset)).normalized;
-		var point = movement.Position + direction;
-		var something = Physics2D.OverlapPoint(point);
+		var direction = (movement.Position - GetColliderPosition(other.collider)).normalized * collider.radius * 2f;
+		var something = Physics2D.Linecast(movement.Position, movement.Position + direction);
 		if (!something)
 		{
 			Debug.DrawRay(movement.Position, direction, Color.white, 1f);
-			inputDirection = direction;
+			inputDirection = direction.normalized;
 			return;
 		}
-		Debug.DrawRay(movement.Position, direction, Color.blue, 1f);
+
+		if(something.collider == collider)
+		{
+			Debug.LogWarning("self");
+		}
+		
+		Debug.DrawRay(GetColliderPosition(other.collider), direction * Vector2.Distance(movement.Position, GetColliderPosition(other.collider)), Color.blue, 1f);
 		return;
 	}
 
-	private void DrawDebugRays(Vector2 direction, ref Vector2 inputDirection)
+	private static Vector2 GetColliderPosition(Collider2D collider)
 	{
-		if (inputDirection != direction)
-		{
-			Debug.DrawRay(movement.Position, inputDirection.normalized * collider.radius, Color.cyan);
-			return;
-		}
-		Debug.DrawRay(movement.Position, direction.normalized * collider.radius, Color.magenta);
-		return;
+		return new Vector2(collider.transform.position.x, collider.transform.position.y) + collider.offset;
 	}
 }

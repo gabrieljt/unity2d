@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System;
 
 #if UNITY_EDITOR
 
@@ -121,6 +120,5 @@ public class PlayerInputEnqueuer : AInputEnqueuer
 
 	protected override void OnInputsDequeued(Vector2 direction)
 	{
-		
 	}
 }
