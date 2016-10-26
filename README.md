@@ -10,7 +10,6 @@ Unity3D - 2D Procedural roguelike top down experiments
 == Known Bugs ==
 * May generate dungeon with unreachable exit (press ESC to rebuild)
 * May not have enough steps to finish
-* Player Input Enqueuer Control Actor is broken for now; fix coming soon
 
 == TODO ==
 * Win / Lose conditions
