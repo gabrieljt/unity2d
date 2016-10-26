@@ -169,7 +169,7 @@ public class Game : MonoBehaviour, IDisposable
 		player.Destroyed += OnPlayerDestroyed;
 
 		var inputDequeuer = player.GetComponent<CharacterInputDequeuer>() as AInputDequeuer;
-		PlayerInputEnqueuer.Add(ref inputDequeuer);
+		PlayerInputEnqueuer.Add(player, ref inputDequeuer);
 	}
 
 	private void OnPlayerDestroyed(MonoBehaviour player)
