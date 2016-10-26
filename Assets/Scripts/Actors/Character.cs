@@ -43,16 +43,9 @@ public class Character : AActor
 
 	private void OnMoving(Vector2 direction)
 	{
-		renderer.flipX = direction.normalized.x > 0f;
-	}
-
-	private void OnCollisionEnter2D(Collision2D other)
-	{
-		var otherMovement = other.gameObject.GetComponent<CharacterMovement>();
-
-		if (otherMovement)
+		if (direction != Vector2.zero && direction.x != 0)
 		{
-			renderer.flipX = (otherMovement.Position - movement.Position).normalized.x > 0f;
+			renderer.flipX = direction.x > 0f;
 		}
 	}
 
