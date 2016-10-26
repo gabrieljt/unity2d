@@ -114,6 +114,11 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 
 	protected override void OnInputsDequeued(Vector2 direction)
 	{
+		if (!enabled)
+		{
+			return;
+		}
+
 		if (state == CharacterAIState.Idle)
 		{
 			if (direction != Vector2.zero)
@@ -165,12 +170,9 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 	{
 		otherColliders.Remove(other.collider);
 
-		if (CanEscape)
+		if (CanEscape && TryToEscape(other, ref inputDirection, ref escapeCounter))
 		{
-			if (TryToEscape(other, ref inputDirection, ref escapeCounter))
-			{
-				return;
-			}
+			return;
 		}
 
 		StopEscaping(out inputDirection, out escapeCounter);

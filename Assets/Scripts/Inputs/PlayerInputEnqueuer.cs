@@ -11,18 +11,18 @@ public class PlayerInputEnqueuerInspector : Editor
 	{
 		DrawDefaultInspector();
 
-		if (GUILayout.Button("Control actor"))
-		{
-			var enqueuer = (PlayerInputEnqueuer)target;
-			var dequeuer = enqueuer.Actor.GetComponent<AInputDequeuer>();
-			PlayerInputEnqueuer.Add(ref dequeuer);
-		}
-
 		if (GUILayout.Button("Release actor"))
 		{
 			var enqueuer = (PlayerInputEnqueuer)target;
 			var dequeuer = enqueuer.Actor.GetComponent<AInputDequeuer>();
 			PlayerInputEnqueuer.Remove(ref dequeuer);
+		}
+
+		if (GUILayout.Button("Control actor"))
+		{
+			var enqueuer = (PlayerInputEnqueuer)target;
+			var dequeuer = enqueuer.Actor.GetComponent<AInputDequeuer>();
+			PlayerInputEnqueuer.Add(enqueuer.Actor, ref dequeuer);
 		}
 	}
 }
@@ -31,13 +31,10 @@ public class PlayerInputEnqueuerInspector : Editor
 
 public class PlayerInputEnqueuer : AInputEnqueuer
 {
-#if UNITY_EDITOR
-
 	[SerializeField]
 	private AActor actor;
 
 	public AActor Actor { get { return actor; } }
-#endif
 
 	public static PlayerInputEnqueuer Instance
 	{
@@ -82,18 +79,20 @@ public class PlayerInputEnqueuer : AInputEnqueuer
 		return;
 	}
 
-	public static void Add(ref AInputDequeuer dequeuer)
+	public static void Add(AActor actor, ref AInputDequeuer dequeuer)
 	{
 		var instance = Instance as AInputEnqueuer;
-
 		instance.Add(ref instance, ref dequeuer);
+
+		Instance.actor = actor;
 	}
 
 	public static void Remove(ref AInputDequeuer dequeuer)
 	{
 		var instance = Instance as AInputEnqueuer;
-
 		instance.Remove(ref instance, ref dequeuer);
+
+		Instance.actor = null;
 	}
 
 	protected override void OnDequeuerDestroyed(MonoBehaviour dequeuerBehaviour)
