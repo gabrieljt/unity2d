@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
 
 #if UNITY_EDITOR
 
@@ -10,306 +9,295 @@ using UnityEditor;
 [CustomEditor(typeof(Game))]
 public class GameInspector : Editor
 {
-	public override void OnInspectorGUI()
-	{
-		DrawDefaultInspector();
-		if (Application.isPlaying)
-		{
-			LoadLevelButton();
-			ResetLevelButton();
-			DisposeButton();
-		}
-	}
+    public override void OnInspectorGUI()
+    {
+        DrawDefaultInspector();
+        if (Application.isPlaying)
+        {
+            LoadLevelButton();
+            ResetLevelButton();
+            DisposeButton();
+        }
+    }
 
-	private void LoadLevelButton()
-	{
-		if (GUILayout.Button("Load Level"))
-		{
-			var game = (Game)target;
-			game.LoadLevel();
-		}
-	}
+    private void LoadLevelButton()
+    {
+        if (GUILayout.Button("Load Level"))
+        {
+            var game = (Game)target;
+            game.LoadLevel();
+        }
+    }
 
-	private void ResetLevelButton()
-	{
-		if (GUILayout.Button("Reset Level"))
-		{
-			var game = (Game)target;
-			game.ResetLevel();
-		}
-	}
+    private void ResetLevelButton()
+    {
+        if (GUILayout.Button("Reset Level"))
+        {
+            var game = (Game)target;
+            game.ResetLevel();
+        }
+    }
 
-	private void DisposeButton()
-	{
-		if (GUILayout.Button("Dispose"))
-		{
-			var game = (Game)target;
-			game.Dispose();
-		}
-	}
+    private void DisposeButton()
+    {
+        if (GUILayout.Button("Dispose"))
+        {
+            var game = (Game)target;
+            game.Dispose();
+        }
+    }
 }
 
 #endif
 
 public enum GameState
 {
-	Unloaded,
-	Loading,
-	InGame,
-	Ended,
+    Unloaded,
+    Loading,
+    InGame,
+    Ended,
 }
 
 public class Game : MonoBehaviour, IDisposable
 {
-	[SerializeField]
-	private GameParams @params = new GameParams(1);
+    [SerializeField]
+    private GameParams @params = new GameParams(1);
 
-	[SerializeField]
-	private GameState state = GameState.Unloaded;
+    public GameParams Params { get { return @params; } }
 
-	[SerializeField]
-	private Level level;
+    [SerializeField]
+    private GameState state = GameState.Unloaded;
 
-	[SerializeField]
-	private Camera camera;
+    public GameState State { get { return state; } }
 
-	private Character player;
+    [SerializeField]
+    private Level level;
 
-	private Exit exit;
+    [SerializeField]
+    private Camera camera;
 
-	[SerializeField]
-	private Text levelLabel, stepsLeftLabel, stepsTakenLabel;
+    private Character player;
 
-	private void Awake()
-	{
-		gameObject.isStatic = true;
+    private Exit exit;
 
-		camera = FindObjectOfType<Camera>();
-		Debug.Assert(camera);
+    public static Game Instance
+    {
+        get
+        {
+            return FindObjectOfType<Game>();
+        }
+    }
 
-		level = FindObjectOfType<Level>();
-		Debug.Assert(level);
+    public Action LevelStarted = delegate { };
 
-		Debug.Assert(levelLabel);
-		Debug.Assert(stepsLeftLabel);
-		Debug.Assert(stepsTakenLabel);
-	}
+    public Action LevelReloaded = delegate { };
 
-	#region Start
+    private void Awake()
+    {
+        gameObject.isStatic = true;
 
-	private void Start()
-	{
-		LoadLevel();
-	}
+        camera = FindObjectOfType<Camera>();
+        Debug.Assert(camera);
 
-	public void LoadLevel()
-	{
-		Debug.Assert(state == GameState.Unloaded);
-		if (state == GameState.Unloaded)
-		{
-			StartCoroutine(StartLevelCoroutine());
-		}
-	}
+        level = Level.Instance;
+        Debug.Assert(level);
+    }
 
-	private IEnumerator StartLevelCoroutine()
-	{
-		yield return 0;
-		state = GameState.Loading;
-		@params = new GameParams(@params.Level);
-		camera.enabled = false;
+    #region Start
 
-		PlayerInputEnqueuer.Instance.Inputs.Clear();
-		PlayerInputEnqueuer.Instance.LockInputs();
+    private void Start()
+    {
+        LoadLevel();
+    }
 
-		level.GetComponent<MapActorSpawners>().Built += OnActorSpawnersBuilt;
-		level.Built += OnLevelBuilt;
+    public void LoadLevel()
+    {
+        Debug.Assert(state == GameState.Unloaded);
+        if (state == GameState.Unloaded)
+        {
+            StartCoroutine(StartLevelCoroutine());
+        }
+    }
 
-		level.Load(@params.levelParams);
+    private IEnumerator StartLevelCoroutine()
+    {
+        yield return 0;
+        state = GameState.Loading;
+        @params = new GameParams(@params.Level);
+        camera.enabled = false;
 
-		StartCoroutine(BuildLevelCoroutine());
-	}
+        var playerInputEnqueuerInstance = PlayerInputEnqueuer.Instance;
+        playerInputEnqueuerInstance.Inputs.Clear();
+        playerInputEnqueuerInstance.LockInputs();
 
-	private IEnumerator BuildLevelCoroutine()
-	{
-		yield return 0;
-		level.Build();
-	}
+        level.GetComponent<MapActorSpawners>().Built += OnActorSpawnersBuilt;
+        level.Built += OnLevelBuilt;
 
-	private void OnActorSpawnersBuilt(Type type)
-	{
-		level.GetComponent<MapActorSpawners>().Built -= OnActorSpawnersBuilt;
-		var actorSpawners = level.GetComponents<ActorSpawner>();
+        level.Load(@params.levelParams);
 
-		foreach (var actorSpawner in actorSpawners)
-		{
-			actorSpawner.Performed += OnActorSpawnerPerformed;
-			if (actorSpawner.type == ActorType.Player)
-			{
-				actorSpawner.Performed += OnPlayerSpawned;
-			}
+        StartCoroutine(BuildLevelCoroutine());
+    }
 
-			if (actorSpawner.type == ActorType.Exit)
-			{
-				actorSpawner.Performed += OnExitSpawned;
-			}
-		}
-	}
+    private IEnumerator BuildLevelCoroutine()
+    {
+        yield return 0;
+        level.Build();
+    }
 
-	private void OnActorSpawnerPerformed(ActorSpawner spawner, AActor actor)
-	{
-		spawner.Performed -= OnActorSpawnerPerformed;
-		spawner.enabled = false;
-	}
+    private void OnActorSpawnersBuilt(Type type)
+    {
+        level.GetComponent<MapActorSpawners>().Built -= OnActorSpawnersBuilt;
+        var actorSpawners = level.GetComponents<ActorSpawner>();
 
-	private void OnPlayerSpawned(ActorSpawner spawner, AActor actor)
-	{
-		spawner.Performed -= OnPlayerSpawned;
-		player = actor as Character;
-		player.GetComponent<StepCounter>().StepTaken += OnStepTaken;
-		player.Destroyed += OnPlayerDestroyed;
+        foreach (var actorSpawner in actorSpawners)
+        {
+            actorSpawner.Performed += OnActorSpawnerPerformed;
+            if (actorSpawner.type == ActorType.Player)
+            {
+                actorSpawner.Performed += OnPlayerSpawned;
+            }
 
-		var inputDequeuer = player.GetComponent<CharacterInputDequeuer>() as AInputDequeuer;
-		PlayerInputEnqueuer.Add(player, ref inputDequeuer);
-	}
+            if (actorSpawner.type == ActorType.Exit)
+            {
+                actorSpawner.Performed += OnExitSpawned;
+            }
+        }
+    }
 
-	private void OnPlayerDestroyed(MonoBehaviour player)
-	{
-		if (this.player == player)
-		{
-			this.player.GetComponent<StepCounter>().StepTaken -= OnStepTaken;
-			this.player.Destroyed -= OnPlayerDestroyed;
-			this.player = null;
-		}
-	}
+    private void OnActorSpawnerPerformed(ActorSpawner spawner, AActor actor)
+    {
+        spawner.Performed -= OnActorSpawnerPerformed;
+        spawner.enabled = false;
+    }
 
-	private void OnStepTaken()
-	{
-		@params.StepTaken();
-	}
+    private void OnPlayerSpawned(ActorSpawner spawner, AActor actor)
+    {
+        spawner.Performed -= OnPlayerSpawned;
+        player = actor as Character;
+        player.GetComponent<StepCounter>().StepTaken += OnStepTaken;
+        player.Destroyed += OnPlayerDestroyed;
 
-	private void OnExitSpawned(ActorSpawner spawner, AActor actor)
-	{
-		spawner.Performed -= OnExitSpawned;
-		exit = actor as Exit;
-		exit.Reached += OnExitReached;
-		exit.Destroyed += OnExitDestroyed;
-	}
+        var inputDequeuer = player.GetComponent<CharacterInputDequeuer>() as AInputDequeuer;
+        PlayerInputEnqueuer.Add(player, ref inputDequeuer);
+    }
 
-	private void OnExitDestroyed(MonoBehaviour exit)
-	{
-		if (this.exit == exit)
-		{
-			this.exit.Reached -= OnExitReached;
-			this.exit.Destroyed -= OnExitDestroyed;
-			this.exit = null;
-		}
-	}
+    private void OnPlayerDestroyed(MonoBehaviour player)
+    {
+        if (this.player == player)
+        {
+            this.player.GetComponent<StepCounter>().StepTaken -= OnStepTaken;
+            this.player.Destroyed -= OnPlayerDestroyed;
+            this.player = null;
+        }
+    }
 
-	private void OnExitReached(Character character)
-	{
-		if (character.gameObject.CompareTag(ActorType.Player.ToString()))
-		{
-			state = GameState.Ended;
-			@params = new GameParams(@params.Level + 1);
-			ReloadLevel();
-		}
-	}
+    private void OnStepTaken()
+    {
+        @params.StepTaken();
+    }
 
-	private void OnLevelBuilt(Type type)
-	{
-		level.Built -= OnLevelBuilt;
+    private void OnExitSpawned(ActorSpawner spawner, AActor actor)
+    {
+        spawner.Performed -= OnExitSpawned;
+        exit = actor as Exit;
+        exit.Reached += OnExitReached;
+        exit.Destroyed += OnExitDestroyed;
+    }
 
-		@params.levelParams = level.Params;
+    private void OnExitDestroyed(MonoBehaviour exit)
+    {
+        if (this.exit == exit)
+        {
+            this.exit.Reached -= OnExitReached;
+            this.exit.Destroyed -= OnExitDestroyed;
+            this.exit = null;
+        }
+    }
 
-		StartCoroutine(StartLevel());
-	}
+    private void OnExitReached(Character character)
+    {
+        if (character.gameObject.CompareTag(ActorType.Player.ToString()))
+        {
+            state = GameState.Ended;
+            @params = new GameParams(@params.Level + 1);
+            ReloadLevel();
+        }
+    }
 
-	private IEnumerator StartLevel()
-	{
-		yield return 0;
-		state = GameState.InGame;
+    private void OnLevelBuilt(Type type)
+    {
+        level.Built -= OnLevelBuilt;
 
-		UpdateUI();
-		var mapCenter = level.GetComponent<Map>().Center;
-		camera.orthographicSize = Mathf.Min(mapCenter.x, mapCenter.y);
-		SetCameraPosition(mapCenter);
-		camera.enabled = true;
+        @params.levelParams = level.Params;
 
-		@params.SetMaximumSteps(level.GetComponent<Map>(), level.GetComponent<MapDungeon>(), level.GetComponent<MapActorSpawners>());
+        StartCoroutine(StartLevel());
+    }
 
-		PlayerInputEnqueuer.Instance.UnlockInputs();
-	}
+    private IEnumerator StartLevel()
+    {
+        yield return 0;
+        state = GameState.InGame;
 
-	#endregion Start
+        var mapCenter = level.GetComponent<Map>().Center;
+        camera.orthographicSize = Mathf.Min(mapCenter.x, mapCenter.y);
+        SetCameraPosition(mapCenter);
+        camera.enabled = true;
 
-	#region Update
+        @params.SetMaximumSteps(level.GetComponent<Map>(), level.GetComponent<MapDungeon>(), level.GetComponent<MapActorSpawners>());
 
-	private void Update()
-	{
-		if (state == GameState.InGame)
-		{
-			if (Input.GetKeyDown(KeyCode.Escape))
-			{
-				ResetLevel();
-				return;
-			}
+        PlayerInputEnqueuer.Instance.UnlockInputs();
 
-			if (@params.StepsLeft == 0)
-			{
-				ResetLevel();
-			}
-			UpdateUI();
-		}
-	}
+        LevelStarted();
+    }
 
-	public void ResetLevel()
-	{
-		Debug.Assert(state == GameState.InGame);
-		if (state == GameState.InGame)
-		{
-			ReloadLevel();
-		}
-	}
+    #endregion Start
 
-	private void ReloadLevel()
-	{
-		Dispose();
-		LoadLevel();
-	}
+    #region Update
 
-	private void UpdateUI()
-	{
-		SetLevelLabel(@params.Level);
-		SetStepsLeftLabel(@params.StepsLeft);
-		SetStepsTakenLabel(GameParams.TotalStepsTaken);
-	}
+    private void Update()
+    {
+        if (state == GameState.InGame)
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                ResetLevel();
+                return;
+            }
 
-	private void SetLevelLabel(int level)
-	{
-		levelLabel.text = "Dungeon Level: " + level;
-	}
+            if (@params.StepsLeft == 0)
+            {
+                ResetLevel();
+            }
+        }
+    }
 
-	private void SetStepsLeftLabel(int stepsLeft)
-	{
-		stepsLeftLabel.text = "Steps Left: " + stepsLeft;
-	}
+    public void ResetLevel()
+    {
+        Debug.Assert(state == GameState.InGame);
+        if (state == GameState.InGame)
+        {
+            ReloadLevel();
+        }
+    }
 
-	private void SetStepsTakenLabel(int steps)
-	{
-		stepsTakenLabel.text = "Steps Taken: " + steps;
-	}
+    private void ReloadLevel()
+    {
+        Dispose();
+        LoadLevel();
+        LevelReloaded();
+    }
 
-	#endregion Update
+    #endregion Update
 
-	private void SetCameraPosition(Vector3 position)
-	{
-		camera.transform.position = Vector3.back * 10f + position;
-	}
+    private void SetCameraPosition(Vector3 position)
+    {
+        camera.transform.position = Vector3.back * 10f + position;
+    }
 
-	public void Dispose()
-	{
-		state = GameState.Unloaded;
-		StopAllCoroutines();
-		level.Dispose(true);
-	}
+    public void Dispose()
+    {
+        state = GameState.Unloaded;
+        StopAllCoroutines();
+        level.Dispose(true);
+    }
 }

@@ -3,7 +3,7 @@ using UnityEngine;
 
 public interface IDestroyable
 {
-	void OnDestroy();
+    void OnDestroy();
 
-	Action<MonoBehaviour> Destroyed { get; set; }
+    Action<MonoBehaviour> Destroyed { get; set; }
 }
