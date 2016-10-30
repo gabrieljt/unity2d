@@ -70,12 +70,6 @@ public class Game : MonoBehaviour, IDisposable
 
     public GameState State { get { return state; } }
 
-    [SerializeField]
-    private Level level;
-
-    [SerializeField]
-    private Camera camera;
-
     private Character player;
 
     private Exit exit;
@@ -95,12 +89,6 @@ public class Game : MonoBehaviour, IDisposable
     private void Awake()
     {
         gameObject.isStatic = true;
-
-        camera = FindObjectOfType<Camera>();
-        Debug.Assert(camera);
-
-        level = Level.Instance;
-        Debug.Assert(level);
     }
 
     #region Start
@@ -124,12 +112,12 @@ public class Game : MonoBehaviour, IDisposable
         yield return 0;
         state = GameState.Loading;
         @params = new GameParams(@params.Level);
-        camera.enabled = false;
 
         var playerInputEnqueuerInstance = PlayerInputEnqueuer.Instance;
         playerInputEnqueuerInstance.Inputs.Clear();
         playerInputEnqueuerInstance.LockInputs();
 
+        var level = Level.Instance;
         level.GetComponent<MapActorSpawners>().Built += OnActorSpawnersBuilt;
         level.Built += OnLevelBuilt;
 
@@ -141,11 +129,12 @@ public class Game : MonoBehaviour, IDisposable
     private IEnumerator BuildLevelCoroutine()
     {
         yield return 0;
-        level.Build();
+        Level.Instance.Build();
     }
 
     private void OnActorSpawnersBuilt(Type type)
     {
+        var level = Level.Instance;
         level.GetComponent<MapActorSpawners>().Built -= OnActorSpawnersBuilt;
         var actorSpawners = level.GetComponents<ActorSpawner>();
 
@@ -226,6 +215,7 @@ public class Game : MonoBehaviour, IDisposable
 
     private void OnLevelBuilt(Type type)
     {
+        var level = Level.Instance;
         level.Built -= OnLevelBuilt;
 
         @params.levelParams = level.Params;
@@ -236,13 +226,10 @@ public class Game : MonoBehaviour, IDisposable
     private IEnumerator StartLevel()
     {
         yield return 0;
+
         state = GameState.InGame;
 
-        var mapCenter = level.GetComponent<Map>().Center;
-        camera.orthographicSize = Mathf.Min(mapCenter.x, mapCenter.y);
-        SetCameraPosition(mapCenter);
-        camera.enabled = true;
-
+        var level = Level.Instance;
         @params.SetMaximumSteps(level.GetComponent<Map>(), level.GetComponent<MapDungeon>(), level.GetComponent<MapActorSpawners>());
 
         PlayerInputEnqueuer.Instance.UnlockInputs();
@@ -289,15 +276,10 @@ public class Game : MonoBehaviour, IDisposable
 
     #endregion Update
 
-    private void SetCameraPosition(Vector3 position)
-    {
-        camera.transform.position = Vector3.back * 10f + position;
-    }
-
     public void Dispose()
     {
         state = GameState.Unloaded;
         StopAllCoroutines();
-        level.Dispose(true);
+        Level.Instance.Dispose(true);
     }
 }

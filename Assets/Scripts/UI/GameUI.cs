@@ -7,8 +7,6 @@ public class GameUI : MonoBehaviour, IDestroyable, IDisposable
     [SerializeField]
     private Text levelLabel, stepsLeftLabel, stepsTakenLabel;
 
-    private Game gameInstance;
-
     private Action<MonoBehaviour> destroyed = delegate { };
 
     public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
@@ -19,7 +17,7 @@ public class GameUI : MonoBehaviour, IDestroyable, IDisposable
         Debug.Assert(stepsLeftLabel);
         Debug.Assert(stepsTakenLabel);
 
-        gameInstance = Game.Instance;
+        var gameInstance = Game.Instance;
         gameInstance.LevelStarted += OnGameLevelStarted;
         gameInstance.LevelReloaded += OnGameLevelReloaded;
 
@@ -40,11 +38,12 @@ public class GameUI : MonoBehaviour, IDestroyable, IDisposable
 
     private void SetEnabled(bool enabled)
     {
-        levelLabel.enabled = stepsLeftLabel.enabled = stepsTakenLabel.enabled = enabled;
+        enabled = levelLabel.enabled = stepsLeftLabel.enabled = stepsTakenLabel.enabled = enabled;
     }
 
     private void SetValues()
     {
+        var gameInstance = Game.Instance;
         SetLevelLabel(gameInstance.Params.Level);
         SetStepsLeftLabel(gameInstance.Params.StepsLeft);
         SetStepsTakenLabel(GameParams.TotalStepsTaken);
@@ -67,17 +66,18 @@ public class GameUI : MonoBehaviour, IDestroyable, IDisposable
 
     private void LateUpdate()
     {
-        if (gameInstance.State == GameState.InGame)
-        {
-            SetValues();
-            return;
-        }
+        SetValues();
+        return;
     }
 
     public void Dispose()
     {
-        gameInstance.LevelStarted -= OnGameLevelStarted;
-        gameInstance.LevelReloaded -= OnGameLevelReloaded;
+        var gameInstance = Game.Instance;
+        if (gameInstance)
+        {
+            gameInstance.LevelStarted -= OnGameLevelStarted;
+            gameInstance.LevelReloaded -= OnGameLevelReloaded;
+        }
     }
 
     public void OnDestroy()
