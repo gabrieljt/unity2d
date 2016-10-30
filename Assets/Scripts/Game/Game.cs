@@ -2,63 +2,15 @@
 using System.Collections;
 using UnityEngine;
 
-#if UNITY_EDITOR
-
-using UnityEditor;
-
-[CustomEditor(typeof(Game))]
-public class GameInspector : Editor
-{
-    public override void OnInspectorGUI()
-    {
-        DrawDefaultInspector();
-        if (Application.isPlaying)
-        {
-            LoadLevelButton();
-            ResetLevelButton();
-            DisposeButton();
-        }
-    }
-
-    private void LoadLevelButton()
-    {
-        if (GUILayout.Button("Load Level"))
-        {
-            var game = (Game)target;
-            game.LoadLevel();
-        }
-    }
-
-    private void ResetLevelButton()
-    {
-        if (GUILayout.Button("Reset Level"))
-        {
-            var game = (Game)target;
-            game.ResetLevel();
-        }
-    }
-
-    private void DisposeButton()
-    {
-        if (GUILayout.Button("Dispose"))
-        {
-            var game = (Game)target;
-            game.Dispose();
-        }
-    }
-}
-
-#endif
-
 public enum GameState
 {
     Unloaded,
     Loading,
-    InGame,
+    Started,
     Ended,
 }
 
-public class Game : MonoBehaviour, IDisposable
+public class Game : MonoBehaviour, IDisposable, IDestroyable
 {
     [SerializeField]
     private GameParams @params = new GameParams(1);
@@ -68,11 +20,13 @@ public class Game : MonoBehaviour, IDisposable
     [SerializeField]
     private GameState state = GameState.Unloaded;
 
-    public GameState State { get { return state; } }
+    [SerializeField]
+    private GameObject levelPrefab;
 
-    private Character player;
+    [SerializeField]
+    private Level level;
 
-    private Exit exit;
+    public Level Level { get { return level; } }
 
     public static Game Instance
     {
@@ -82,16 +36,23 @@ public class Game : MonoBehaviour, IDisposable
         }
     }
 
-    public Action LevelStarted = delegate { };
+    public Action Loading = delegate { };
 
-    public Action LevelReloaded = delegate { };
+    public Action Started = delegate { };
+
+    internal Action Updated = delegate { };
+
+    private Action<IDestroyable> destroyed = delegate { };
+
+    public Action<IDestroyable> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
     private void Awake()
     {
         gameObject.isStatic = true;
+        Debug.Assert(levelPrefab);
     }
 
-    #region Start
+    #region Load Level
 
     private void Start()
     {
@@ -103,11 +64,11 @@ public class Game : MonoBehaviour, IDisposable
         Debug.Assert(state == GameState.Unloaded);
         if (state == GameState.Unloaded)
         {
-            StartCoroutine(StartLevelCoroutine());
+            StartCoroutine(LoadLevelCoroutine());
         }
     }
 
-    private IEnumerator StartLevelCoroutine()
+    private IEnumerator LoadLevelCoroutine()
     {
         yield return 0;
         state = GameState.Loading;
@@ -117,30 +78,22 @@ public class Game : MonoBehaviour, IDisposable
         playerInputEnqueuerInstance.Inputs.Clear();
         playerInputEnqueuerInstance.LockInputs();
 
-        var level = Level.Instance;
+        level = (Instantiate(levelPrefab, transform, true) as GameObject).GetComponent<Level>();
         level.GetComponent<MapActorSpawners>().Built += OnActorSpawnersBuilt;
+        level.@params = @params.levelParams;
         level.Built += OnLevelBuilt;
 
-        level.Load(@params.levelParams);
-
-        StartCoroutine(BuildLevelCoroutine());
-    }
-
-    private IEnumerator BuildLevelCoroutine()
-    {
-        yield return 0;
-        Level.Instance.Build();
+        Loading();
     }
 
     private void OnActorSpawnersBuilt(Type type)
     {
-        var level = Level.Instance;
+        var level = Level;
         level.GetComponent<MapActorSpawners>().Built -= OnActorSpawnersBuilt;
         var actorSpawners = level.GetComponents<ActorSpawner>();
 
         foreach (var actorSpawner in actorSpawners)
         {
-            actorSpawner.Performed += OnActorSpawnerPerformed;
             if (actorSpawner.type == ActorType.Player)
             {
                 actorSpawner.Performed += OnPlayerSpawned;
@@ -153,16 +106,10 @@ public class Game : MonoBehaviour, IDisposable
         }
     }
 
-    private void OnActorSpawnerPerformed(ActorSpawner spawner, AActor actor)
-    {
-        spawner.Performed -= OnActorSpawnerPerformed;
-        spawner.enabled = false;
-    }
-
     private void OnPlayerSpawned(ActorSpawner spawner, AActor actor)
     {
         spawner.Performed -= OnPlayerSpawned;
-        player = actor as Character;
+        var player = actor as Character;
         player.GetComponent<StepCounter>().StepTaken += OnStepTaken;
         player.Destroyed += OnPlayerDestroyed;
 
@@ -170,36 +117,89 @@ public class Game : MonoBehaviour, IDisposable
         PlayerInputEnqueuer.Add(player, ref inputDequeuer);
     }
 
-    private void OnPlayerDestroyed(MonoBehaviour player)
+    private void OnPlayerDestroyed(IDestroyable destroyedComponent)
     {
-        if (this.player == player)
-        {
-            this.player.GetComponent<StepCounter>().StepTaken -= OnStepTaken;
-            this.player.Destroyed -= OnPlayerDestroyed;
-            this.player = null;
-        }
-    }
-
-    private void OnStepTaken()
-    {
-        @params.StepTaken();
+        var player = destroyedComponent as Character;
+        player.GetComponent<StepCounter>().StepTaken -= OnStepTaken;
+        player.Destroyed -= OnPlayerDestroyed;
     }
 
     private void OnExitSpawned(ActorSpawner spawner, AActor actor)
     {
         spawner.Performed -= OnExitSpawned;
-        exit = actor as Exit;
+        var exit = actor as Exit;
         exit.Reached += OnExitReached;
         exit.Destroyed += OnExitDestroyed;
     }
 
-    private void OnExitDestroyed(MonoBehaviour exit)
+    private void OnExitDestroyed(IDestroyable destroyedComponent)
     {
-        if (this.exit == exit)
+        var exit = destroyedComponent as Exit;
+
+        exit.Reached -= OnExitReached;
+        exit.Destroyed -= OnExitDestroyed;
+    }
+
+    #endregion Load Level
+
+    #region Start Level
+
+    private void OnLevelBuilt(Type type)
+    {
+        StartLevel();
+    }
+
+    private void StartLevel()
+    {
+        level.Built -= OnLevelBuilt;
+
+        @params.levelParams = level.@params;
+
+        StartCoroutine(StartLevelCoroutine());
+    }
+
+    private IEnumerator StartLevelCoroutine()
+    {
+        yield return 0;
+
+        state = GameState.Started;
+
+        @params.SetMaximumSteps(level.GetComponent<Map>(), level.GetComponent<MapDungeon>(), level.GetComponent<MapActorSpawners>());
+
+        PlayerInputEnqueuer.Instance.UnlockInputs();
+
+        Started();
+    }
+
+    #endregion Start Level
+
+    #region Update
+
+    private void Update()
+    {
+        if (state == GameState.Started)
         {
-            this.exit.Reached -= OnExitReached;
-            this.exit.Destroyed -= OnExitDestroyed;
-            this.exit = null;
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                ResetLevel();
+                return;
+            }
+        }
+
+        Updated();
+    }
+
+    #endregion Update
+
+    #region Logic
+
+    private void OnStepTaken()
+    {
+        @params.StepTaken();
+
+        if (@params.StepsLeft == 0)
+        {
+            ResetLevel();
         }
     }
 
@@ -213,55 +213,14 @@ public class Game : MonoBehaviour, IDisposable
         }
     }
 
-    private void OnLevelBuilt(Type type)
-    {
-        var level = Level.Instance;
-        level.Built -= OnLevelBuilt;
+    #endregion Logic
 
-        @params.levelParams = level.Params;
-
-        StartCoroutine(StartLevel());
-    }
-
-    private IEnumerator StartLevel()
-    {
-        yield return 0;
-
-        state = GameState.InGame;
-
-        var level = Level.Instance;
-        @params.SetMaximumSteps(level.GetComponent<Map>(), level.GetComponent<MapDungeon>(), level.GetComponent<MapActorSpawners>());
-
-        PlayerInputEnqueuer.Instance.UnlockInputs();
-
-        LevelStarted();
-    }
-
-    #endregion Start
-
-    #region Update
-
-    private void Update()
-    {
-        if (state == GameState.InGame)
-        {
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                ResetLevel();
-                return;
-            }
-
-            if (@params.StepsLeft == 0)
-            {
-                ResetLevel();
-            }
-        }
-    }
+    #region End Level
 
     public void ResetLevel()
     {
-        Debug.Assert(state == GameState.InGame);
-        if (state == GameState.InGame)
+        Debug.Assert(state == GameState.Started);
+        if (state == GameState.Started)
         {
             ReloadLevel();
         }
@@ -269,17 +228,22 @@ public class Game : MonoBehaviour, IDisposable
 
     private void ReloadLevel()
     {
-        Dispose();
+        state = GameState.Unloaded;
+        Destroy(level.gameObject);
         LoadLevel();
-        LevelReloaded();
     }
 
-    #endregion Update
+    #endregion End Level
 
     public void Dispose()
     {
         state = GameState.Unloaded;
         StopAllCoroutines();
-        Level.Instance.Dispose(true);
+    }
+
+    public void OnDestroy()
+    {
+        Destroyed(this);
+        Dispose();
     }
 }

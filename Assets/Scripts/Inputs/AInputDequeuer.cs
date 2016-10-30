@@ -10,9 +10,9 @@ public abstract class AInputDequeuer : MonoBehaviour, IDestroyable
 
     public Action<Vector2> InputsDequeued = delegate { };
 
-    private Action<MonoBehaviour> destroyed = delegate { };
+    private Action<IDestroyable> destroyed = delegate { };
 
-    public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
+    public Action<IDestroyable> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
     public abstract void OnInputsEnqueued(AInputEnqueuer inputQueue);
 

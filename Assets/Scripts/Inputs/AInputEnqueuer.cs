@@ -27,9 +27,9 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 
     public Action<AInputEnqueuer> InputsEnqueued = delegate { };
 
-    private Action<MonoBehaviour> destroyed = delegate { };
+    private Action<IDestroyable> destroyed = delegate { };
 
-    public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
+    public Action<IDestroyable> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
     protected virtual void Awake()
     {
@@ -100,10 +100,10 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
         }
     }
 
-    protected virtual void OnDequeuerDestroyed(MonoBehaviour dequeuerBehaviour)
+    protected virtual void OnDequeuerDestroyed(IDestroyable destroyedComponent)
     {
         var instance = this as AInputEnqueuer;
-        var dequeuer = dequeuerBehaviour.GetComponent<AInputDequeuer>();
+        var dequeuer = destroyedComponent as AInputDequeuer;
         instance.Remove(ref instance, ref dequeuer);
     }
 

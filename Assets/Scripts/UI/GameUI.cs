@@ -1,15 +1,10 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class GameUI : MonoBehaviour, IDestroyable, IDisposable
+public class GameUI : MonoBehaviour
 {
     [SerializeField]
     private Text levelLabel, stepsLeftLabel, stepsTakenLabel;
-
-    private Action<MonoBehaviour> destroyed = delegate { };
-
-    public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
     private void Awake()
     {
@@ -18,22 +13,38 @@ public class GameUI : MonoBehaviour, IDestroyable, IDisposable
         Debug.Assert(stepsTakenLabel);
 
         var gameInstance = Game.Instance;
-        gameInstance.LevelStarted += OnGameLevelStarted;
-        gameInstance.LevelReloaded += OnGameLevelReloaded;
+        gameInstance.Loading += OnGameLoading;
+        gameInstance.Started += OnGameStarted;
+        gameInstance.Updated += OnGameUpdated;
+        gameInstance.Destroyed += OnGameDestroyed;
 
         SetEnabled(false);
         SetValues();
     }
 
-    private void OnGameLevelStarted()
+    private void OnGameLoading()
+    {
+        SetEnabled(false);
+    }
+
+    private void OnGameStarted()
     {
         SetEnabled(true);
         SetValues();
     }
 
-    private void OnGameLevelReloaded()
+    private void OnGameUpdated()
     {
-        SetEnabled(false);
+        SetValues();
+        return;
+    }
+
+    private void OnGameDestroyed(IDestroyable destroyedComponent)
+    {
+        var gameInstance = destroyedComponent as Game;
+        gameInstance.Loading -= OnGameLoading;
+        gameInstance.Started -= OnGameStarted;
+        gameInstance.Destroyed -= OnGameDestroyed;
     }
 
     private void SetEnabled(bool enabled)
@@ -62,26 +73,5 @@ public class GameUI : MonoBehaviour, IDestroyable, IDisposable
     private void SetStepsTakenLabel(int steps)
     {
         stepsTakenLabel.text = "Steps Taken: " + steps;
-    }
-
-    private void LateUpdate()
-    {
-        SetValues();
-        return;
-    }
-
-    public void Dispose()
-    {
-        var gameInstance = Game.Instance;
-        if (gameInstance)
-        {
-            gameInstance.LevelStarted -= OnGameLevelStarted;
-            gameInstance.LevelReloaded -= OnGameLevelReloaded;
-        }
-    }
-
-    public void OnDestroy()
-    {
-        Dispose();
     }
 }
