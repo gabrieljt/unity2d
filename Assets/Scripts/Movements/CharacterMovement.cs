@@ -30,9 +30,9 @@ public class CharacterMovement : MonoBehaviour, IMoveable
 
     public Action<Vector2> Moving { get { return moving; } set { moving = value; } }
 
-    private Action<MonoBehaviour> destroyed = delegate { };
+    private Action<IDestroyable> destroyed = delegate { };
 
-    public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
+    public Action<IDestroyable> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
     private void Awake()
     {

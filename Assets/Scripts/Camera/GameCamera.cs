@@ -1,22 +1,28 @@
 ﻿using System;
 using UnityEngine;
 
-public class GameCamera : MonoBehaviour, IDestroyable, IDisposable
+public class GameCamera : MonoBehaviour
 {
-    private Action<MonoBehaviour> destroyed = delegate { };
+    private Action<IDestroyable> destroyed = delegate { };
 
-    public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
+    public Action<IDestroyable> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
     private void Awake()
     {
         var gameInstance = Game.Instance;
-        gameInstance.LevelStarted += OnGameLevelStarted;
-        gameInstance.LevelReloaded += OnGameLevelReloaded;
+        gameInstance.Loading += OnGameLoading;
+        gameInstance.Started += OnGameStarted;
+        gameInstance.Destroyed += OnGameDestroyed;
     }
 
-    private void OnGameLevelStarted()
+    private void OnGameLoading()
     {
-        var mapCenter = Level.Instance.GetComponent<Map>().Center;
+        GetComponent<Camera>().enabled = false;
+    }
+
+    private void OnGameStarted()
+    {
+        var mapCenter = Game.Instance.Level.GetComponent<Map>().Center;
         var camera = GetComponent<Camera>();
 
         camera.orthographicSize = Mathf.Min(mapCenter.x, mapCenter.y);
@@ -24,23 +30,11 @@ public class GameCamera : MonoBehaviour, IDestroyable, IDisposable
         camera.enabled = true;
     }
 
-    private void OnGameLevelReloaded()
+    private void OnGameDestroyed(IDestroyable destroyedComponent)
     {
-        GetComponent<Camera>().enabled = false;
-    }
-
-    public void Dispose()
-    {
-        var gameInstance = Game.Instance;
-        if (gameInstance)
-        {
-            gameInstance.LevelStarted -= OnGameLevelStarted;
-            gameInstance.LevelReloaded -= OnGameLevelReloaded;
-        }
-    }
-
-    public void OnDestroy()
-    {
-        Dispose();
+        var gameInstance = destroyedComponent as Game;
+        gameInstance.Loading -= OnGameLoading;
+        gameInstance.Started -= OnGameStarted;
+        gameInstance.Destroyed -= OnGameDestroyed;
     }
 }

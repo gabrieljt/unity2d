@@ -1,16 +1,5 @@
 ﻿using UnityEngine;
 
-#if UNITY_EDITOR
-
-using UnityEditor;
-
-[CustomEditor(typeof(MapRenderer))]
-public class MapRendererInspector : ALevelComponentInspector
-{
-}
-
-#endif
-
 [RequireComponent(
     typeof(SpriteRenderer),
     typeof(Map)

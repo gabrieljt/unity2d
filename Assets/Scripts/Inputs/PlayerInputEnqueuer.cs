@@ -95,7 +95,7 @@ public class PlayerInputEnqueuer : AInputEnqueuer
         Instance.actor = null;
     }
 
-    protected override void OnDequeuerDestroyed(MonoBehaviour dequeuerBehaviour)
+    protected override void OnDequeuerDestroyed(IDestroyable destroyedComponent)
     {
         if (!Instance)
         {
@@ -103,7 +103,7 @@ public class PlayerInputEnqueuer : AInputEnqueuer
         }
 
         var instance = Instance as AInputEnqueuer;
-        var dequeuer = dequeuerBehaviour.GetComponent<AInputDequeuer>();
+        var dequeuer = destroyedComponent as AInputDequeuer;
         instance.Remove(ref instance, ref dequeuer);
     }
 

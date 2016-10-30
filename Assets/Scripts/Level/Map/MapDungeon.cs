@@ -2,17 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-#if UNITY_EDITOR
-
-using UnityEditor;
-
-[CustomEditor(typeof(MapDungeon))]
-public class MapDungeonInspector : ALevelComponentInspector
-{
-}
-
-#endif
-
 [RequireComponent(
     typeof(Map)
 )]

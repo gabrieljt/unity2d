@@ -2,33 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-#if UNITY_EDITOR
-
-using UnityEditor;
-
-[CustomEditor(typeof(LevelBuilder))]
-public class LevelBuilderInspector : ALevelComponentInspector
-{
-    public override void OnInspectorGUI()
-    {
-        DrawDefaultInspector();
-        BuildButton();
-        DisposeAllButton();
-        DisposeButton();
-    }
-
-    private void DisposeAllButton()
-    {
-        if (GUILayout.Button("Dispose All"))
-        {
-            var builder = (LevelBuilder)target;
-            builder.Dispose(true);
-        }
-    }
-}
-
-#endif
-
 [RequireComponent(
     typeof(Map),
     typeof(MapDungeon),
@@ -42,7 +15,7 @@ public class LevelBuilder : ALevelComponent
 {
     private Queue<ALevelComponent> componentsBuildQueue = new Queue<ALevelComponent>();
 
-    private int componentsBuilt;
+    private int componentsBuilt = 0;
 
     [SerializeField]
     private ALevelComponent[] components = new ALevelComponent[0];
@@ -89,7 +62,6 @@ public class LevelBuilder : ALevelComponent
 
     private void OnComponentBuilt(Type type)
     {
-        Array.Find(components, component => component.GetType() == type).Built -= OnComponentBuilt;
         ++componentsBuilt;
 
         if (componentsBuilt == components.Length)
@@ -116,23 +88,14 @@ public class LevelBuilder : ALevelComponent
 
     public override void Dispose()
     {
+        Array.Reverse(components);
+        foreach (var component in components)
+        {
+            component.Built -= OnComponentBuilt;
+        }
+
         components = new ALevelComponent[0];
         componentsBuildQueue.Clear();
         componentsBuilt = 0;
-    }
-
-    public void Dispose(bool disposeDependencies)
-    {
-        if (disposeDependencies)
-        {
-            Array.Reverse(components);
-            foreach (var component in components)
-            {
-                component.Built -= OnComponentBuilt;
-                component.Dispose();
-            }
-        }
-
-        Dispose();
     }
 }

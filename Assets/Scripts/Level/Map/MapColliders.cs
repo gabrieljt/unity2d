@@ -1,16 +1,5 @@
 ﻿using UnityEngine;
 
-#if UNITY_EDITOR
-
-using UnityEditor;
-
-[CustomEditor(typeof(MapColliders))]
-public class MapCollidersInspector : ALevelComponentInspector
-{
-}
-
-#endif
-
 [RequireComponent(
     typeof(Map)
 )]

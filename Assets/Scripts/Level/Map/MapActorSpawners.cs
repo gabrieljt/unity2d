@@ -4,17 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-#if UNITY_EDITOR
-
-using UnityEditor;
-
-[CustomEditor(typeof(MapActorSpawners))]
-public class MapActorSpawnersInspector : ALevelComponentInspector
-{
-}
-
-#endif
-
 [RequireComponent(
     typeof(Map)
 )]
@@ -101,10 +90,11 @@ public class MapActorSpawners : ALevelComponent
         actorsContainers[spawner.type].Add(actor);
     }
 
-    private void OnActorDestroyed(MonoBehaviour destroyedActor)
+    private void OnActorDestroyed(IDestroyable destroyedComponent)
     {
+        var destroyedActor = destroyedComponent as AActor;
         var actorType = destroyedActor.tag.ToEnum<ActorType>();
-        var actor = actorsContainers[actorType].Find(containedActor => containedActor == (destroyedActor as AActor));
+        var actor = actorsContainers[actorType].Find(containedActor => containedActor == (destroyedActor));
         Debug.Assert(actor);
         actor.Destroyed -= OnActorDestroyed;
         actorsContainers[actorType].Remove(destroyedActor as AActor);

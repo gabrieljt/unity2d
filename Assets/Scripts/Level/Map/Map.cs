@@ -1,17 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-#if UNITY_EDITOR
-
-using UnityEditor;
-
-[CustomEditor(typeof(Map))]
-public class MapInspector : ALevelComponentInspector
-{
-}
-
-#endif
-
 public class Map : ALevelComponent
 {
     [Range(4, 128)]

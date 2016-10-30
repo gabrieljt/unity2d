@@ -7,9 +7,9 @@ public abstract class AActor : MonoBehaviour, IDestroyable, IDisposable
 
     public Action<AActor> Disabled = delegate { };
 
-    private Action<MonoBehaviour> destroyed = delegate { };
+    private Action<IDestroyable> destroyed = delegate { };
 
-    public Action<MonoBehaviour> Destroyed { get { return destroyed; } set { destroyed = value; } }
+    public Action<IDestroyable> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
     public virtual void Enable()
     {

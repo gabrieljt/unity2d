@@ -1,123 +1,50 @@
 ﻿using System;
 using UnityEngine;
 
-#if UNITY_EDITOR
-
-using UnityEditor;
-
-[CustomEditor(typeof(Level))]
-public class LevelInspector : ALevelComponentInspector
-{
-    public override void OnInspectorGUI()
-    {
-        DrawDefaultInspector();
-        LoadButton();
-        BuildButton();
-        DisposeAllButton();
-        DisposeButton();
-    }
-
-    private void LoadButton()
-    {
-        if (GUILayout.Button("Load"))
-        {
-            var level = (Level)target;
-            level.Load(level.Params);
-        }
-    }
-
-    private void DisposeAllButton()
-    {
-        if (GUILayout.Button("Dispose All"))
-        {
-            var level = (Level)target;
-            level.Dispose(true);
-        }
-    }
-}
-
-#endif
-
 [RequireComponent(
     typeof(LevelBuilder)
 )]
-public class Level : ALevel
+public class Level : ALevelComponent
 {
-    [SerializeField]
-    private LevelParams @params;
-
-    public LevelParams Params { get { return @params; } }
+    public LevelParams @params;
 
     [SerializeField]
     private LevelBuilder levelBuilder;
-
-    public static Level Instance
-    {
-        get
-        {
-            return FindObjectOfType<Level>();
-        }
-    }
 
     private void Awake()
     {
         levelBuilder = GetComponent<LevelBuilder>();
     }
 
-    public override void Load(LevelParams @params)
+    private void Start()
     {
-        Debug.Assert(state == LevelState.Unloaded);
-        if (state == LevelState.Unloaded)
-        {
-            state = LevelState.Unbuilt;
-            this.@params = @params as LevelParams;
-        }
+        Build();
     }
 
     public override void Build()
     {
-        Debug.Assert(state == LevelState.Unbuilt);
-        if (state == LevelState.Unbuilt)
-        {
-            state = LevelState.Building;
-            levelBuilder.GetComponent<MapDungeon>().Built += OnDungeonBuilt;
-            levelBuilder.Built += OnLevelBuilderBuilt;
+        levelBuilder.GetComponent<MapDungeon>().Built += OnDungeonBuilt;
+        levelBuilder.Built += OnBuilderBuilt;
 
-            var map = levelBuilder.GetComponent<Map>();
-            @params.SetSize(ref map);
-            levelBuilder.Build();
-        }
+        var map = levelBuilder.GetComponent<Map>();
+        @params.SetSize(ref map);
+        levelBuilder.Build();
     }
 
     private void OnDungeonBuilt(Type type)
     {
-        levelBuilder.GetComponent<MapDungeon>().Built -= OnDungeonBuilt;
-
         var actorSpawners = levelBuilder.GetComponent<MapActorSpawners>();
         @params.SetActorSpawnersData(ref actorSpawners, levelBuilder.GetComponent<Map>(), levelBuilder.GetComponent<MapDungeon>());
     }
 
-    private void OnLevelBuilderBuilt(Type type)
+    private void OnBuilderBuilt(Type type)
     {
-        state = LevelState.Built;
-        levelBuilder.Built -= OnLevelBuilderBuilt;
-
         Built(GetType());
     }
 
     public override void Dispose()
     {
-        state = LevelState.Unloaded;
-    }
-
-    public void Dispose(bool disposeDependencies)
-    {
-        if (disposeDependencies)
-        {
-            levelBuilder.GetComponent<MapDungeon>().Built -= OnDungeonBuilt;
-            levelBuilder.Built -= OnLevelBuilderBuilt;
-            levelBuilder.Dispose(true);
-        }
-        Dispose();
+        levelBuilder.GetComponent<MapDungeon>().Built -= OnDungeonBuilt;
+        levelBuilder.Built -= OnBuilderBuilt;
     }
 }
