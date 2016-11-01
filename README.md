@@ -5,7 +5,6 @@ Unity3D 5.4.2f2 - 2D Procedural roguelike top down experiments
 * Physics top down movement
 * Simple Character AI
 * Step counter
-* Scene rebuild on the fly
 
 == Known Bugs ==
 * May generate dungeon with unreachable exit (press ESC to rebuild)
