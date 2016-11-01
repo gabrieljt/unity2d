@@ -1,10 +1,18 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
-public class GameUI : MonoBehaviour
+public class GameUI : MonoBehaviour, IDestroyable, IDisposable
 {
     [SerializeField]
+    private Game gameInstance;
+
+    [SerializeField]
     private Text levelLabel, stepsLeftLabel, stepsTakenLabel;
+
+    private Action<IDestroyable> destroyed = delegate { };
+
+    public Action<IDestroyable> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
     private void Awake()
     {
@@ -12,7 +20,7 @@ public class GameUI : MonoBehaviour
         Debug.Assert(stepsLeftLabel);
         Debug.Assert(stepsTakenLabel);
 
-        var gameInstance = Game.Instance;
+        gameInstance = Game.Instance;
         gameInstance.Loading += OnGameLoading;
         gameInstance.Started += OnGameStarted;
         gameInstance.Updated += OnGameUpdated;
@@ -41,9 +49,9 @@ public class GameUI : MonoBehaviour
 
     private void OnGameDestroyed(IDestroyable destroyedComponent)
     {
-        var gameInstance = destroyedComponent as Game;
         gameInstance.Loading -= OnGameLoading;
         gameInstance.Started -= OnGameStarted;
+        gameInstance.Updated -= OnGameUpdated;
         gameInstance.Destroyed -= OnGameDestroyed;
     }
 
@@ -54,7 +62,6 @@ public class GameUI : MonoBehaviour
 
     private void SetValues()
     {
-        var gameInstance = Game.Instance;
         SetLevelLabel(gameInstance.Params.Level);
         SetStepsLeftLabel(gameInstance.Params.StepsLeft);
         SetStepsTakenLabel(GameParams.TotalStepsTaken);
@@ -73,5 +80,22 @@ public class GameUI : MonoBehaviour
     private void SetStepsTakenLabel(int steps)
     {
         stepsTakenLabel.text = "Steps Taken: " + steps;
+    }
+
+    public void Dispose()
+    {
+        if (gameInstance)
+        {
+            gameInstance.Loading -= OnGameLoading;
+            gameInstance.Started -= OnGameStarted;
+            gameInstance.Updated -= OnGameUpdated;
+            gameInstance.Destroyed -= OnGameDestroyed;
+        }
+    }
+
+    public void OnDestroy()
+    {
+        Destroyed(this);
+        Dispose();
     }
 }

@@ -28,6 +28,9 @@ public class Game : MonoBehaviour, IDisposable, IDestroyable
 
     public Level Level { get { return level; } }
 
+    [SerializeField]
+    private PlayerInputEnqueuer playerInputEnqueuerInstance;
+
     public static Game Instance
     {
         get
@@ -50,6 +53,8 @@ public class Game : MonoBehaviour, IDisposable, IDestroyable
     {
         gameObject.isStatic = true;
         Debug.Assert(levelPrefab);
+
+        playerInputEnqueuerInstance = PlayerInputEnqueuer.Instance;
     }
 
     #region Load Level
@@ -74,21 +79,19 @@ public class Game : MonoBehaviour, IDisposable, IDestroyable
         state = GameState.Loading;
         @params = new GameParams(@params.Level);
 
-        var playerInputEnqueuerInstance = PlayerInputEnqueuer.Instance;
         playerInputEnqueuerInstance.Inputs.Clear();
         playerInputEnqueuerInstance.LockInputs();
 
         level = (Instantiate(levelPrefab, transform, true) as GameObject).GetComponent<Level>();
         level.GetComponent<MapActorSpawners>().Built += OnActorSpawnersBuilt;
-        level.@params = @params.levelParams;
         level.Built += OnLevelBuilt;
+        level.@params = @params.levelParams;
 
         Loading();
     }
 
     private void OnActorSpawnersBuilt(Type type)
     {
-        var level = Level;
         level.GetComponent<MapActorSpawners>().Built -= OnActorSpawnersBuilt;
         var actorSpawners = level.GetComponents<ActorSpawner>();
 
@@ -113,8 +116,7 @@ public class Game : MonoBehaviour, IDisposable, IDestroyable
         player.GetComponent<StepCounter>().StepTaken += OnStepTaken;
         player.Destroyed += OnPlayerDestroyed;
 
-        var inputDequeuer = player.GetComponent<CharacterInputDequeuer>() as AInputDequeuer;
-        PlayerInputEnqueuer.Add(player, ref inputDequeuer);
+        playerInputEnqueuerInstance.Add(player);
     }
 
     private void OnPlayerDestroyed(IDestroyable destroyedComponent)
@@ -166,7 +168,7 @@ public class Game : MonoBehaviour, IDisposable, IDestroyable
 
         @params.SetMaximumSteps(level.GetComponent<Map>(), level.GetComponent<MapDungeon>(), level.GetComponent<MapActorSpawners>());
 
-        PlayerInputEnqueuer.Instance.UnlockInputs();
+        playerInputEnqueuerInstance.UnlockInputs();
 
         Started();
     }
