@@ -14,8 +14,6 @@ Unity3D 5.4.2f2 - 2D Procedural roguelike top down experiments
 == TODO ==
 * Win / Lose conditions
 * Progression rules
-* UI
-* Camera
 
 Using assets from http://opengameart.org/content/dawnlike-16x16-universal-rogue-like-tileset-v181
 
