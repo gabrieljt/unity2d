@@ -26,16 +26,6 @@ public class Exit : AActor
         }
     }
 
-    public override void Enable()
-    {
-        gameObject.SetActive(true);
-    }
-
-    public override void Disable()
-    {
-        gameObject.SetActive(false);
-    }
-
     public override void Dispose()
     {
     }

@@ -36,65 +36,61 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
         MaximumInputsPerUpdate = maximumInputsPerUpdate;
     }
 
-    public void Add(ref AInputEnqueuer instance, ref AInputDequeuer dequeuer)
+    public void Add(ref AInputDequeuer dequeuer)
     {
-        Debug.Assert(!instance.Dequeuers.Contains(dequeuer));
-        Debug.Assert(!dequeuer.Enqueuers.Contains(instance));
+        Debug.Assert(!Dequeuers.Contains(dequeuer));
+        Debug.Assert(!dequeuer.Enqueuers.Contains(this));
 
-        if (instance.Dequeuers.Contains(dequeuer))
+        if (Dequeuers.Contains(dequeuer))
         {
             return;
         }
 
-        RegisterDequeuer(ref instance, ref dequeuer);
+        RegisterDequeuer(ref dequeuer);
 
-        dequeuer.Enqueuers.Add(instance);
-        instance.Dequeuers.Add(dequeuer);
+        dequeuer.Enqueuers.Add(this);
+        Dequeuers.Add(dequeuer);
 
         Debug.Assert(dequeuer.Enqueuers.Count <= 2);
     }
 
-    private void RegisterDequeuer(ref AInputEnqueuer instance, ref AInputDequeuer dequeuer)
+    private void RegisterDequeuer(ref AInputDequeuer dequeuer)
     {
-        instance.InputsEnqueued += dequeuer.OnInputsEnqueued;
+        InputsEnqueued += dequeuer.OnInputsEnqueued;
         (dequeuer as IDestroyable).Destroyed += OnDequeuerDestroyed;
-        dequeuer.InputsDequeued += OnInputsDequeued;
 
         var otherEnqueuer = dequeuer.GetComponent<AInputEnqueuer>();
-        if (otherEnqueuer && otherEnqueuer != instance)
+        if (otherEnqueuer && otherEnqueuer != this)
         {
             otherEnqueuer.enabled = false;
         }
     }
 
-    protected abstract void OnInputsDequeued(Vector2 obj);
-
-    public void Remove(ref AInputEnqueuer instance, ref AInputDequeuer dequeuer)
+    public void Remove(ref AInputDequeuer dequeuer)
     {
-        Debug.Assert(instance.Dequeuers.Contains(dequeuer));
-        Debug.Assert(dequeuer.Enqueuers.Contains(instance));
+        Debug.Assert(Dequeuers.Contains(dequeuer));
+        Debug.Assert(dequeuer.Enqueuers.Contains(this));
 
-        if (!instance.Dequeuers.Contains(dequeuer))
+        if (!Dequeuers.Contains(dequeuer))
         {
             return;
         }
 
-        UnregisterDequeuer(ref instance, ref dequeuer);
+        UnregisterDequeuer(ref dequeuer);
 
-        dequeuer.Enqueuers.Remove(instance);
-        instance.Dequeuers.Remove(dequeuer);
+        dequeuer.Enqueuers.Remove(this);
+        Dequeuers.Remove(dequeuer);
 
         Debug.Assert(dequeuer.Enqueuers.Count >= 0);
     }
 
-    private void UnregisterDequeuer(ref AInputEnqueuer instance, ref AInputDequeuer dequeuer)
+    private void UnregisterDequeuer(ref AInputDequeuer dequeuer)
     {
-        instance.InputsEnqueued -= dequeuer.OnInputsEnqueued;
+        InputsEnqueued -= dequeuer.OnInputsEnqueued;
         (dequeuer as IDestroyable).Destroyed -= OnDequeuerDestroyed;
-        dequeuer.InputsDequeued -= OnInputsDequeued;
 
         var otherEnqueuer = dequeuer.GetComponent<AInputEnqueuer>();
-        if (otherEnqueuer && otherEnqueuer != instance)
+        if (otherEnqueuer && otherEnqueuer != this)
         {
             otherEnqueuer.enabled = true;
         }
@@ -102,9 +98,8 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 
     protected virtual void OnDequeuerDestroyed(IDestroyable destroyedComponent)
     {
-        var instance = this as AInputEnqueuer;
         var dequeuer = destroyedComponent as AInputDequeuer;
-        instance.Remove(ref instance, ref dequeuer);
+        Remove(ref dequeuer);
     }
 
     protected abstract void EnqueueInputs();
@@ -144,12 +139,11 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 
     public virtual void Dispose()
     {
-        var instance = this as AInputEnqueuer;
         var dequeuersList = new List<AInputDequeuer>(dequeuers);
         foreach (var dequeuer in dequeuersList)
         {
             var dequeuerInstance = dequeuer;
-            instance.Remove(ref instance, ref dequeuerInstance);
+            Remove(ref dequeuerInstance);
         }
 
         dequeuers.Clear();

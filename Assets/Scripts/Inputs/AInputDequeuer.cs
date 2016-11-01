@@ -8,8 +8,6 @@ public abstract class AInputDequeuer : MonoBehaviour, IDestroyable
 
     public HashSet<AInputEnqueuer> Enqueuers { get { return enqueuers; } }
 
-    public Action<Vector2> InputsDequeued = delegate { };
-
     private Action<IDestroyable> destroyed = delegate { };
 
     public Action<IDestroyable> Destroyed { get { return destroyed; } set { destroyed = value; } }

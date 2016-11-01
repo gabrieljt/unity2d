@@ -49,13 +49,14 @@ public class CharacterInputEnqueuer : AInputEnqueuer
     protected override void Awake()
     {
         base.Awake();
+
         character = GetComponent<Character>();
         movement = character.GetComponent<CharacterMovement>();
         collider = character.GetComponent<CircleCollider2D>();
 
-        var instance = this as AInputEnqueuer;
         var dequeuerInstance = character.GetComponent<AInputDequeuer>();
-        Add(ref instance, ref dequeuerInstance);
+        Add(ref dequeuerInstance);
+        (dequeuerInstance as CharacterInputDequeuer).InputsDequeued += OnInputsDequeued;
     }
 
     protected override void EnqueueInputs()
@@ -112,7 +113,7 @@ public class CharacterInputEnqueuer : AInputEnqueuer
         }
     }
 
-    protected override void OnInputsDequeued(Vector2 direction)
+    protected void OnInputsDequeued(Vector2 direction)
     {
         if (!enabled)
         {
@@ -205,5 +206,11 @@ public class CharacterInputEnqueuer : AInputEnqueuer
     private static Vector2 GetColliderPosition(Collider2D collider)
     {
         return new Vector2(collider.transform.position.x, collider.transform.position.y) + collider.offset;
+    }
+
+    protected override void OnDequeuerDestroyed(IDestroyable destroyedComponent)
+    {
+        base.OnDequeuerDestroyed(destroyedComponent);
+        (destroyedComponent as CharacterInputDequeuer).InputsDequeued -= OnInputsDequeued;
     }
 }

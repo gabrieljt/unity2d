@@ -1,15 +1,24 @@
 ﻿using System;
 using UnityEngine;
 
-public class GameCamera : MonoBehaviour
+[RequireComponent(
+    typeof(Camera)
+)]
+public class GameCamera : MonoBehaviour, IDestroyable, IDisposable
 {
+    [SerializeField]
+    private Game gameInstance;
+
+    [SerializeField]
+    private Camera camera;
+
     private Action<IDestroyable> destroyed = delegate { };
 
     public Action<IDestroyable> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
     private void Awake()
     {
-        var gameInstance = Game.Instance;
+        gameInstance = Game.Instance;
         gameInstance.Loading += OnGameLoading;
         gameInstance.Started += OnGameStarted;
         gameInstance.Destroyed += OnGameDestroyed;
@@ -22,19 +31,34 @@ public class GameCamera : MonoBehaviour
 
     private void OnGameStarted()
     {
-        var mapCenter = Game.Instance.Level.GetComponent<Map>().Center;
+        var mapCenter = gameInstance.Level.GetComponent<Map>().Center;
         var camera = GetComponent<Camera>();
 
         camera.orthographicSize = Mathf.Min(mapCenter.x, mapCenter.y);
-        camera.transform.position = Vector3.back * 10f + (Vector3)mapCenter;
+        camera.transform.position = Vector3.back + (Vector3)mapCenter;
         camera.enabled = true;
     }
 
     private void OnGameDestroyed(IDestroyable destroyedComponent)
     {
-        var gameInstance = destroyedComponent as Game;
         gameInstance.Loading -= OnGameLoading;
         gameInstance.Started -= OnGameStarted;
         gameInstance.Destroyed -= OnGameDestroyed;
+    }
+
+    public void Dispose()
+    {
+        if (gameInstance)
+        {
+            gameInstance.Loading -= OnGameLoading;
+            gameInstance.Started -= OnGameStarted;
+            gameInstance.Destroyed -= OnGameDestroyed;
+        }
+    }
+
+    public void OnDestroy()
+    {
+        Destroyed(this);
+        Dispose();
     }
 }

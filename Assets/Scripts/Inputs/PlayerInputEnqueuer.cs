@@ -15,14 +15,14 @@ public class PlayerInputEnqueuerInspector : Editor
         {
             var enqueuer = (PlayerInputEnqueuer)target;
             var dequeuer = enqueuer.Actor.GetComponent<AInputDequeuer>();
-            PlayerInputEnqueuer.Remove(ref dequeuer);
+            PlayerInputEnqueuer.Instance.Remove(PlayerInputEnqueuer.Instance.Actor);
         }
 
         if (GUILayout.Button("Control actor"))
         {
             var enqueuer = (PlayerInputEnqueuer)target;
             var dequeuer = enqueuer.Actor.GetComponent<AInputDequeuer>();
-            PlayerInputEnqueuer.Add(enqueuer.Actor, ref dequeuer);
+            PlayerInputEnqueuer.Instance.Add(PlayerInputEnqueuer.Instance.Actor);
         }
     }
 }
@@ -48,6 +48,20 @@ public class PlayerInputEnqueuer : AInputEnqueuer
     {
         base.Awake();
         gameObject.isStatic = true;
+    }
+
+    public void Add(AActor actor)
+    {
+        var dequeuer = actor.GetComponent<AInputDequeuer>();
+        Add(ref dequeuer);
+        this.actor = actor;
+    }
+
+    public void Remove(AActor actor)
+    {
+        var dequeuer = actor.GetComponent<AInputDequeuer>();
+        Remove(ref dequeuer);
+        this.actor = null;
     }
 
     protected override void EnqueueInputs()
@@ -77,47 +91,5 @@ public class PlayerInputEnqueuer : AInputEnqueuer
         }
         Enqueue(KeyCode.None);
         return;
-    }
-
-    public static void Add(AActor actor, ref AInputDequeuer dequeuer)
-    {
-        var instance = Instance as AInputEnqueuer;
-        instance.Add(ref instance, ref dequeuer);
-
-        Instance.actor = actor;
-    }
-
-    public static void Remove(ref AInputDequeuer dequeuer)
-    {
-        var instance = Instance as AInputEnqueuer;
-        instance.Remove(ref instance, ref dequeuer);
-
-        Instance.actor = null;
-    }
-
-    protected override void OnDequeuerDestroyed(IDestroyable destroyedComponent)
-    {
-        if (!Instance)
-        {
-            return;
-        }
-
-        var instance = Instance as AInputEnqueuer;
-        var dequeuer = destroyedComponent as AInputDequeuer;
-        instance.Remove(ref instance, ref dequeuer);
-    }
-
-    public override void Dispose()
-    {
-        if (!Instance)
-        {
-            return;
-        }
-
-        base.Dispose();
-    }
-
-    protected override void OnInputsDequeued(Vector2 direction)
-    {
     }
 }

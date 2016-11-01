@@ -1,7 +1,10 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public class CharacterInputDequeuer : AInputDequeuer
 {
+    public Action<Vector2> InputsDequeued = delegate { };
+
     public override void OnInputsEnqueued(AInputEnqueuer enqueuer)
     {
         var direction = Vector2.zero;
@@ -27,6 +30,7 @@ public class CharacterInputDequeuer : AInputDequeuer
                     break;
             }
         }
+
         InputsDequeued(direction.normalized);
     }
 }

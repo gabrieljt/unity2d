@@ -48,18 +48,6 @@ public class Character : AActor
         }
     }
 
-    public override void Enable()
-    {
-        base.Enable();
-        gameObject.SetActive(true);
-    }
-
-    public override void Disable()
-    {
-        base.Disable();
-        gameObject.SetActive(false);
-    }
-
     public override void Dispose()
     {
         inputDequeuer.InputsDequeued -= OnInputsDequeued;

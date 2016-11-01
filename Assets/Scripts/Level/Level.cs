@@ -9,11 +9,11 @@ public class Level : ALevelComponent
     public LevelParams @params;
 
     [SerializeField]
-    private LevelBuilder levelBuilder;
+    private LevelBuilder builder;
 
     private void Awake()
     {
-        levelBuilder = GetComponent<LevelBuilder>();
+        builder = GetComponent<LevelBuilder>();
     }
 
     private void Start()
@@ -23,18 +23,18 @@ public class Level : ALevelComponent
 
     public override void Build()
     {
-        levelBuilder.GetComponent<MapDungeon>().Built += OnDungeonBuilt;
-        levelBuilder.Built += OnBuilderBuilt;
+        builder.GetComponent<MapDungeon>().Built += OnDungeonBuilt;
+        builder.Built += OnBuilderBuilt;
 
-        var map = levelBuilder.GetComponent<Map>();
+        var map = builder.GetComponent<Map>();
         @params.SetSize(ref map);
-        levelBuilder.Build();
+        builder.Build();
     }
 
     private void OnDungeonBuilt(Type type)
     {
-        var actorSpawners = levelBuilder.GetComponent<MapActorSpawners>();
-        @params.SetActorSpawnersData(ref actorSpawners, levelBuilder.GetComponent<Map>(), levelBuilder.GetComponent<MapDungeon>());
+        var actorSpawners = builder.GetComponent<MapActorSpawners>();
+        @params.SetActorSpawnersData(ref actorSpawners, builder.GetComponent<Map>(), builder.GetComponent<MapDungeon>());
     }
 
     private void OnBuilderBuilt(Type type)
@@ -44,7 +44,7 @@ public class Level : ALevelComponent
 
     public override void Dispose()
     {
-        levelBuilder.GetComponent<MapDungeon>().Built -= OnDungeonBuilt;
-        levelBuilder.Built -= OnBuilderBuilt;
+        builder.GetComponent<MapDungeon>().Built -= OnDungeonBuilt;
+        builder.Built -= OnBuilderBuilt;
     }
 }
