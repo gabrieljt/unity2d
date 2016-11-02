@@ -22,17 +22,18 @@ public class GameCamera : MonoBehaviour, IDestroyable, IDisposable
         gameInstance.Loading += OnGameLoading;
         gameInstance.Started += OnGameStarted;
         gameInstance.Destroyed += OnGameDestroyed;
+
+        camera = GetComponent<Camera>();
     }
 
     private void OnGameLoading()
     {
-        GetComponent<Camera>().enabled = false;
+        camera.enabled = false;
     }
 
     private void OnGameStarted()
     {
         var mapCenter = gameInstance.Level.GetComponent<Map>().Center;
-        var camera = GetComponent<Camera>();
 
         camera.orthographicSize = Mathf.Min(mapCenter.x, mapCenter.y);
         camera.transform.position = Vector3.back + (Vector3)mapCenter;
