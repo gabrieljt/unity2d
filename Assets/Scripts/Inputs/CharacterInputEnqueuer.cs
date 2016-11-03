@@ -205,7 +205,7 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 
     private static Vector2 GetColliderPosition(Collider2D collider)
     {
-        return new Vector2(collider.transform.position.x, collider.transform.position.y) + collider.offset;
+        return (Vector2)collider.transform.position + collider.offset;
     }
 
     protected override void OnDequeuerDestroyed(IDestroyable destroyedComponent)
