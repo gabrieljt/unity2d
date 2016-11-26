@@ -8,7 +8,7 @@ using UnityEngine;
 public class SpaceshipMovement : MonoBehaviour, IRideable
 {
 	[SerializeField]
-	[Range(1f, 10f)]
+	[Range(1f, 100f)]
 	private float speed;
 
 	public float Speed { get { return speed; } }
@@ -17,7 +17,22 @@ public class SpaceshipMovement : MonoBehaviour, IRideable
 	[Range(1f, 100f)]
 	private float steeringSpeed;
 
-	public float SteeringSpeed { get { return steeringSpeed; } }
+	public float SteeringSpeed
+	{
+		get
+		{
+			if (steering == Vector2.left)
+			{
+				return steeringSpeed;
+			}
+			else if (steering == Vector2.right)
+			{
+				return -steeringSpeed;
+			}
+
+			return 0f;
+		}
+	}
 
 	[SerializeField]
 	private Vector2 direction;
@@ -54,23 +69,6 @@ public class SpaceshipMovement : MonoBehaviour, IRideable
 		}
 	}
 
-	public float SteeringVelocity
-	{
-		get
-		{
-			if (steering == Vector2.left)
-			{
-				return steeringSpeed;
-			}
-			else if (steering == Vector2.right)
-			{
-				return -steeringSpeed;
-			}
-
-			return 0f;
-		}
-	}
-
 	private Action<Vector2, Vector2> moving = delegate { };
 
 	public Action<Vector2, Vector2> Moving { get { return moving; } set { moving = value; } }
@@ -84,6 +82,7 @@ public class SpaceshipMovement : MonoBehaviour, IRideable
 		rigidbody = GetComponent<Rigidbody2D>();
 		rigidbody.gravityScale = 0f;
 		rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+		rigidbody.interpolation = RigidbodyInterpolation2D.Interpolate;
 
 		collider = GetComponent<CircleCollider2D>();
 		if (!collider.sharedMaterial)
@@ -107,6 +106,6 @@ public class SpaceshipMovement : MonoBehaviour, IRideable
 	private void FixedUpdate()
 	{
 		rigidbody.AddForce(Velocity);
-		rigidbody.MoveRotation(rigidbody.rotation + SteeringVelocity * Time.fixedDeltaTime);
+		rigidbody.MoveRotation(rigidbody.rotation + SteeringSpeed * Time.fixedDeltaTime);
 	}
 }

@@ -5,7 +5,9 @@ public class MovementTestScene : MonoBehaviour
 	// Use this for initialization
 	private void Start()
 	{
-		PlayerInputEnqueuer.Instance.Add(FindObjectOfType<AActor>());
+		var spaceship = FindObjectOfType<Spaceship>();
+		PlayerInputEnqueuer.Instance.Add(spaceship);
+		FollowCamera.Instance.target = spaceship.transform;
 	}
 
 	// Update is called once per frame

@@ -27,7 +27,5 @@ public interface IRideable : IMoveable
 
 	Vector2 Steering { get; }
 
-	float SteeringVelocity { get; }
-
 	Action<Vector2, Vector2> Moving { get; set; }
 }
