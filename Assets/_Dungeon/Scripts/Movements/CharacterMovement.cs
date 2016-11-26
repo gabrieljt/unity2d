@@ -5,11 +5,13 @@ using UnityEngine;
 	typeof(Rigidbody2D),
 	typeof(CircleCollider2D)
 )]
-public class CharacterMovement : MonoBehaviour, IMoveable
+public class CharacterMovement : MonoBehaviour, IWalkable
 {
 	[SerializeField]
 	[Range(1f, 10f)]
 	private float speed;
+
+	public float Speed { get { return speed; } }
 
 	[SerializeField]
 	private Vector2 direction;

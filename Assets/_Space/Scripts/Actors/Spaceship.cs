@@ -29,9 +29,9 @@ public class Spaceship : AActor
 		movement = GetComponent<SpaceshipMovement>();
 	}
 
-	private void OnInputsDequeued(Vector2 direction)
+	private void OnInputsDequeued(Vector2 direction, Vector2 steering)
 	{
-		movement.Move(direction);
+		movement.Move(direction, steering);
 	}
 
 	public override void Dispose()

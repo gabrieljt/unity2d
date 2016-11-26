@@ -5,16 +5,29 @@ using UnityEngine;
 	typeof(Rigidbody2D),
 	typeof(CircleCollider2D)
 )]
-public class SpaceshipMovement : MonoBehaviour, IMoveable
+public class SpaceshipMovement : MonoBehaviour, IRideable
 {
 	[SerializeField]
 	[Range(1f, 10f)]
 	private float speed;
 
+	public float Speed { get { return speed; } }
+
+	[SerializeField]
+	[Range(1f, 100f)]
+	private float steeringSpeed;
+
+	public float SteeringSpeed { get { return steeringSpeed; } }
+
 	[SerializeField]
 	private Vector2 direction;
 
 	public Vector2 Direction { get { return direction; } }
+
+	[SerializeField]
+	private Vector2 steering;
+
+	public Vector2 Steering { get { return steering; } }
 
 	[SerializeField]
 	private Rigidbody2D rigidbody;
@@ -24,11 +37,43 @@ public class SpaceshipMovement : MonoBehaviour, IMoveable
 
 	public Vector2 Position { get { return rigidbody.position; } }
 
-	public Vector2 Velocity { get { return direction * speed; } }
+	public Vector2 Velocity
+	{
+		get
+		{
+			if (direction == Vector2.up)
+			{
+				return transform.up * speed;
+			}
+			else if (direction == Vector2.down)
+			{
+				return -transform.up * speed;
+			}
 
-	private Action<Vector2> moving = delegate { };
+			return Vector2.zero;
+		}
+	}
 
-	public Action<Vector2> Moving { get { return moving; } set { moving = value; } }
+	public float SteeringVelocity
+	{
+		get
+		{
+			if (steering == Vector2.left)
+			{
+				return steeringSpeed;
+			}
+			else if (steering == Vector2.right)
+			{
+				return -steeringSpeed;
+			}
+
+			return 0f;
+		}
+	}
+
+	private Action<Vector2, Vector2> moving = delegate { };
+
+	public Action<Vector2, Vector2> Moving { get { return moving; } set { moving = value; } }
 
 	private Action<IDestroyable> destroyed = delegate { };
 
@@ -39,7 +84,6 @@ public class SpaceshipMovement : MonoBehaviour, IMoveable
 		rigidbody = GetComponent<Rigidbody2D>();
 		rigidbody.gravityScale = 0f;
 		rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-		rigidbody.freezeRotation = true;
 
 		collider = GetComponent<CircleCollider2D>();
 		if (!collider.sharedMaterial)
@@ -53,14 +97,16 @@ public class SpaceshipMovement : MonoBehaviour, IMoveable
 		direction = Vector2.zero;
 	}
 
-	public void Move(Vector2 direction)
+	public void Move(Vector2 direction, Vector2 steering)
 	{
 		this.direction = direction;
-		Moving(direction);
+		this.steering = steering;
+		Moving(direction, steering);
 	}
 
 	private void FixedUpdate()
 	{
-		rigidbody.velocity += Velocity * Time.fixedDeltaTime;
+		rigidbody.AddForce(Velocity);
+		rigidbody.MoveRotation(rigidbody.rotation + SteeringVelocity * Time.fixedDeltaTime);
 	}
 }

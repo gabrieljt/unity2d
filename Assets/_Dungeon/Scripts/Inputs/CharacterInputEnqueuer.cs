@@ -28,7 +28,7 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 
 	private int escapeCounter = 0;
 
-	private Vector2 inputDirection = Vector2.zero;
+	private Vector2 directionInput = Vector2.zero;
 
 	private Vector2 EscapeDirection
 	{
@@ -124,7 +124,7 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 		{
 			if (direction != Vector2.zero)
 			{
-				inputDirection = direction;
+				directionInput = direction;
 				state = CharacterAIState.Moving;
 				return;
 			}
@@ -132,23 +132,23 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 
 		if (state == CharacterAIState.Moving)
 		{
-			if (inputDirection == Vector2.zero)
+			if (directionInput == Vector2.zero)
 			{
 				state = CharacterAIState.Idle;
 				return;
 			}
 		}
 
-		movement.Move(inputDirection);
-		DrawDebugRays(direction, ref inputDirection);
+		movement.Move(directionInput);
+		DrawDebugRays(direction, ref directionInput);
 		return;
 	}
 
-	private void DrawDebugRays(Vector2 direction, ref Vector2 inputDirection)
+	private void DrawDebugRays(Vector2 direction, ref Vector2 directionInput)
 	{
-		if (inputDirection != direction)
+		if (directionInput != direction)
 		{
-			Debug.DrawRay(movement.Position, inputDirection.normalized * collider.radius, Color.cyan);
+			Debug.DrawRay(movement.Position, directionInput.normalized * collider.radius, Color.cyan);
 			return;
 		}
 		Debug.DrawRay(movement.Position, direction.normalized * collider.radius, Color.magenta);
@@ -159,35 +159,35 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 	{
 		lastInputsReceived.Clear();
 		otherColliders.Add(other.collider);
-		inputDirection = EscapeDirection;
+		directionInput = EscapeDirection;
 	}
 
 	private void OnCollisionStay2D()
 	{
-		inputDirection = EscapeDirection;
+		directionInput = EscapeDirection;
 	}
 
 	private void OnCollisionExit2D(Collision2D other)
 	{
 		otherColliders.Remove(other.collider);
 
-		if (CanEscape && TryToEscape(other, ref inputDirection, ref escapeCounter))
+		if (CanEscape && TryToEscape(other, ref directionInput, ref escapeCounter))
 		{
 			return;
 		}
 
-		StopEscaping(out inputDirection, out escapeCounter);
+		StopEscaping(out directionInput, out escapeCounter);
 		return;
 	}
 
-	private bool TryToEscape(Collision2D other, ref Vector2 inputDirection, ref int escapeCounter)
+	private bool TryToEscape(Collision2D other, ref Vector2 directionInput, ref int escapeCounter)
 	{
 		var direction = (movement.Position - GetColliderPosition(other.collider)).normalized * collider.radius;
 		var something = Physics2D.Raycast(movement.Position, direction, collider.radius * 2f);
 		if (!something.collider)
 		{
 			++escapeCounter;
-			inputDirection = direction.normalized;
+			directionInput = direction.normalized;
 
 			Debug.DrawRay(movement.Position, direction, Color.white, 1f);
 			return true;
@@ -197,10 +197,10 @@ public class CharacterInputEnqueuer : AInputEnqueuer
 		return false;
 	}
 
-	private static void StopEscaping(out Vector2 inputDirection, out int escapeCounter)
+	private static void StopEscaping(out Vector2 directionInput, out int escapeCounter)
 	{
 		escapeCounter = 0;
-		inputDirection = Vector2.zero;
+		directionInput = Vector2.zero;
 	}
 
 	private static Vector2 GetColliderPosition(Collider2D collider)
