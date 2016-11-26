@@ -2,7 +2,7 @@
 
 public interface IDestroyable
 {
-    void OnDestroy();
+	void OnDestroy();
 
-    Action<IDestroyable> Destroyed { get; set; }
+	Action<IDestroyable> Destroyed { get; set; }
 }

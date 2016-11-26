@@ -4,249 +4,249 @@ using UnityEngine;
 
 public enum GameState
 {
-    Unloaded,
-    Loading,
-    Started,
-    Ended,
+	Unloaded,
+	Loading,
+	Started,
+	Ended,
 }
 
 public class Game : MonoBehaviour, IDisposable, IDestroyable
 {
-    [SerializeField]
-    private GameParams @params = new GameParams(1);
+	[SerializeField]
+	private GameParams @params = new GameParams(1);
 
-    public GameParams Params { get { return @params; } }
+	public GameParams Params { get { return @params; } }
 
-    [SerializeField]
-    private GameState state = GameState.Unloaded;
+	[SerializeField]
+	private GameState state = GameState.Unloaded;
 
-    [SerializeField]
-    private GameObject levelPrefab;
+	[SerializeField]
+	private GameObject levelPrefab;
 
-    [SerializeField]
-    private Level level;
+	[SerializeField]
+	private Level level;
 
-    public Level Level { get { return level; } }
+	public Level Level { get { return level; } }
 
-    [SerializeField]
-    private PlayerInputEnqueuer playerInputEnqueuerInstance;
+	[SerializeField]
+	private PlayerInputEnqueuer playerInputEnqueuerInstance;
 
-    public static Game Instance
-    {
-        get
-        {
-            return FindObjectOfType<Game>();
-        }
-    }
+	public static Game Instance
+	{
+		get
+		{
+			return FindObjectOfType<Game>();
+		}
+	}
 
-    public Action Loading = delegate { };
+	public Action Loading = delegate { };
 
-    public Action Started = delegate { };
+	public Action Started = delegate { };
 
-    internal Action Updated = delegate { };
+	internal Action Updated = delegate { };
 
-    private Action<IDestroyable> destroyed = delegate { };
+	private Action<IDestroyable> destroyed = delegate { };
 
-    public Action<IDestroyable> Destroyed { get { return destroyed; } set { destroyed = value; } }
+	public Action<IDestroyable> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
-    private void Awake()
-    {
-        gameObject.isStatic = true;
-        Debug.Assert(levelPrefab);
+	private void Awake()
+	{
+		gameObject.isStatic = true;
+		Debug.Assert(levelPrefab);
 
-        playerInputEnqueuerInstance = PlayerInputEnqueuer.Instance;
-    }
+		playerInputEnqueuerInstance = PlayerInputEnqueuer.Instance;
+	}
 
-    #region Load Level
+	#region Load Level
 
-    private void Start()
-    {
-        LoadLevel();
-    }
+	private void Start()
+	{
+		LoadLevel();
+	}
 
-    public void LoadLevel()
-    {
-        Debug.Assert(state == GameState.Unloaded);
-        if (state == GameState.Unloaded)
-        {
-            StartCoroutine(LoadLevelCoroutine());
-        }
-    }
+	public void LoadLevel()
+	{
+		Debug.Assert(state == GameState.Unloaded);
+		if (state == GameState.Unloaded)
+		{
+			StartCoroutine(LoadLevelCoroutine());
+		}
+	}
 
-    private IEnumerator LoadLevelCoroutine()
-    {
-        yield return 0;
-        state = GameState.Loading;
-        @params = new GameParams(@params.Level);
+	private IEnumerator LoadLevelCoroutine()
+	{
+		yield return 0;
+		state = GameState.Loading;
+		@params = new GameParams(@params.Level);
 
-        playerInputEnqueuerInstance.Inputs.Clear();
-        playerInputEnqueuerInstance.LockInputs();
+		playerInputEnqueuerInstance.Inputs.Clear();
+		playerInputEnqueuerInstance.LockInputs();
 
-        level = (Instantiate(levelPrefab) as GameObject).GetComponent<Level>();
-        level.transform.SetParent(transform, true);
-        level.GetComponent<MapActorSpawners>().Built += OnActorSpawnersBuilt;
-        level.Built += OnLevelBuilt;
-        level.@params = @params.levelParams;
+		level = (Instantiate(levelPrefab) as GameObject).GetComponent<Level>();
+		level.transform.SetParent(transform, true);
+		level.GetComponent<MapActorSpawners>().Built += OnActorSpawnersBuilt;
+		level.Built += OnLevelBuilt;
+		level.@params = @params.levelParams;
 
-        Loading();
-    }
+		Loading();
+	}
 
-    private void OnActorSpawnersBuilt(Type type)
-    {
-        level.GetComponent<MapActorSpawners>().Built -= OnActorSpawnersBuilt;
-        var actorSpawners = level.GetComponents<ActorSpawner>();
+	private void OnActorSpawnersBuilt(Type type)
+	{
+		level.GetComponent<MapActorSpawners>().Built -= OnActorSpawnersBuilt;
+		var actorSpawners = level.GetComponents<ActorSpawner>();
 
-        foreach (var actorSpawner in actorSpawners)
-        {
-            if (actorSpawner.type == ActorType.Player)
-            {
-                actorSpawner.Performed += OnPlayerSpawned;
-            }
+		foreach (var actorSpawner in actorSpawners)
+		{
+			if (actorSpawner.type == ActorType.Player)
+			{
+				actorSpawner.Performed += OnPlayerSpawned;
+			}
 
-            if (actorSpawner.type == ActorType.Exit)
-            {
-                actorSpawner.Performed += OnExitSpawned;
-            }
-        }
-    }
+			if (actorSpawner.type == ActorType.Exit)
+			{
+				actorSpawner.Performed += OnExitSpawned;
+			}
+		}
+	}
 
-    private void OnPlayerSpawned(ActorSpawner spawner, AActor actor)
-    {
-        spawner.Performed -= OnPlayerSpawned;
-        var player = actor as Character;
-        player.GetComponent<StepCounter>().StepTaken += OnStepTaken;
-        player.Destroyed += OnPlayerDestroyed;
+	private void OnPlayerSpawned(ActorSpawner spawner, AActor actor)
+	{
+		spawner.Performed -= OnPlayerSpawned;
+		var player = actor as Character;
+		player.GetComponent<StepCounter>().StepTaken += OnStepTaken;
+		player.Destroyed += OnPlayerDestroyed;
 
-        playerInputEnqueuerInstance.Add(player);
-    }
+		playerInputEnqueuerInstance.Add(player);
+	}
 
-    private void OnPlayerDestroyed(IDestroyable destroyedComponent)
-    {
-        var player = destroyedComponent as Character;
-        player.GetComponent<StepCounter>().StepTaken -= OnStepTaken;
-        player.Destroyed -= OnPlayerDestroyed;
-    }
+	private void OnPlayerDestroyed(IDestroyable destroyedComponent)
+	{
+		var player = destroyedComponent as Character;
+		player.GetComponent<StepCounter>().StepTaken -= OnStepTaken;
+		player.Destroyed -= OnPlayerDestroyed;
+	}
 
-    private void OnExitSpawned(ActorSpawner spawner, AActor actor)
-    {
-        spawner.Performed -= OnExitSpawned;
-        var exit = actor as Exit;
-        exit.Reached += OnExitReached;
-        exit.Destroyed += OnExitDestroyed;
-    }
+	private void OnExitSpawned(ActorSpawner spawner, AActor actor)
+	{
+		spawner.Performed -= OnExitSpawned;
+		var exit = actor as Exit;
+		exit.Reached += OnExitReached;
+		exit.Destroyed += OnExitDestroyed;
+	}
 
-    private void OnExitDestroyed(IDestroyable destroyedComponent)
-    {
-        var exit = destroyedComponent as Exit;
+	private void OnExitDestroyed(IDestroyable destroyedComponent)
+	{
+		var exit = destroyedComponent as Exit;
 
-        exit.Reached -= OnExitReached;
-        exit.Destroyed -= OnExitDestroyed;
-    }
+		exit.Reached -= OnExitReached;
+		exit.Destroyed -= OnExitDestroyed;
+	}
 
-    #endregion Load Level
+	#endregion Load Level
 
-    #region Start Level
+	#region Start Level
 
-    private void OnLevelBuilt(Type type)
-    {
-        StartLevel();
-    }
+	private void OnLevelBuilt(Type type)
+	{
+		StartLevel();
+	}
 
-    private void StartLevel()
-    {
-        level.Built -= OnLevelBuilt;
+	private void StartLevel()
+	{
+		level.Built -= OnLevelBuilt;
 
-        @params.levelParams = level.@params;
+		@params.levelParams = level.@params;
 
-        StartCoroutine(StartLevelCoroutine());
-    }
+		StartCoroutine(StartLevelCoroutine());
+	}
 
-    private IEnumerator StartLevelCoroutine()
-    {
-        yield return 0;
+	private IEnumerator StartLevelCoroutine()
+	{
+		yield return 0;
 
-        state = GameState.Started;
+		state = GameState.Started;
 
-        @params.SetMaximumSteps(level.GetComponent<Map>(), level.GetComponent<MapDungeon>(), level.GetComponent<MapActorSpawners>());
+		@params.SetMaximumSteps(level.GetComponent<Map>(), level.GetComponent<MapDungeon>(), level.GetComponent<MapActorSpawners>());
 
-        playerInputEnqueuerInstance.UnlockInputs();
+		playerInputEnqueuerInstance.UnlockInputs();
 
-        Started();
-    }
+		Started();
+	}
 
-    #endregion Start Level
+	#endregion Start Level
 
-    #region Update
+	#region Update
 
-    private void Update()
-    {
-        if (state == GameState.Started)
-        {
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                ResetLevel();
-                return;
-            }
-        }
+	private void Update()
+	{
+		if (state == GameState.Started)
+		{
+			if (Input.GetKeyDown(KeyCode.Escape))
+			{
+				ResetLevel();
+				return;
+			}
+		}
 
-        Updated();
-    }
+		Updated();
+	}
 
-    #endregion Update
+	#endregion Update
 
-    #region Logic
+	#region Logic
 
-    private void OnStepTaken()
-    {
-        @params.StepTaken();
+	private void OnStepTaken()
+	{
+		@params.StepTaken();
 
-        if (@params.StepsLeft == 0)
-        {
-            ResetLevel();
-        }
-    }
+		if (@params.StepsLeft == 0)
+		{
+			ResetLevel();
+		}
+	}
 
-    private void OnExitReached(Character character)
-    {
-        if (character.gameObject.CompareTag(ActorType.Player.ToString()))
-        {
-            state = GameState.Ended;
-            @params = new GameParams(@params.Level + 1);
-            ReloadLevel();
-        }
-    }
+	private void OnExitReached(Character character)
+	{
+		if (character.gameObject.CompareTag(ActorType.Player.ToString()))
+		{
+			state = GameState.Ended;
+			@params = new GameParams(@params.Level + 1);
+			ReloadLevel();
+		}
+	}
 
-    #endregion Logic
+	#endregion Logic
 
-    #region End Level
+	#region End Level
 
-    public void ResetLevel()
-    {
-        Debug.Assert(state == GameState.Started);
-        if (state == GameState.Started)
-        {
-            ReloadLevel();
-        }
-    }
+	public void ResetLevel()
+	{
+		Debug.Assert(state == GameState.Started);
+		if (state == GameState.Started)
+		{
+			ReloadLevel();
+		}
+	}
 
-    private void ReloadLevel()
-    {
-        state = GameState.Unloaded;
-        Destroy(level.gameObject);
-        LoadLevel();
-    }
+	private void ReloadLevel()
+	{
+		state = GameState.Unloaded;
+		Destroy(level.gameObject);
+		LoadLevel();
+	}
 
-    #endregion End Level
+	#endregion End Level
 
-    public void Dispose()
-    {
-        state = GameState.Unloaded;
-        StopAllCoroutines();
-    }
+	public void Dispose()
+	{
+		state = GameState.Unloaded;
+		StopAllCoroutines();
+	}
 
-    public void OnDestroy()
-    {
-        Destroyed(this);
-        Dispose();
-    }
+	public void OnDestroy()
+	{
+		Destroyed(this);
+		Dispose();
+	}
 }

@@ -2,7 +2,7 @@
 
 public interface IBuildable
 {
-    void Build();
+	void Build();
 
-    Action<Type> Built { get; set; }
+	Action<Type> Built { get; set; }
 }

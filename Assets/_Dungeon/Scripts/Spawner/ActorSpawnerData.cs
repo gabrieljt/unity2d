@@ -4,22 +4,22 @@ using UnityEngine;
 [Serializable]
 public class ActorSpawnerData
 {
-    [SerializeField]
-    private ActorType type;
+	[SerializeField]
+	private ActorType type;
 
-    public ActorType Type { get { return type; } }
+	public ActorType Type { get { return type; } }
 
-    [SerializeField]
-    [Range(1, 99)]
-    private int quantity;
+	[SerializeField]
+	[Range(1, 99)]
+	private int quantity;
 
-    public int Quantity { get { return quantity; } }
+	public int Quantity { get { return quantity; } }
 
-    public ActorSpawner[] spawners = new ActorSpawner[0];
+	public ActorSpawner[] spawners = new ActorSpawner[0];
 
-    public ActorSpawnerData(ActorType type, int quantity)
-    {
-        this.type = type;
-        this.quantity = quantity;
-    }
+	public ActorSpawnerData(ActorType type, int quantity)
+	{
+		this.type = type;
+		this.quantity = quantity;
+	}
 }

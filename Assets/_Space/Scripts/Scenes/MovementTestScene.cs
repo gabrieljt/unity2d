@@ -1,15 +1,15 @@
 ﻿using UnityEngine;
-using System.Collections;
 
-public class MovementTestScene : MonoBehaviour {
-
+public class MovementTestScene : MonoBehaviour
+{
 	// Use this for initialization
-	void Start () {
+	private void Start()
+	{
 		PlayerInputEnqueuer.Instance.Add(FindObjectOfType<AActor>());
 	}
-	
+
 	// Update is called once per frame
-	void Update () {
-	
+	private void Update()
+	{
 	}
 }
