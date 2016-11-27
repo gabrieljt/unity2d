@@ -106,11 +106,13 @@ public class SpaceshipMovement : MonoBehaviour, IRideable
 	private void FixedUpdate()
 	{
 		rigidbody.AddForce(Velocity);
-		rigidbody.MoveRotation(rigidbody.rotation + SteeringSpeed * Time.fixedDeltaTime * 10f);
 
-		if (rigidbody.velocity.magnitude > speed)
+		var currentSpeed = rigidbody.velocity.magnitude;
+		if (currentSpeed > speed)
 		{
-			rigidbody.velocity = rigidbody.velocity.normalized * speed;
+			rigidbody.AddForce(-(rigidbody.velocity.normalized * (currentSpeed - speed)), ForceMode2D.Impulse);
 		}
+
+		rigidbody.MoveRotation(rigidbody.rotation + SteeringSpeed * Time.fixedDeltaTime * 10f);
 	}
 }
