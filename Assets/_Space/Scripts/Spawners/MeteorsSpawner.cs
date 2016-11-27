@@ -11,6 +11,11 @@ public class MeteorsSpawner : MonoBehaviour
 	[SerializeField]
 	private int quantity = 5;
 
+	private void Awake()
+	{
+		Debug.Assert(meteorPrefab);
+	}
+
 	private void Start()
 	{
 		InvokeRandomSpawn();
