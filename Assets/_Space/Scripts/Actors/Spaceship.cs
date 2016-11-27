@@ -5,9 +5,6 @@
 	typeof(SpaceshipInputDequeuer),
 	typeof(SpaceshipMovement)
 )]
-[RequireComponent(
-	typeof(StepCounter)
-)]
 public class Spaceship : AActor
 {
 	[SerializeField]

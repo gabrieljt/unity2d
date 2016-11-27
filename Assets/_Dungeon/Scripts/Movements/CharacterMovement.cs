@@ -32,10 +32,6 @@ public class CharacterMovement : MonoBehaviour, IWalkable
 
 	public Action<Vector2> Moving { get { return moving; } set { moving = value; } }
 
-	private Action<IDestroyable> destroyed = delegate { };
-
-	public Action<IDestroyable> Destroyed { get { return destroyed; } set { destroyed = value; } }
-
 	private void Awake()
 	{
 		rigidbody = GetComponent<Rigidbody2D>();
