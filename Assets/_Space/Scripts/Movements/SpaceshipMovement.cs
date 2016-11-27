@@ -110,7 +110,7 @@ public class SpaceshipMovement : MonoBehaviour, IRideable
 		var currentSpeed = rigidbody.velocity.magnitude;
 		if (currentSpeed > speed)
 		{
-			rigidbody.AddForce(-(rigidbody.velocity.normalized * (currentSpeed - speed)), ForceMode2D.Impulse);
+			rigidbody.AddForce(rigidbody.velocity.normalized * (speed - currentSpeed), ForceMode2D.Impulse);
 		}
 
 		rigidbody.MoveRotation(rigidbody.rotation + SteeringSpeed * Time.fixedDeltaTime * 10f);
