@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 [RequireComponent(
 	typeof(SpriteRenderer),
@@ -6,13 +7,10 @@
 	typeof(SpaceshipMovement)
 )]
 [RequireComponent(
-	typeof(SpaceshipGun)
+	typeof(SpaceshipLaserGun)
 )]
-public class Spaceship : AActor
+public class Spaceship : MonoBehaviour, IDestroyable, IDisposable
 {
-	[SerializeField]
-	private SpriteRenderer renderer;
-
 	[SerializeField]
 	private SpaceshipInputDequeuer inputDequeuer;
 
@@ -20,18 +18,20 @@ public class Spaceship : AActor
 	private SpaceshipMovement movement;
 
 	[SerializeField]
-	private SpaceshipGun gun;
+	private SpaceshipLaserGun laserGun;
+
+	private Action<IDestroyable> destroyed = delegate { };
+
+	public Action<IDestroyable> Destroyed { get { return destroyed; } set { destroyed = value; } }
 
 	private void Awake()
 	{
-		renderer = GetComponent<SpriteRenderer>();
-
 		inputDequeuer = GetComponent<SpaceshipInputDequeuer>();
 		inputDequeuer.InputsDequeued += OnInputsDequeued;
 
 		movement = GetComponent<SpaceshipMovement>();
 
-		gun = GetComponentInChildren<SpaceshipGun>();
+		laserGun = GetComponentInChildren<SpaceshipLaserGun>();
 	}
 
 	private void OnInputsDequeued(Vector2 direction, Vector2 steering, bool fire)
@@ -41,11 +41,17 @@ public class Spaceship : AActor
 
 		if (fire)
 		{
-			gun.Fire();
+			laserGun.Fire();
 		}
 	}
 
-	public override void Dispose()
+	public void OnDestroy()
+	{
+		Destroyed(this);
+		Dispose();
+	}
+
+	public void Dispose()
 	{
 		inputDequeuer.InputsDequeued -= OnInputsDequeued;
 	}

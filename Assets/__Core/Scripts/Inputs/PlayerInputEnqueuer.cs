@@ -11,18 +11,18 @@ public class PlayerInputEnqueuerInspector : Editor
 	{
 		DrawDefaultInspector();
 
-		if (GUILayout.Button("Release actor"))
+		if (GUILayout.Button("Release Game Object"))
 		{
 			var enqueuer = (PlayerInputEnqueuer)target;
-			var dequeuer = enqueuer.Actor.GetComponent<AInputDequeuer>();
-			PlayerInputEnqueuer.Instance.Remove(PlayerInputEnqueuer.Instance.Actor);
+			var dequeuer = enqueuer.GameObjectDequeueing.GetComponent<AInputDequeuer>();
+			PlayerInputEnqueuer.Instance.Remove(PlayerInputEnqueuer.Instance.GameObjectDequeueing);
 		}
 
-		if (GUILayout.Button("Control actor"))
+		if (GUILayout.Button("Control Game Object"))
 		{
 			var enqueuer = (PlayerInputEnqueuer)target;
-			var dequeuer = enqueuer.Actor.GetComponent<AInputDequeuer>();
-			PlayerInputEnqueuer.Instance.Add(PlayerInputEnqueuer.Instance.Actor);
+			var dequeuer = enqueuer.GameObjectDequeueing.GetComponent<AInputDequeuer>();
+			PlayerInputEnqueuer.Instance.Add(PlayerInputEnqueuer.Instance.GameObjectDequeueing);
 		}
 	}
 }
@@ -32,9 +32,9 @@ public class PlayerInputEnqueuerInspector : Editor
 public class PlayerInputEnqueuer : AInputEnqueuer
 {
 	[SerializeField]
-	private AActor actor;
+	private GameObject gameObjectDequeueing;
 
-	public AActor Actor { get { return actor; } }
+	public GameObject GameObjectDequeueing { get { return gameObjectDequeueing; } }
 
 	public static PlayerInputEnqueuer Instance
 	{
@@ -50,18 +50,18 @@ public class PlayerInputEnqueuer : AInputEnqueuer
 		gameObject.isStatic = true;
 	}
 
-	public void Add(AActor actor)
+	public void Add(GameObject gameObject)
 	{
-		var dequeuer = actor.GetComponent<AInputDequeuer>();
+		var dequeuer = gameObject.GetComponent<AInputDequeuer>();
 		Add(ref dequeuer);
-		this.actor = actor;
+		this.gameObjectDequeueing = gameObject;
 	}
 
-	public void Remove(AActor actor)
+	public void Remove(GameObject gameObject)
 	{
-		var dequeuer = actor.GetComponent<AInputDequeuer>();
+		var dequeuer = gameObject.GetComponent<AInputDequeuer>();
 		Remove(ref dequeuer);
-		this.actor = null;
+		this.gameObjectDequeueing = null;
 	}
 
 	protected override void EnqueueInputs()

@@ -28,14 +28,17 @@ public class MeteorMovement : MonoBehaviour, IMoveable
 
 	public Action<Vector2> Moving { get { return moving; } set { moving = value; } }
 
+	public float Mass { get { return rigidbody.mass; } }
+
 	private void Awake()
 	{
 		rigidbody = GetComponent<Rigidbody2D>();
 		rigidbody.gravityScale = 0f;
 		rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
 		rigidbody.interpolation = RigidbodyInterpolation2D.Interpolate;
+		rigidbody.mass = UnityEngine.Random.Range(1f, rigidbody.mass);
 
-		speed = UnityEngine.Random.Range(1f, speed);
+		speed = UnityEngine.Random.Range(rigidbody.mass, speed * rigidbody.mass);
 
 		var targetDirection = (FindObjectOfType<Spaceship>().transform.position - transform.position).normalized;
 		direction = (Quaternion.AngleAxis(UnityEngine.Random.Range(-60f, 60f), Vector3.up) * targetDirection).normalized;

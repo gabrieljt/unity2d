@@ -7,6 +7,9 @@ using UnityEngine;
 public class SpaceshipMovement : MonoBehaviour, IMoveable, ISteerable
 {
 	[SerializeField]
+	private Rigidbody2D rigidbody;
+
+	[SerializeField]
 	[Range(1f, 100f)]
 	private float speed;
 
@@ -42,9 +45,6 @@ public class SpaceshipMovement : MonoBehaviour, IMoveable, ISteerable
 	private Vector2 steeringDirection;
 
 	public Vector2 SteerDirection { get { return steeringDirection; } }
-
-	[SerializeField]
-	private Rigidbody2D rigidbody;
 
 	public Vector2 Position { get { return rigidbody.position; } }
 
@@ -110,6 +110,4 @@ public class SpaceshipMovement : MonoBehaviour, IMoveable, ISteerable
 
 		rigidbody.MoveRotation(rigidbody.rotation + SteeringSpeed * Time.fixedDeltaTime * 10f);
 	}
-
-	
 }

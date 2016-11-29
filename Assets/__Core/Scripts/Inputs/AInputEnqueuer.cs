@@ -137,6 +137,12 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 		maximumInputsPerUpdate = MaximumInputsPerUpdate;
 	}
 
+	public void OnDestroy()
+	{
+		Destroyed(this);
+		Dispose();
+	}
+
 	public virtual void Dispose()
 	{
 		var dequeuersList = new List<AInputDequeuer>(dequeuers);
@@ -147,11 +153,5 @@ public abstract class AInputEnqueuer : MonoBehaviour, IDestroyable, IDisposable
 		}
 
 		dequeuers.Clear();
-	}
-
-	public void OnDestroy()
-	{
-		Destroyed(this);
-		Dispose();
 	}
 }

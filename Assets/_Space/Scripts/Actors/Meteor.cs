@@ -4,31 +4,28 @@
 	typeof(SpriteRenderer),
 	typeof(MeteorMovement)
 )]
-public class Meteor : AActor
+public class Meteor : MonoBehaviour
 {
 	[SerializeField]
-	private SpriteRenderer renderer;
+	private GameObject explosionPrefab;
 
 	[SerializeField]
 	private MeteorMovement movement;
 
-	[SerializeField]
-	private GameObject explosionPrefab;
-
 	private void Awake()
 	{
-		renderer = GetComponent<SpriteRenderer>();
 		movement = GetComponent<MeteorMovement>();
 		Debug.Assert(explosionPrefab);
+	}
+
+	private void Start()
+	{
+		transform.localScale *= movement.Mass;
 	}
 
 	private void OnCollisionEnter2D(Collision2D collision)
 	{
 		Instantiate(explosionPrefab, transform.position, Quaternion.identity);
 		Destroy(gameObject);
-	}
-
-	public override void Dispose()
-	{
 	}
 }

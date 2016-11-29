@@ -25,18 +25,9 @@ public class LaserMovement : MonoBehaviour, IMoveable
 
 	public Vector2 Velocity { get { return Direction * speed; } }
 
-	public Action<Vector2> Moving
-	{
-		get
-		{
-			throw new NotImplementedException();
-		}
+	private Action<Vector2> moving = delegate { };
 
-		set
-		{
-			throw new NotImplementedException();
-		}
-	}
+	public Action<Vector2> Moving { get { return moving; } set { moving = value; } }
 
 	private void Awake()
 	{
@@ -51,11 +42,12 @@ public class LaserMovement : MonoBehaviour, IMoveable
 
 	private void FixedUpdate()
 	{
-		rigidbody.MovePosition(Position + Velocity * Time.fixedDeltaTime);
+		Move(Position + Velocity * Time.fixedDeltaTime);
 	}
 
-	public void Move(Vector2 direction)
+	public void Move(Vector2 position)
 	{
-		throw new NotImplementedException();
+		rigidbody.MovePosition(position);
+		Moving(transform.position);
 	}
 }
