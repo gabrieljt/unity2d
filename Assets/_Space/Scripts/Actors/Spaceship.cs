@@ -5,6 +5,9 @@
 	typeof(SpaceshipInputDequeuer),
 	typeof(SpaceshipMovement)
 )]
+[RequireComponent(
+	typeof(SpaceshipGun)
+)]
 public class Spaceship : AActor
 {
 	[SerializeField]
@@ -16,6 +19,9 @@ public class Spaceship : AActor
 	[SerializeField]
 	private SpaceshipMovement movement;
 
+	[SerializeField]
+	private SpaceshipGun gun;
+
 	private void Awake()
 	{
 		renderer = GetComponent<SpriteRenderer>();
@@ -24,11 +30,18 @@ public class Spaceship : AActor
 		inputDequeuer.InputsDequeued += OnInputsDequeued;
 
 		movement = GetComponent<SpaceshipMovement>();
+
+		gun = GetComponentInChildren<SpaceshipGun>();
 	}
 
-	private void OnInputsDequeued(Vector2 direction, Vector2 steering)
+	private void OnInputsDequeued(Vector2 direction, Vector2 steering, bool fire)
 	{
 		movement.Move(direction, steering);
+
+		if (fire)
+		{
+			gun.Fire();
+		}
 	}
 
 	public override void Dispose()

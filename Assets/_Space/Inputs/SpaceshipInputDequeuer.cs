@@ -3,12 +3,13 @@ using UnityEngine;
 
 public class SpaceshipInputDequeuer : AInputDequeuer
 {
-	public Action<Vector2, Vector2> InputsDequeued = delegate { };
+	public Action<Vector2, Vector2, bool> InputsDequeued = delegate { };
 
 	public override void OnInputsEnqueued(AInputEnqueuer enqueuer)
 	{
 		var direction = Vector2.zero;
 		var steering = Vector2.zero;
+		var fire = false;
 		while (enqueuer.HasInputs)
 		{
 			var input = enqueuer.Inputs.Dequeue();
@@ -29,9 +30,13 @@ public class SpaceshipInputDequeuer : AInputDequeuer
 				case KeyCode.RightArrow:
 					steering += Vector2.right;
 					break;
+
+				case KeyCode.Space:
+					fire = true;
+					break;
 			}
 		}
 
-		InputsDequeued(direction.normalized, steering.normalized);
+		InputsDequeued(direction.normalized, steering.normalized, fire);
 	}
 }

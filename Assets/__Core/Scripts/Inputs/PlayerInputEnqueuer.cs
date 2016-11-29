@@ -87,6 +87,11 @@ public class PlayerInputEnqueuer : AInputEnqueuer
 			{
 				Enqueue(KeyCode.RightArrow);
 			}
+
+			if (Input.GetKey(KeyCode.Space))
+			{
+				Enqueue(KeyCode.Space);
+			}
 			return;
 		}
 		Enqueue(KeyCode.None);

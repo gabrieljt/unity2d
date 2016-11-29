@@ -115,7 +115,7 @@ public class SpaceshipInputEnqueuer : AInputEnqueuer
 		}
 	}
 
-	protected void OnInputsDequeued(Vector2 directionInput, Vector2 steeringInput)
+	protected void OnInputsDequeued(Vector2 directionInput, Vector2 steeringInput, bool fire)
 	{
 		if (!enabled)
 		{

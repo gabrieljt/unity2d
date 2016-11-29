@@ -6,6 +6,9 @@
 public class MeteorMovement : MonoBehaviour, IMoveable
 {
 	[SerializeField]
+	private Rigidbody2D rigidbody;
+
+	[SerializeField]
 	[Range(1f, 100f)]
 	private float speed;
 
@@ -15,9 +18,6 @@ public class MeteorMovement : MonoBehaviour, IMoveable
 	private Vector2 direction;
 
 	public Vector2 Direction { get { return direction; } }
-
-	[SerializeField]
-	private Rigidbody2D rigidbody;
 
 	public Vector2 Position { get { return rigidbody.position; } }
 
@@ -41,14 +41,7 @@ public class MeteorMovement : MonoBehaviour, IMoveable
 
 	private void FixedUpdate()
 	{
-		rigidbody.AddForce(Velocity, ForceMode2D.Impulse);
-
-		var currentSpeed = rigidbody.velocity.magnitude;
-		if (currentSpeed > speed)
-		{
-			rigidbody.AddForce(rigidbody.velocity.normalized * (speed - currentSpeed), ForceMode2D.Impulse);
-		}
-
+		rigidbody.MovePosition(Position + Velocity * Time.fixedDeltaTime);
 		rigidbody.MoveRotation(rigidbody.rotation + speed * Time.fixedDeltaTime * 10f);
 	}
 }
