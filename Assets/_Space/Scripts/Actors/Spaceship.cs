@@ -36,7 +36,8 @@ public class Spaceship : AActor
 
 	private void OnInputsDequeued(Vector2 direction, Vector2 steering, bool fire)
 	{
-		movement.Move(direction, steering);
+		movement.Move(direction);
+		movement.Steer(steering);
 
 		if (fire)
 		{

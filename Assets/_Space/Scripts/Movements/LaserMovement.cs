@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 [RequireComponent(
 	typeof(Laser),
@@ -24,6 +25,19 @@ public class LaserMovement : MonoBehaviour, IMoveable
 
 	public Vector2 Velocity { get { return Direction * speed; } }
 
+	public Action<Vector2> Moving
+	{
+		get
+		{
+			throw new NotImplementedException();
+		}
+
+		set
+		{
+			throw new NotImplementedException();
+		}
+	}
+
 	private void Awake()
 	{
 		laser = GetComponent<Laser>();
@@ -38,5 +52,10 @@ public class LaserMovement : MonoBehaviour, IMoveable
 	private void FixedUpdate()
 	{
 		rigidbody.MovePosition(Position + Velocity * Time.fixedDeltaTime);
+	}
+
+	public void Move(Vector2 direction)
+	{
+		throw new NotImplementedException();
 	}
 }

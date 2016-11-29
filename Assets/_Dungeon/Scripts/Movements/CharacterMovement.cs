@@ -5,7 +5,7 @@ using UnityEngine;
 	typeof(Rigidbody2D),
 	typeof(CircleCollider2D)
 )]
-public class CharacterMovement : MonoBehaviour, IWalkable
+public class CharacterMovement : MonoBehaviour, IMoveable
 {
 	[SerializeField]
 	[Range(1f, 10f)]

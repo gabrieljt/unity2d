@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 [RequireComponent(
 	typeof(Rigidbody2D)
@@ -23,6 +24,10 @@ public class MeteorMovement : MonoBehaviour, IMoveable
 
 	public Vector2 Velocity { get { return direction * speed; } }
 
+	private Action<Vector2> moving = delegate { };
+
+	public Action<Vector2> Moving { get { return moving; } set { moving = value; } }
+
 	private void Awake()
 	{
 		rigidbody = GetComponent<Rigidbody2D>();
@@ -30,10 +35,10 @@ public class MeteorMovement : MonoBehaviour, IMoveable
 		rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
 		rigidbody.interpolation = RigidbodyInterpolation2D.Interpolate;
 
-		speed = Random.Range(1f, speed);
+		speed = UnityEngine.Random.Range(1f, speed);
 
 		var targetDirection = (FindObjectOfType<Spaceship>().transform.position - transform.position).normalized;
-		direction = (Quaternion.AngleAxis(Random.Range(-60f, 60f), Vector3.up) * targetDirection).normalized;
+		direction = (Quaternion.AngleAxis(UnityEngine.Random.Range(-60f, 60f), Vector3.up) * targetDirection).normalized;
 
 		Debug.DrawRay(transform.position, targetDirection, Color.green, 1f);
 		Debug.DrawRay(transform.position, direction, Color.red, 1f);
@@ -41,7 +46,12 @@ public class MeteorMovement : MonoBehaviour, IMoveable
 
 	private void FixedUpdate()
 	{
-		rigidbody.MovePosition(Position + Velocity * Time.fixedDeltaTime);
+		Move(Position + Velocity * Time.fixedDeltaTime);
+	}
+
+	public void Move(Vector2 position)
+	{
+		rigidbody.MovePosition(position);
 		rigidbody.MoveRotation(rigidbody.rotation + speed * Time.fixedDeltaTime * 10f);
 	}
 }

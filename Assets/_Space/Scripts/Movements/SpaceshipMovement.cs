@@ -4,7 +4,7 @@ using UnityEngine;
 [RequireComponent(
 	typeof(Rigidbody2D)
 )]
-public class SpaceshipMovement : MonoBehaviour, IRideable
+public class SpaceshipMovement : MonoBehaviour, IMoveable, ISteerable
 {
 	[SerializeField]
 	[Range(1f, 100f)]
@@ -20,11 +20,11 @@ public class SpaceshipMovement : MonoBehaviour, IRideable
 	{
 		get
 		{
-			if (steering == Vector2.left)
+			if (steeringDirection == Vector2.left)
 			{
 				return steeringSpeed;
 			}
-			else if (steering == Vector2.right)
+			else if (steeringDirection == Vector2.right)
 			{
 				return -steeringSpeed;
 			}
@@ -39,9 +39,9 @@ public class SpaceshipMovement : MonoBehaviour, IRideable
 	public Vector2 Direction { get { return direction; } }
 
 	[SerializeField]
-	private Vector2 steering;
+	private Vector2 steeringDirection;
 
-	public Vector2 Steering { get { return steering; } }
+	public Vector2 SteerDirection { get { return steeringDirection; } }
 
 	[SerializeField]
 	private Rigidbody2D rigidbody;
@@ -65,9 +65,13 @@ public class SpaceshipMovement : MonoBehaviour, IRideable
 		}
 	}
 
-	private Action<Vector2, Vector2> moving = delegate { };
+	private Action<Vector2> moving = delegate { };
 
-	public Action<Vector2, Vector2> Moving { get { return moving; } set { moving = value; } }
+	public Action<Vector2> Moving { get { return moving; } set { moving = value; } }
+
+	private Action<Vector2> steering = delegate { };
+
+	public Action<Vector2> Steering { get { return steering; } set { steering = value; } }
 
 	private void Awake()
 	{
@@ -82,11 +86,16 @@ public class SpaceshipMovement : MonoBehaviour, IRideable
 		direction = Vector2.zero;
 	}
 
-	public void Move(Vector2 direction, Vector2 steering)
+	public void Move(Vector2 direction)
 	{
 		this.direction = direction;
-		this.steering = steering;
-		Moving(direction, steering);
+		Moving(direction);
+	}
+
+	public void Steer(Vector2 steeringDirection)
+	{
+		this.steeringDirection = steeringDirection;
+		Steering(steeringDirection);
 	}
 
 	private void FixedUpdate()
@@ -101,4 +110,6 @@ public class SpaceshipMovement : MonoBehaviour, IRideable
 
 		rigidbody.MoveRotation(rigidbody.rotation + SteeringSpeed * Time.fixedDeltaTime * 10f);
 	}
+
+	
 }

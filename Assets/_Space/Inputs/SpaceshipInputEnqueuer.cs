@@ -30,7 +30,7 @@ public class SpaceshipInputEnqueuer : AInputEnqueuer
 
 	private Vector2 directionInput = Vector2.zero;
 
-	private Vector2 steeringInput = Vector2.zero;
+	private Vector2 steeringDirectionInput = Vector2.zero;
 
 	private Vector2 EscapeDirection
 	{
@@ -141,7 +141,8 @@ public class SpaceshipInputEnqueuer : AInputEnqueuer
 			}
 		}
 
-		movement.Move(this.directionInput, this.steeringInput);
+		movement.Move(this.directionInput);
+		movement.Steer(this.steeringDirectionInput);
 		DrawDebugRays(directionInput, ref this.directionInput);
 		return;
 	}
