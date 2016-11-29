@@ -28,7 +28,6 @@ public class LaserMovement : MonoBehaviour, IMoveable
 
 	private void Awake()
 	{
-
 		rigidbody = GetComponent<Rigidbody2D>();
 		rigidbody.gravityScale = 0f;
 		rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
