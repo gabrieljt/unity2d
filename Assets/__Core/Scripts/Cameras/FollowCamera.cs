@@ -5,14 +5,11 @@
 )]
 public class FollowCamera : MonoBehaviour
 {
-	[SerializeField]
-	private Camera camera;
-
 	public Transform target;
 
 	private void Awake()
 	{
-		camera = GetComponent<Camera>();
+		var camera = GetComponent<Camera>();
 		camera.orthographic = true;
 		camera.clearFlags = CameraClearFlags.SolidColor;
 		camera.backgroundColor = Color.black;

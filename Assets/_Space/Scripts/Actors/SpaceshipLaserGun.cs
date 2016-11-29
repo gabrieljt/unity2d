@@ -8,6 +8,11 @@ public class SpaceshipLaserGun : MonoBehaviour
 
 	private bool waitingForUpdate = false;
 
+	private void Awake()
+	{
+		Debug.Assert(laserPrefab);
+	}
+
 	public void Fire()
 	{
 		if (waitingForUpdate)

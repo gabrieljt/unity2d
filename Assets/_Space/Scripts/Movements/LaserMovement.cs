@@ -8,9 +8,6 @@ using UnityEngine;
 public class LaserMovement : MonoBehaviour, IMoveable
 {
 	[SerializeField]
-	private Laser laser;
-
-	[SerializeField]
 	private Rigidbody2D rigidbody;
 
 	[SerializeField]
@@ -31,7 +28,6 @@ public class LaserMovement : MonoBehaviour, IMoveable
 
 	private void Awake()
 	{
-		laser = GetComponent<Laser>();
 
 		rigidbody = GetComponent<Rigidbody2D>();
 		rigidbody.gravityScale = 0f;
