@@ -8,7 +8,7 @@ public class SpaceshipInputDequeuer : AInputDequeuer
 	public override void OnInputsEnqueued(AInputEnqueuer enqueuer)
 	{
 		var direction = Vector2.zero;
-		var steering = Vector2.zero;
+		var steerDirection = Vector2.zero;
 		var fire = false;
 		while (enqueuer.HasInputs)
 		{
@@ -24,11 +24,11 @@ public class SpaceshipInputDequeuer : AInputDequeuer
 					break;
 
 				case KeyCode.LeftArrow:
-					steering += Vector2.left;
+					steerDirection += Vector2.left;
 					break;
 
 				case KeyCode.RightArrow:
-					steering += Vector2.right;
+					steerDirection += Vector2.right;
 					break;
 
 				case KeyCode.Space:
@@ -37,6 +37,6 @@ public class SpaceshipInputDequeuer : AInputDequeuer
 			}
 		}
 
-		InputsDequeued(direction.normalized, steering.normalized, fire);
+		InputsDequeued(direction.normalized, steerDirection.normalized, fire);
 	}
 }

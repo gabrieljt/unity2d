@@ -35,13 +35,13 @@ public class LaserMovement : MonoBehaviour, IMoveable
 		rigidbody.isKinematic = true;
 	}
 
-	private void FixedUpdate()
+	private void Start()
 	{
-		Move(Position + Velocity * Time.fixedDeltaTime);
+		Move(Velocity);
 	}
 
-	public void Move(Vector2 position)
+	public void Move(Vector2 velocity)
 	{
-		rigidbody.MovePosition(position);
+		rigidbody.velocity = velocity;
 	}
 }

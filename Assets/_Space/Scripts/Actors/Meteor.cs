@@ -29,7 +29,9 @@ public class Meteor : MonoBehaviour, IDestroyable, IDisposable
 
 	private void Start()
 	{
-		transform.localScale *= GetComponent<MeteorMovement>().Mass;
+		var mass = GetComponent<MeteorMovement>().Mass;
+		transform.localScale *= mass;
+		odometer.maximumDistance = UnityEngine.Random.Range(odometer.maximumDistance, odometer.maximumDistance * mass);
 	}
 
 	private void OnMaximumDistanceTravelled()

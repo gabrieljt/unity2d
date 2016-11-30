@@ -23,33 +23,38 @@ public class MeteorsSpawner : MonoBehaviour
 
 	private void InvokeRandomSpawn()
 	{
-		Invoke("Spawn", Random.Range(1f, timeToSpawn));
+		Invoke("SpawnLoop", Random.Range(1f, timeToSpawn));
 	}
 
-	private void Spawn()
+	private void SpawnLoop()
 	{
 		var randomQuantity = Random.Range(1, quantity + 1);
 
 		for (int i = 0; i < randomQuantity; i++)
 		{
-			var outsideViewport = Random.Range(0, 2) % 2 == 0;
-			var x = RandomCoordinate(outsideViewport);
-			var y = RandomCoordinate(!outsideViewport);
-
-			var spawnPosition = Camera.main.ViewportToWorldPoint(new Vector3(x, y, -Camera.main.transform.position.z));
-			Instantiate(meteorPrefab, spawnPosition, Quaternion.identity, transform);
+			Invoke("Spawn", Random.Range(Mathf.Min(quantity, timeToSpawn) / Mathf.Max(quantity, timeToSpawn), Mathf.Max(quantity, timeToSpawn)));
 		}
 
 		InvokeRandomSpawn();
 	}
 
+	private void Spawn()
+	{
+		var outsideViewport = Random.Range(0, 2) % 2 == 0;
+		var x = RandomCoordinate(outsideViewport);
+		var y = RandomCoordinate(!outsideViewport);
+
+		var spawnPosition = Camera.main.ViewportToWorldPoint(new Vector3(x, y, -Camera.main.transform.position.z));
+		Instantiate(meteorPrefab, spawnPosition, Quaternion.identity, transform);
+	}
+
 	private float RandomCoordinate(bool outsideViewport)
 	{
-		var randomCoordinate = Random.Range(-0.1f, 1.1f);
+		var randomCoordinate = Random.Range(-0.5f, 1.5f);
 		if (outsideViewport && randomCoordinate >= 0f && randomCoordinate <= 1f)
 		{
 			randomCoordinate += Random.Range(0, 2) % 2 == 0 ? 1f : -1f;
-			randomCoordinate = Mathf.Clamp(randomCoordinate, -0.1f, 1.1f);
+			randomCoordinate = Mathf.Clamp(randomCoordinate, -0.5f, 1.5f);
 		}
 		return randomCoordinate;
 	}

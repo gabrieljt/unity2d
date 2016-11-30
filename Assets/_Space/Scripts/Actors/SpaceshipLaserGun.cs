@@ -51,5 +51,6 @@ public class SpaceshipLaserGun : MonoBehaviour
 	{
 		Debug.DrawLine(transform.parent.position, transform.parent.position + transform.up, Color.blue);
 	}
+
 #endif
 }

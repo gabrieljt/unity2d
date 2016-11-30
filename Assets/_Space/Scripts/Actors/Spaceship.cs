@@ -34,10 +34,10 @@ public class Spaceship : MonoBehaviour, IDestroyable, IDisposable
 		laserGun = GetComponentInChildren<SpaceshipLaserGun>();
 	}
 
-	private void OnInputsDequeued(Vector2 direction, Vector2 steering, bool fire)
+	private void OnInputsDequeued(Vector2 direction, Vector2 steerDirection, bool fire)
 	{
 		movement.Move(direction);
-		movement.Steer(steering);
+		movement.Steer(steerDirection);
 
 		if (fire)
 		{

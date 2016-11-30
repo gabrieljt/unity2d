@@ -16,35 +16,9 @@ public class SpaceshipMovement : MonoBehaviour, IMoveable, ISteerable
 	public float Speed { get { return speed; } }
 
 	[SerializeField]
-	[Range(1f, 100f)]
-	private float steeringSpeed;
-
-	public float SteeringSpeed
-	{
-		get
-		{
-			if (steeringDirection == Vector2.left)
-			{
-				return steeringSpeed;
-			}
-			else if (steeringDirection == Vector2.right)
-			{
-				return -steeringSpeed;
-			}
-
-			return 0f;
-		}
-	}
-
-	[SerializeField]
 	private Vector2 direction;
 
 	public Vector2 Direction { get { return direction; } }
-
-	[SerializeField]
-	private Vector2 steeringDirection;
-
-	public Vector2 SteerDirection { get { return steeringDirection; } }
 
 	public Vector2 Position { get { return rigidbody.position; } }
 
@@ -69,6 +43,32 @@ public class SpaceshipMovement : MonoBehaviour, IMoveable, ISteerable
 
 	public Action<Vector2> Moving { get { return moving; } set { moving = value; } }
 
+	[SerializeField]
+	[Range(1f, 100f)]
+	private float steerSpeed;
+
+	public float SteerSpeed
+	{
+		get
+		{
+			if (steerDirection == Vector2.left)
+			{
+				return steerSpeed;
+			}
+			else if (steerDirection == Vector2.right)
+			{
+				return -steerSpeed;
+			}
+
+			return 0f;
+		}
+	}
+
+	[SerializeField]
+	private Vector2 steerDirection;
+
+	public Vector2 SteerDirection { get { return steerDirection; } }
+
 	private Action<Vector2> steering = delegate { };
 
 	public Action<Vector2> Steering { get { return steering; } set { steering = value; } }
@@ -92,10 +92,10 @@ public class SpaceshipMovement : MonoBehaviour, IMoveable, ISteerable
 		Moving(direction);
 	}
 
-	public void Steer(Vector2 steeringDirection)
+	public void Steer(Vector2 steerDirection)
 	{
-		this.steeringDirection = steeringDirection;
-		Steering(steeringDirection);
+		this.steerDirection = steerDirection;
+		Steering(steerDirection);
 	}
 
 	private void FixedUpdate()
@@ -108,6 +108,6 @@ public class SpaceshipMovement : MonoBehaviour, IMoveable, ISteerable
 			rigidbody.AddForce(rigidbody.velocity.normalized * (speed - currentSpeed), ForceMode2D.Impulse);
 		}
 
-		rigidbody.MoveRotation(rigidbody.rotation + SteeringSpeed * Time.fixedDeltaTime * 10f);
+		rigidbody.MoveRotation(rigidbody.rotation + SteerSpeed * Time.fixedDeltaTime * 10f);
 	}
 }

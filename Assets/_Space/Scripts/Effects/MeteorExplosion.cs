@@ -8,7 +8,6 @@ public class MeteorExplosion : MonoBehaviour
 {
 	private void Start()
 	{
-		GetComponent<AudioSource>().Play();
 		Destroy(gameObject, GetComponent<ParticleSystem>().duration);
 	}
 }
