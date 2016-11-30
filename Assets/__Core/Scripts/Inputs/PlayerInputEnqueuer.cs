@@ -31,11 +31,6 @@ public class PlayerInputEnqueuerInspector : Editor
 
 public class PlayerInputEnqueuer : AInputEnqueuer
 {
-	[SerializeField]
-	private GameObject gameObjectDequeueing;
-
-	public GameObject GameObjectDequeueing { get { return gameObjectDequeueing; } }
-
 	public static PlayerInputEnqueuer Instance
 	{
 		get
@@ -43,6 +38,11 @@ public class PlayerInputEnqueuer : AInputEnqueuer
 			return FindObjectOfType<PlayerInputEnqueuer>();
 		}
 	}
+
+	[SerializeField]
+	private GameObject gameObjectDequeueing;
+
+	public GameObject GameObjectDequeueing { get { return gameObjectDequeueing; } }
 
 	protected override void Awake()
 	{

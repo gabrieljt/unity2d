@@ -79,7 +79,6 @@ public class MeteorMovement : MonoBehaviour, IMoveable, ISteerable
 		rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
 		rigidbody.interpolation = RigidbodyInterpolation2D.Interpolate;
 
-		//TODO: move to Meteor
 		rigidbody.mass = UnityEngine.Random.Range(1f, rigidbody.mass);
 		speed = UnityEngine.Random.Range(Mathf.Min(rigidbody.mass, speed), rigidbody.mass * speed);
 		steerSpeed = UnityEngine.Random.Range(Mathf.Min(rigidbody.mass, steerSpeed), rigidbody.mass * steerSpeed);

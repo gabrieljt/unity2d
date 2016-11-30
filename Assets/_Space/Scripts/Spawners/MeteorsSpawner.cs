@@ -50,11 +50,11 @@ public class MeteorsSpawner : MonoBehaviour
 
 	private float RandomCoordinate(bool outsideViewport)
 	{
-		var randomCoordinate = Random.Range(-0.5f, 1.5f);
+		var randomCoordinate = Random.Range(-0.35f, 1.35f);
 		if (outsideViewport && randomCoordinate >= 0f && randomCoordinate <= 1f)
 		{
 			randomCoordinate += Random.Range(0, 2) % 2 == 0 ? 1f : -1f;
-			randomCoordinate = Mathf.Clamp(randomCoordinate, -0.5f, 1.5f);
+			randomCoordinate = Mathf.Clamp(randomCoordinate, -0.35f, 1.35f);
 		}
 		return randomCoordinate;
 	}
