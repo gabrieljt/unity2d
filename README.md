@@ -1,18 +1,8 @@
-Unity3D 5.4.2f2 - 2D Procedural roguelike top down experiments
+Unity3D 5.4.3f1 - 2D Top down seamless spaceshooter
 
-== Dungeon Escape v0.1.3 featuring ==
-* Procedural Tile Map
-* Physics top down movement
-* Simple Character AI
-* Step counter
+== Seamless Spaceshooter v0.0.1 ==
 
-== Known Bugs ==
-* May generate dungeon with unreachable exit (press ESC to rebuild)
-* May not have enough steps to finish
+fork from: https://github.com/gabrieljt/unity2d
 
-== TODO ==
-* Win / Lose conditions
+Using assets from: https://www.assetstore.unity3d.com/en/#!/content/20749
 
-Using assets from http://opengameart.org/content/dawnlike-16x16-universal-rogue-like-tileset-v181
-
-Thanks to http://quill18.com/unity_tutorials/ Tile Map tutorial which gave some insights.
