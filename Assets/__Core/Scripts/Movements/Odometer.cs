@@ -56,14 +56,14 @@ public class Odometer : MonoBehaviour
 
 	private void OnDrawGizmos()
 	{
-		if (Application.isPlaying && gameObject.activeInHierarchy)
+		if (Application.isPlaying)
 		{
 			var gizmosColor = Gizmos.color;
 
 			Gizmos.color = Color.yellow;
 			Gizmos.DrawWireSphere(previousPosition, DistanceToPreviousPosition);
 
-			Debug.DrawRay(movement.Position, PreviousPositionDirection * DistanceToPreviousPosition, Color.green);
+			Debug.DrawRay(movement.Position, PreviousPositionDirection * DistanceToPreviousPosition, Color.green, 1f);
 
 			Gizmos.color = gizmosColor;
 		}

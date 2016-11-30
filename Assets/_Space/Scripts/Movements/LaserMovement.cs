@@ -31,7 +31,7 @@ public class LaserMovement : MonoBehaviour, IMoveable
 		rigidbody = GetComponent<Rigidbody2D>();
 		rigidbody.gravityScale = 0f;
 		rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
-		rigidbody.interpolation = RigidbodyInterpolation2D.None;
+		rigidbody.interpolation = RigidbodyInterpolation2D.Interpolate;
 		rigidbody.isKinematic = true;
 	}
 
@@ -43,6 +43,5 @@ public class LaserMovement : MonoBehaviour, IMoveable
 	public void Move(Vector2 position)
 	{
 		rigidbody.MovePosition(position);
-		Moving(transform.position);
 	}
 }

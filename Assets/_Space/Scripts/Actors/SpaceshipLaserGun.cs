@@ -1,12 +1,14 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class SpaceshipLaserGun : MonoBehaviour
 {
 	[SerializeField]
 	private GameObject laserPrefab;
 
-	private bool waitingForUpdate = false;
+	[SerializeField]
+	private float fireRate = 1f;
+
+	private bool @lock = false;
 
 	private void Awake()
 	{
@@ -15,17 +17,17 @@ public class SpaceshipLaserGun : MonoBehaviour
 
 	public void Fire()
 	{
-		if (waitingForUpdate)
+		if (@lock)
+		{
 			return;
-
-		StartCoroutine(InstantiateProjectileCoroutine());
+		}
+		@lock = true;
+		InstantiateLaser();
+		Invoke("Unlock", fireRate);
 	}
 
-	private IEnumerator InstantiateProjectileCoroutine()
+	private void InstantiateLaser()
 	{
-		waitingForUpdate = true;
-		yield return 0;
-
 		var laser = Instantiate(laserPrefab, transform.position, Quaternion.identity) as GameObject;
 		laser.transform.up = transform.up;
 
@@ -36,7 +38,18 @@ public class SpaceshipLaserGun : MonoBehaviour
 		{
 			Physics2D.IgnoreCollision(laserCollider, spaceshipColliders[i]);
 		}
-
-		waitingForUpdate = false;
 	}
+
+	private void Unlock()
+	{
+		@lock = false;
+	}
+
+#if UNITY_EDITOR
+
+	private void OnDrawGizmos()
+	{
+		Debug.DrawLine(transform.parent.position, transform.parent.position + transform.up, Color.blue);
+	}
+#endif
 }
